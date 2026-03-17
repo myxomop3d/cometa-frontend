@@ -1,0 +1,4232 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Пример 1",
+    "description": "",
+    "contact": {
+      "name": "",
+      "email": ""
+    },
+    "version": "dev"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "AS",
+      "description": "AS"
+    },
+    {
+      "name": "NodeInterface",
+      "description": "Интерфейсы"
+    },
+    {
+      "name": "FlowGraph",
+      "description": "Графы потоков"
+    },
+    {
+      "name": "Link",
+      "description": "Линки"
+    },
+    {
+      "name": "Node",
+      "description": "Ноды"
+    }
+  ],
+  "paths": {
+    "/api/links": {
+      "get": {
+        "tags": [
+          "link-entity-controller"
+        ],
+        "description": "get-link",
+        "operationId": "getCollectionResource-link-get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedModelEntityModelLink"
+                }
+              },
+              "application/x-spring-data-compact+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedModelEntityModelLink"
+                }
+              },
+              "text/uri-list": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "link-entity-controller"
+        ],
+        "description": "create-link",
+        "operationId": "postCollectionResource-link-post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelLink"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/links/search/findByFlowId": {
+      "get": {
+        "tags": [
+          "link-search-controller"
+        ],
+        "operationId": "executeSearch-link-get",
+        "parameters": [
+          {
+            "name": "flowId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "entityGraph",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/EntityGraph"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionModelEntityModelLink"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/links/{id}": {
+      "get": {
+        "tags": [
+          "link-entity-controller"
+        ],
+        "description": "get-link",
+        "operationId": "getItemResource-link-get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelLink"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "link-entity-controller"
+        ],
+        "description": "update-link",
+        "operationId": "putItemResource-link-put",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelLink"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelLink"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "link-entity-controller"
+        ],
+        "description": "delete-link",
+        "operationId": "deleteItemResource-link-delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "link-entity-controller"
+        ],
+        "description": "patch-link",
+        "operationId": "patchItemResource-link-patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityModelLink"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "tags": [
+          "profile-controller"
+        ],
+        "operationId": "listAllFormsOfMetadata",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentationModelObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profile/links": {
+      "get": {
+        "tags": [
+          "profile-controller"
+        ],
+        "operationId": "descriptor",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/alps+json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/schema+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/node/{id}": {
+      "get": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Полностью изменить по ключу",
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NodeDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MicroserviceNodeDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TopicNodeDto"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Удалить",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjString"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Частично изменить по ключу",
+        "operationId": "patch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NodeDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MicroserviceNodeDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TopicNodeDto"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/link/{id}": {
+      "get": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLinkDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Полностью изменить по ключу",
+        "operationId": "update_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLinkDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Удалить",
+        "operationId": "delete_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjString"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Частично изменить по ключу",
+        "operationId": "patch_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLinkDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interface/{id}": {
+      "get": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeInterfaceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Полностью изменить по ключу",
+        "operationId": "update_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NodeInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/KafkaClientInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/KafkaServerInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RestClientInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RestServerInterfaceDto"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeInterfaceDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Удалить",
+        "operationId": "delete_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjString"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Частично изменить по ключу",
+        "operationId": "patch_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NodeInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/KafkaClientInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/KafkaServerInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RestClientInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RestServerInterfaceDto"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeInterfaceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated-system/{id}": {
+      "get": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjAutomatedSystemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Полностью изменить по ключу",
+        "operationId": "update_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomatedSystemDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjAutomatedSystemDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Удалить",
+        "operationId": "delete_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjString"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Частично изменить по ключу",
+        "operationId": "patch_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomatedSystemDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjAutomatedSystemDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/node": {
+      "get": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListNodeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Создать",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NodeDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MicroserviceNodeDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TopicNodeDto"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/link": {
+      "get": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll_1",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListLinkDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Создать",
+        "operationId": "create_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLinkDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interface": {
+      "get": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll_2",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListNodeInterfaceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Создать",
+        "operationId": "create_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/NodeInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/KafkaClientInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/KafkaServerInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RestClientInterfaceDto"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RestServerInterfaceDto"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeInterfaceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/flow-graph/create/{flowId}": {
+      "post": {
+        "tags": [
+          "FlowGraph"
+        ],
+        "operationId": "create_3",
+        "parameters": [
+          {
+            "name": "flowId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjFlowGraphDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated-system": {
+      "get": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll_3",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListAutomatedSystemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Создать",
+        "operationId": "create_4",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomatedSystemDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjAutomatedSystemDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/node/num/{naturalId}": {
+      "get": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Получить по натуральному ключу",
+        "description": "Возвращает одну запись по натуральному ключу",
+        "operationId": "getByNaturalId",
+        "parameters": [
+          {
+            "name": "naturalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/node/graph": {
+      "get": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll_4",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListNodeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/node/graph/{id}": {
+      "get": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get_4",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/node/count": {
+      "get": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Количество записей",
+        "description": "Возвращает количество записей с учетом фильтра",
+        "operationId": "count",
+        "parameters": [
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/node/$metadata": {
+      "get": {
+        "tags": [
+          "Node"
+        ],
+        "summary": "Метаданные",
+        "operationId": "metadata",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/link/num/{naturalId}": {
+      "get": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Получить по натуральному ключу",
+        "description": "Возвращает одну запись по натуральному ключу",
+        "operationId": "getByNaturalId_1",
+        "parameters": [
+          {
+            "name": "naturalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLinkDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/link/graph": {
+      "get": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll_5",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListLinkDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/link/graph/{id}": {
+      "get": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get_5",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLinkDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/link/count": {
+      "get": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Количество записей",
+        "description": "Возвращает количество записей с учетом фильтра",
+        "operationId": "count_1",
+        "parameters": [
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/link/$metadata": {
+      "get": {
+        "tags": [
+          "Link"
+        ],
+        "summary": "Метаданные",
+        "operationId": "metadata_1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interface/num/{naturalId}": {
+      "get": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Получить по натуральному ключу",
+        "description": "Возвращает одну запись по натуральному ключу",
+        "operationId": "getByNaturalId_2",
+        "parameters": [
+          {
+            "name": "naturalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeInterfaceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interface/graph": {
+      "get": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll_6",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListNodeInterfaceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interface/graph/{id}": {
+      "get": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get_6",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjNodeInterfaceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interface/count": {
+      "get": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Количество записей",
+        "description": "Возвращает количество записей с учетом фильтра",
+        "operationId": "count_2",
+        "parameters": [
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interface/$metadata": {
+      "get": {
+        "tags": [
+          "NodeInterface"
+        ],
+        "summary": "Метаданные",
+        "operationId": "metadata_2",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/flow-graph/{flowId}": {
+      "get": {
+        "tags": [
+          "FlowGraph"
+        ],
+        "operationId": "get_7",
+        "parameters": [
+          {
+            "name": "flowId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjFlowGraphDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated-system/num/{naturalId}": {
+      "get": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Получить по натуральному ключу",
+        "description": "Возвращает одну запись по натуральному ключу",
+        "operationId": "getByNaturalId_3",
+        "parameters": [
+          {
+            "name": "naturalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjAutomatedSystemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated-system/graph": {
+      "get": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Получить всё",
+        "description": "Возвращает все записи с учетом фильтра, сортировки и пагинации",
+        "operationId": "getAll_7",
+        "parameters": [
+          {
+            "name": "$skip",
+            "in": "query",
+            "description": "Количество пропущенных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$top",
+            "in": "query",
+            "description": "Количество выбранных записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#top-and-skip\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$orderby",
+            "in": "query",
+            "description": "Сортировка записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#orderby\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjListAutomatedSystemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated-system/graph/{id}": {
+      "get": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Получить по ключу",
+        "description": "Возвращает одну запись по ключу",
+        "operationId": "get_8",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "$fields",
+            "in": "query",
+            "description": "Список вложенных сущностей (объектов), которые должны быть включены в ответ (например, 'customer,orders'). Используется для построения графа объектов.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjAutomatedSystemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated-system/count": {
+      "get": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Количество записей",
+        "description": "Возвращает количество записей с учетом фильтра",
+        "operationId": "count_3",
+        "parameters": [
+          {
+            "name": "$filter",
+            "in": "query",
+            "description": "Фильтрация записей (\u003Ca href=\"https://learn.microsoft.com/en-us/odata/concepts/queryoptions-overview#filter\"\u003Eинформация\u003C/a\u003E)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultObjLong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageObj"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automated-system/$metadata": {
+      "get": {
+        "tags": [
+          "AS"
+        ],
+        "summary": "Метаданные",
+        "operationId": "metadata_3",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.hal+json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AbstractJsonSchemaPropertyObject": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "readOnly": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Item": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AbstractJsonSchemaPropertyObject"
+            }
+          },
+          "requiredProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "JsonSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AbstractJsonSchemaPropertyObject"
+            }
+          },
+          "requiredProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "definitions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Item"
+            }
+          },
+          "type": {
+            "type": "string"
+          },
+          "$schema": {
+            "type": "string"
+          }
+        }
+      },
+      "Link": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string"
+          },
+          "hreflang": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "deprecation": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "templated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RepresentationModelObject": {
+        "type": "object",
+        "properties": {
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "Node": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeInterface"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "NodeInterface": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "segment": {
+            "type": "string"
+          },
+          "node": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "linksIn": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "uniqueItems": true
+          },
+          "linksOut": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "EntityModelLink": {
+        "type": "object",
+        "properties": {
+          "flowId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "clientInterface": {
+            "$ref": "#/components/schemas/NodeInterface"
+          },
+          "serverInterface": {
+            "$ref": "#/components/schemas/NodeInterface"
+          },
+          "dataFlowDirection": {
+            "type": "string"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "PageMetadata": {
+        "type": "object",
+        "properties": {
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PagedModelEntityModelLink": {
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "type": "object",
+            "properties": {
+              "links": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EntityModelLink"
+                }
+              }
+            }
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "EntityGraph": {
+
+      },
+      "CollectionModelEntityModelLink": {
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "type": "object",
+            "properties": {
+              "links": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EntityModelLink"
+                }
+              }
+            }
+          },
+          "_links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        }
+      },
+      "LinkRequestBody": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "flowId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "clientInterface": {
+            "$ref": "#/components/schemas/NodeInterface"
+          },
+          "serverInterface": {
+            "$ref": "#/components/schemas/NodeInterface"
+          },
+          "dataFlowDirection": {
+            "type": "string"
+          }
+        }
+      },
+      "KafkaClientInterfaceFlatDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceFlatDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "compressionType": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "KafkaServerInterfaceFlatDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceFlatDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "replicas": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "partitions": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "partitionKey": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        ]
+      },
+      "MicroserviceNodeDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "artifactId": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "NodeDto": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "dtoType"
+        },
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dtoType": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/NodeInterfaceFlatDto"
+                },
+                {
+                  "$ref": "#/components/schemas/KafkaClientInterfaceFlatDto"
+                },
+                {
+                  "$ref": "#/components/schemas/KafkaServerInterfaceFlatDto"
+                },
+                {
+                  "$ref": "#/components/schemas/RestClientInterfaceFlatDto"
+                },
+                {
+                  "$ref": "#/components/schemas/RestServerInterfaceFlatDto"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "NodeInterfaceFlatDto": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "dtoType"
+        },
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dtoType": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "segment": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "linksInIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "uniqueItems": true
+          },
+          "linksOutIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "RestClientInterfaceFlatDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceFlatDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "http_method": {
+                "type": "string"
+              },
+              "requestFormat": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "RestServerInterfaceFlatDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceFlatDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timeout": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "responseFormat": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "TopicNodeDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "param": {
+                "type": "string"
+              },
+              "papam2": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "AppMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Сообщение",
+        "properties": {
+          "semantic": {
+            "type": "string",
+            "description": "Семантика сообщения",
+            "enum": [
+              "I",
+              "W",
+              "S",
+              "E"
+            ],
+            "title": "Семантика сообщения"
+          },
+          "message": {
+            "type": "string",
+            "description": "Текст сообщения",
+            "example": "Текст сообщения",
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^.*$"
+          },
+          "target": {
+            "type": "string",
+            "description": "Поле, к которому относится сообщение",
+            "example": "Поле, к которому относится сообщение",
+            "maxLength": 255,
+            "pattern": "^.*$"
+          },
+          "description": {
+            "type": "string",
+            "description": "Подробный текст сообщения",
+            "example": "Подробный текст сообщения",
+            "maxLength": 512,
+            "pattern": "^.*$"
+          }
+        },
+        "title": "Сообщение"
+      },
+      "ResultObjNodeDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "description": "Объект данных",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NodeDto"
+              },
+              {
+                "$ref": "#/components/schemas/MicroserviceNodeDto"
+              },
+              {
+                "$ref": "#/components/schemas/TopicNodeDto"
+              }
+            ],
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "LinkDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "flowId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "clientInterface": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NodeInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/KafkaClientInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/KafkaServerInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/RestClientInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/RestServerInterfaceFlatDto"
+              }
+            ]
+          },
+          "serverInterface": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NodeInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/KafkaClientInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/KafkaServerInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/RestClientInterfaceFlatDto"
+              },
+              {
+                "$ref": "#/components/schemas/RestServerInterfaceFlatDto"
+              }
+            ]
+          },
+          "dataFlowDirection": {
+            "type": "string"
+          }
+        }
+      },
+      "ResultObjLinkDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LinkDto",
+            "description": "Объект данных",
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "KafkaClientInterfaceDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "compressionType": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "KafkaServerInterfaceDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "replicas": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "partitions": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "partitionKey": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        ]
+      },
+      "NodeInterfaceDto": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "dtoType"
+        },
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dtoType": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "segment": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "linksInIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "uniqueItems": true
+          },
+          "linksOutIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "uniqueItems": true
+          },
+          "node": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NodeDto"
+              },
+              {
+                "$ref": "#/components/schemas/MicroserviceNodeDto"
+              },
+              {
+                "$ref": "#/components/schemas/TopicNodeDto"
+              }
+            ]
+          },
+          "linksIn": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkDto"
+            },
+            "uniqueItems": true
+          },
+          "linksOut": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkDto"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "RestClientInterfaceDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "http_method": {
+                "type": "string"
+              },
+              "requestFormat": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "RestServerInterfaceDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NodeInterfaceDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timeout": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "responseFormat": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ResultObjNodeInterfaceDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "description": "Объект данных",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NodeInterfaceDto"
+              },
+              {
+                "$ref": "#/components/schemas/KafkaClientInterfaceDto"
+              },
+              {
+                "$ref": "#/components/schemas/KafkaServerInterfaceDto"
+              },
+              {
+                "$ref": "#/components/schemas/RestClientInterfaceDto"
+              },
+              {
+                "$ref": "#/components/schemas/RestServerInterfaceDto"
+              }
+            ],
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "AutomatedSystemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "objectCode": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "ci": {
+            "type": "string"
+          },
+          "nameHpsm": {
+            "type": "string"
+          },
+          "leader": {
+            "type": "string"
+          },
+          "leaderSapId": {
+            "type": "string"
+          },
+          "block": {
+            "type": "string"
+          },
+          "tribe": {
+            "type": "string"
+          },
+          "cluster": {
+            "type": "string"
+          },
+          "clusterHpsmId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "iftMailSupport": {
+            "type": "string"
+          },
+          "uatMailSupport": {
+            "type": "string"
+          },
+          "prodMailSupport": {
+            "type": "string"
+          },
+          "guid": {
+            "type": "string"
+          }
+        }
+      },
+      "ResultObjAutomatedSystemDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AutomatedSystemDto",
+            "description": "Объект данных",
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "FlowGraphDto": {
+        "type": "object",
+        "properties": {
+          "flowId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/NodeDto"
+                },
+                {
+                  "$ref": "#/components/schemas/MicroserviceNodeDto"
+                },
+                {
+                  "$ref": "#/components/schemas/TopicNodeDto"
+                }
+              ]
+            },
+            "uniqueItems": true
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkDto"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "ResultObjFlowGraphDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FlowGraphDto",
+            "description": "Объект данных",
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "MessageObj": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Объект для сообщений без данных",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          }
+        },
+        "title": "Объект сообщений"
+      },
+      "ResultObjListNodeDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "type": "array",
+            "description": "Объект данных",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/NodeDto"
+                },
+                {
+                  "$ref": "#/components/schemas/MicroserviceNodeDto"
+                },
+                {
+                  "$ref": "#/components/schemas/TopicNodeDto"
+                }
+              ]
+            },
+            "maxItems": 9999,
+            "minItems": 0,
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "ResultObjLong": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Объект данных",
+            "maximum": 9999,
+            "minimum": 0,
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "ResultObjListLinkDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "type": "array",
+            "description": "Объект данных",
+            "items": {
+              "$ref": "#/components/schemas/LinkDto"
+            },
+            "maxItems": 9999,
+            "minItems": 0,
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "ResultObjListNodeInterfaceDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "type": "array",
+            "description": "Объект данных",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/NodeInterfaceDto"
+                },
+                {
+                  "$ref": "#/components/schemas/KafkaClientInterfaceDto"
+                },
+                {
+                  "$ref": "#/components/schemas/KafkaServerInterfaceDto"
+                },
+                {
+                  "$ref": "#/components/schemas/RestClientInterfaceDto"
+                },
+                {
+                  "$ref": "#/components/schemas/RestServerInterfaceDto"
+                }
+              ]
+            },
+            "maxItems": 9999,
+            "minItems": 0,
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "ResultObjListAutomatedSystemDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "type": "array",
+            "description": "Объект данных",
+            "items": {
+              "$ref": "#/components/schemas/AutomatedSystemDto"
+            },
+            "maxItems": 9999,
+            "minItems": 0,
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "ResultObjString": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Упаковка объекта для rest ответа",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "description": "Сообщения",
+            "items": {
+              "$ref": "#/components/schemas/AppMessage"
+            },
+            "maxItems": 999,
+            "minItems": 0,
+            "title": "Сообщения"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Общее кол-во объектов удовлетворяющих фильтру",
+            "maximum": 9.223372036854776e+18,
+            "minimum": 0,
+            "title": "Кол-во объектов"
+          },
+          "data": {
+            "type": "string",
+            "description": "Объект данных",
+            "maxLength": 9999,
+            "minLength": 0,
+            "title": "Объект данных"
+          }
+        },
+        "title": "Упаковка для rest"
+      },
+      "Links": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/Link"
+        }
+      }
+    }
+  }
+}

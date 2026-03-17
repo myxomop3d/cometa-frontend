@@ -1,6 +1,15 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  Link,
+  Outlet,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import type { QueryClient } from "@tanstack/react-query";
+
+export interface RouterContext {
+  queryClient: QueryClient;
+}
 
 const navItems = [
   { to: "/automated-system", label: "Automated Systems" },
@@ -8,7 +17,7 @@ const navItems = [
   { to: "/components", label: "Components" },
 ] as const;
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
 });
 
