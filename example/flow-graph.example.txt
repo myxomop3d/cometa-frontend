@@ -1,0 +1,313 @@
+Request
+curl -X 'GET' \
+  'http://localhost:8080/api/v1/flow-graph/1' \
+  -H 'accept: application/vnd.hal+json'
+  
+Server response
+{
+  "count": 0,
+  "data": {
+    "flowId": 1,
+    "links": [
+      {
+        "clientInterface": {
+          "dtoType": "kafkaClient",
+          "compressionType": "zstd",
+          "id": 1,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "Кафка клиент системы источника",
+          "nodeId": null,
+          "protocol": "Kafka",
+          "segment": "Sigma"
+        },
+        "dataFlowDirection": "Forward",
+        "flowId": 1,
+        "id": 1,
+        "serverInterface": {
+          "dtoType": "kafkaServer",
+          "id": 2,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "MY.TOPIC.IN",
+          "nodeId": null,
+          "partitionKey": null,
+          "partitions": 10,
+          "protocol": "Kafka",
+          "replicas": 2,
+          "segment": "Sigma"
+        }
+      },
+      {
+        "clientInterface": {
+          "dtoType": "kafkaClient",
+          "compressionType": "zstd",
+          "id": 4,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "Кафка клиент микросервиса 1",
+          "nodeId": null,
+          "protocol": "Kafka",
+          "segment": "Sigma"
+        },
+        "dataFlowDirection": "Backward",
+        "flowId": 1,
+        "id": 2,
+        "serverInterface": {
+          "dtoType": "kafkaServer",
+          "id": 2,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "MY.TOPIC.IN",
+          "nodeId": null,
+          "partitionKey": null,
+          "partitions": 10,
+          "protocol": "Kafka",
+          "replicas": 2,
+          "segment": "Sigma"
+        }
+      },
+      {
+        "clientInterface": {
+          "dtoType": "restClient",
+          "http_method": "POST",
+          "id": 3,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "Rest клиент микросервиса 1",
+          "nodeId": null,
+          "protocol": "http",
+          "requestFormat": "JSON",
+          "segment": "Sigma"
+        },
+        "dataFlowDirection": "Forward",
+        "flowId": 1,
+        "id": 3,
+        "serverInterface": {
+          "dtoType": "restServer",
+          "id": 5,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "Rest сервер микросервиса 2",
+          "nodeId": null,
+          "protocol": "http",
+          "responseFormat": "JSON",
+          "segment": "Sigma",
+          "timeout": 60000
+        }
+      },
+      {
+        "clientInterface": {
+          "dtoType": "kafkaClient",
+          "compressionType": "zstd",
+          "id": 6,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "Кафка клиент микросервиса 2",
+          "nodeId": null,
+          "protocol": "Kafka",
+          "segment": "Sigma"
+        },
+        "dataFlowDirection": "Forward",
+        "flowId": 1,
+        "id": 4,
+        "serverInterface": {
+          "dtoType": "kafkaServer",
+          "id": 7,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "MY.TOPIC.OUT",
+          "nodeId": null,
+          "partitionKey": null,
+          "partitions": 10,
+          "protocol": "Kafka",
+          "replicas": 2,
+          "segment": "Sigma"
+        }
+      },
+      {
+        "clientInterface": {
+          "dtoType": "kafkaClient",
+          "compressionType": "zstd",
+          "id": 8,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "Кафка клиент системы получателя",
+          "nodeId": null,
+          "protocol": "Kafka",
+          "segment": "Sigma"
+        },
+        "dataFlowDirection": "Backward",
+        "flowId": 1,
+        "id": 5,
+        "serverInterface": {
+          "dtoType": "kafkaServer",
+          "id": 7,
+          "linksInIds": null,
+          "linksOutIds": null,
+          "name": "MY.TOPIC.OUT",
+          "nodeId": null,
+          "partitionKey": null,
+          "partitions": 10,
+          "protocol": "Kafka",
+          "replicas": 2,
+          "segment": "Sigma"
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "dtoType": "topic",
+        "id": 2,
+        "interfaces": [
+          {
+            "dtoType": "kafkaServer",
+            "id": 2,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "MY.TOPIC.IN",
+            "nodeId": null,
+            "partitionKey": null,
+            "partitions": 10,
+            "protocol": "Kafka",
+            "replicas": 2,
+            "segment": "Sigma"
+          }
+        ],
+        "name": "MY.TOPIC.IN",
+        "papam2": "someParam2",
+        "param": "someParam1"
+      },
+      {
+        "dtoType": "topic",
+        "id": 5,
+        "interfaces": [
+          {
+            "dtoType": "kafkaServer",
+            "id": 7,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "MY.TOPIC.OUT",
+            "nodeId": null,
+            "partitionKey": null,
+            "partitions": 10,
+            "protocol": "Kafka",
+            "replicas": 2,
+            "segment": "Sigma"
+          }
+        ],
+        "name": "MY.TOPIC.OUT",
+        "papam2": "someParam4",
+        "param": "someParam3"
+      },
+      {
+        "dtoType": "microservice",
+        "artifactId": "ext1-data-ext2-out",
+        "id": 4,
+        "interfaces": [
+          {
+            "dtoType": "restServer",
+            "id": 5,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "Rest сервер микросервиса 2",
+            "nodeId": null,
+            "protocol": "http",
+            "responseFormat": "JSON",
+            "segment": "Sigma",
+            "timeout": 60000
+          },
+          {
+            "dtoType": "kafkaClient",
+            "compressionType": "zstd",
+            "id": 6,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "Кафка клиент микросервиса 2",
+            "nodeId": null,
+            "protocol": "Kafka",
+            "segment": "Sigma"
+          }
+        ],
+        "name": "ext1-data-ext2-out",
+        "version": "4.0.0"
+      },
+      {
+        "dtoType": "node",
+        "id": 6,
+        "interfaces": [
+          {
+            "dtoType": "kafkaClient",
+            "compressionType": "zstd",
+            "id": 8,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "Кафка клиент системы получателя",
+            "nodeId": null,
+            "protocol": "Kafka",
+            "segment": "Sigma"
+          }
+        ],
+        "name": "Сервис системы получателя"
+      },
+      {
+        "dtoType": "node",
+        "id": 1,
+        "interfaces": [
+          {
+            "dtoType": "kafkaClient",
+            "compressionType": "zstd",
+            "id": 1,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "Кафка клиент системы источника",
+            "nodeId": null,
+            "protocol": "Kafka",
+            "segment": "Sigma"
+          }
+        ],
+        "name": "Сервис системы источника"
+      },
+      {
+        "dtoType": "microservice",
+        "artifactId": "ext-data-in",
+        "id": 3,
+        "interfaces": [
+          {
+            "dtoType": "restClient",
+            "http_method": "POST",
+            "id": 3,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "Rest клиент микросервиса 1",
+            "nodeId": null,
+            "protocol": "http",
+            "requestFormat": "JSON",
+            "segment": "Sigma"
+          },
+          {
+            "dtoType": "kafkaClient",
+            "compressionType": "zstd",
+            "id": 4,
+            "linksInIds": null,
+            "linksOutIds": null,
+            "name": "Кафка клиент микросервиса 1",
+            "nodeId": null,
+            "protocol": "Kafka",
+            "segment": "Sigma"
+          }
+        ],
+        "name": "ext1-data-in",
+        "version": "4.0.0"
+      }
+    ]
+  },
+  "messages": [
+    {
+      "description": null,
+      "message": "Успешное выполнение",
+      "semantic": "S",
+      "target": null
+    }
+  ]
+}

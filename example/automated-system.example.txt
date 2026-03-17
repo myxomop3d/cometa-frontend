@@ -1,0 +1,152 @@
+Request
+curl -X 'GET' \
+  'http://localhost:8080/api/v1/automated-system/1' \
+  -H 'accept: application/vnd.hal+json'
+  
+Server response
+{
+  "count": 0,
+  "data": {
+    "block": "Финансы",
+    "ci": "CI06228014",
+    "cluster": "Департамент финансов (115147)",
+    "clusterHpsmId": null,
+    "fullName": "УВХД Доходные и нефинансовые договоры",
+    "guid": null,
+    "id": 1,
+    "iftMailSupport": null,
+    "leader": "Филина Е. М. (806025)",
+    "leaderSapId": null,
+    "name": "УВХД Доходные и нефинансовые договоры",
+    "nameHpsm": null,
+    "objectCode": null,
+    "prodMailSupport": null,
+    "status": null,
+    "tribe": "Digital Accounting",
+    "uatMailSupport": null
+  },
+  "messages": [
+    {
+      "description": null,
+      "message": "Успешное выполнение",
+      "semantic": "S",
+      "target": null
+    }
+  ]
+}
+
+=============================================================
+Request
+curl -X 'GET' \
+  'http://localhost:8080/api/v1/automated-system?%24skip=1&%24top=5&%24filter=status%20eq%20%27%D0%9D%D0%B0%D1%85%D0%BE%D0%B4%D0%B8%D1%82%D1%81%D1%8F%20%D0%B2%20%D1%8D%D0%BA%D1%81%D0%BF%D0%BB%D1%83%D0%B0%D1%82%D0%B0%D1%86%D0%B8%D0%B8%27%20and%20clusterHpsmId%20gt%20%271%27%20and%20startswith%28tribe%2C%27Global%27%29&%24orderby=objectCode' \
+  -H 'accept: application/vnd.hal+json'
+Server response
+{
+  "count": 61,
+  "data": [
+    {
+      "block": "Корпоративно-инвестиционный бизнес",
+      "ci": "CI01776490",
+      "cluster": "Департамент глобальных рынков (293803)",
+      "clusterHpsmId": "293803",
+      "fullName": "Учёт сделок с физическими товарами Commodity Trading (Aspect)",
+      "guid": "bc1bc9b1-1995-11e9-66de-005056802d99",
+      "id": 1451,
+      "iftMailSupport": null,
+      "leader": "Берестов Р. В. (801690)",
+      "leaderSapId": "801690",
+      "name": "Aspect",
+      "nameHpsm": "Учёт сделок с физическими товарами Commodity Trading (Aspect)",
+      "objectCode": "aspect",
+      "prodMailSupport": "np_support@sberbank.ru",
+      "status": "Находится в эксплуатации",
+      "tribe": "Global Trading Platform",
+      "uatMailSupport": null
+    },
+    {
+      "block": "Корпоративно-инвестиционный бизнес",
+      "ci": "CI00442723",
+      "cluster": "Департамент глобальных рынков (293803)",
+      "clusterHpsmId": "293803",
+      "fullName": "Calypso - Учет операций с внебиржевыми деривативами",
+      "guid": "dedfc321-e62e-11e7-710f-fa163edfb21e",
+      "id": 1751,
+      "iftMailSupport": null,
+      "leader": "Висич И. Б. (803559)",
+      "leaderSapId": "803559",
+      "name": "Calypso",
+      "nameHpsm": "Calypso - Учет операций с внебиржевыми деривативами",
+      "objectCode": "calypso",
+      "prodMailSupport": "calypsosupport@omega.sbrf.ru",
+      "status": "Находится в эксплуатации",
+      "tribe": "Global Trading Platform",
+      "uatMailSupport": null
+    },
+    {
+      "block": "Корпоративно-инвестиционный бизнес",
+      "ci": "CI01143386",
+      "cluster": "Центр операций на Глобальных рынках (119276)",
+      "clusterHpsmId": "119276",
+      "fullName": "CrossingEngine CIB",
+      "guid": "de2b8e51-e62e-11e7-710f-fa163edfb21e",
+      "id": 1901,
+      "iftMailSupport": null,
+      "leader": "Белышов М. В. (820682)",
+      "leaderSapId": "820682",
+      "name": "Crossing Engine",
+      "nameHpsm": "CrossingEngine CIB",
+      "objectCode": "ce",
+      "prodMailSupport": "algosupportcib@sberbank.ru",
+      "status": "Находится в эксплуатации",
+      "tribe": "Global Trading Platform",
+      "uatMailSupport": null
+    },
+    {
+      "block": "Корпоративно-инвестиционный бизнес",
+      "ci": "CI01143386",
+      "cluster": "Центр операций на Глобальных рынках (119276)",
+      "clusterHpsmId": "119276",
+      "fullName": "CrossingEngine CIB",
+      "guid": "de2b8e51-e62e-11e7-710f-fa163edfb21e",
+      "id": 1351,
+      "iftMailSupport": null,
+      "leader": "Белышов М. В. (820682)",
+      "leaderSapId": "820682",
+      "name": "Crossing Engine PAO",
+      "nameHpsm": "CrossingEngine CIB",
+      "objectCode": "ce-pao",
+      "prodMailSupport": "algosupportcib@sberbank.ru",
+      "status": "Находится в эксплуатации",
+      "tribe": "Global Trading Platform",
+      "uatMailSupport": null
+    },
+    {
+      "block": "Корпоративно-инвестиционный бизнес",
+      "ci": "CI00897299",
+      "cluster": "Департамент глобальных рынков (293803)",
+      "clusterHpsmId": "293803",
+      "fullName": "Diasoft Clearing CIB",
+      "guid": "dede1571-e62e-11e7-710f-fa163edfb21e",
+      "id": 1951,
+      "iftMailSupport": null,
+      "leader": "Кузовкин П. В. (802206)",
+      "leaderSapId": "802206",
+      "name": "Diasoft Clearing",
+      "nameHpsm": "Diasoft Clearing CIB",
+      "objectCode": "dias-clearing",
+      "prodMailSupport": "ds_bosupport@sberbank.ru",
+      "status": "Находится в эксплуатации",
+      "tribe": "Global Trading Platform",
+      "uatMailSupport": null
+    }
+  ],
+  "messages": [
+    {
+      "description": null,
+      "message": "Успешное выполнение",
+      "semantic": "S",
+      "target": null
+    }
+  ]
+}
+
