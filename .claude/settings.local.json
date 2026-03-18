@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find /f/programming/react/cometa-frontend/src/api -type f -name *.ts -o -name *.tsx)"
     ]
   }
 }
