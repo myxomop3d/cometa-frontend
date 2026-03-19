@@ -92,7 +92,7 @@ export function SimpleTable<TData>({
         </div>
       )}
 
-      <Table style={{ width: table.getCenterTotalSize() }}>
+      <Table style={{ width: table.getCenterTotalSize() }} className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

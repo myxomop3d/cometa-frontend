@@ -3,7 +3,6 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(find /f/programming/react/cometa-frontend/src/api -type f -name *.ts -o -name *.tsx)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npx shadcn@latest add input --yes)"
