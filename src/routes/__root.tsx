@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   createRootRouteWithContext,
   Link,
@@ -6,6 +7,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { QueryClient } from "@tanstack/react-query";
+import { Moon, Sun } from "lucide-react";
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -22,6 +24,20 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootLayout() {
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    const dark = stored === "dark";
+    if (dark) document.documentElement.classList.add("dark");
+    return dark;
+  });
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
   return (
     <div className="flex h-screen">
       <aside className="w-64 border-r border-border bg-sidebar flex flex-col">
@@ -33,12 +49,21 @@ function RootLayout() {
             <Link
               key={item.to}
               to={item.to}
-              className="px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors [&.active]:bg-sidebar-accent [&.active]:text-sidebar-accent-foreground [&.active]:font-medium"
+              className="px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors [&.active]:bg-sidebar-primary [&.active]:text-sidebar-primary-foreground [&.active]:font-medium"
             >
               {item.label}
             </Link>
           ))}
         </nav>
+        <div className="mt-auto p-2 border-t border-border">
+          <button
+            onClick={toggleTheme}
+            className="flex w-full items-center gap-2 px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer"
+          >
+            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            {isDark ? "Light Mode" : "Dark Mode"}
+          </button>
+        </div>
       </aside>
       <main className="flex-1 overflow-auto p-6">
         <Outlet />
