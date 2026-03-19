@@ -14,7 +14,7 @@ export function parseOData(url: URL): ODataParams {
   };
 }
 
-export function applyOData<T extends Record<string, unknown>>(
+export function applyOData<T extends object>(
   items: T[],
   params: ODataParams,
 ): { items: T[]; total: number } {
@@ -39,7 +39,7 @@ export function applyOData<T extends Record<string, unknown>>(
   return { items: result, total };
 }
 
-function applyFilter<T extends Record<string, unknown>>(
+function applyFilter<T extends object>(
   items: T[],
   filter: string,
 ): T[] {
@@ -48,15 +48,17 @@ function applyFilter<T extends Record<string, unknown>>(
   return items.filter((item) => conditions.every((c) => matchCondition(item, c.trim())));
 }
 
-function matchCondition<T extends Record<string, unknown>>(
+function matchCondition<T extends object>(
   item: T,
   condition: string,
 ): boolean {
+  const rec = item as Record<string, unknown>;
+
   // contains(field,'value')
   const containsMatch = condition.match(/^contains\((\w+),\s*'([^']*)'\)$/i);
   if (containsMatch) {
     const [, field, value] = containsMatch;
-    const fieldVal = String(item[field] ?? "").toLowerCase();
+    const fieldVal = String(rec[field] ?? "").toLowerCase();
     return fieldVal.includes(value.toLowerCase());
   }
 
@@ -64,7 +66,7 @@ function matchCondition<T extends Record<string, unknown>>(
   const startsMatch = condition.match(/^startswith\((\w+),\s*'([^']*)'\)$/i);
   if (startsMatch) {
     const [, field, value] = startsMatch;
-    const fieldVal = String(item[field] ?? "").toLowerCase();
+    const fieldVal = String(rec[field] ?? "").toLowerCase();
     return fieldVal.startsWith(value.toLowerCase());
   }
 
@@ -72,27 +74,27 @@ function matchCondition<T extends Record<string, unknown>>(
   const eqMatch = condition.match(/^(\w+)\s+eq\s+'([^']*)'$/i);
   if (eqMatch) {
     const [, field, value] = eqMatch;
-    return String(item[field] ?? "") === value;
+    return String(rec[field] ?? "") === value;
   }
 
   // field gt 'value'
   const gtMatch = condition.match(/^(\w+)\s+gt\s+'([^']*)'$/i);
   if (gtMatch) {
     const [, field, value] = gtMatch;
-    return String(item[field] ?? "") > value;
+    return String(rec[field] ?? "") > value;
   }
 
   // field lt 'value'
   const ltMatch = condition.match(/^(\w+)\s+lt\s+'([^']*)'$/i);
   if (ltMatch) {
     const [, field, value] = ltMatch;
-    return String(item[field] ?? "") < value;
+    return String(rec[field] ?? "") < value;
   }
 
   return true;
 }
 
-function applyOrderBy<T extends Record<string, unknown>>(
+function applyOrderBy<T extends object>(
   items: T[],
   orderby: string,
 ): T[] {
@@ -100,10 +102,12 @@ function applyOrderBy<T extends Record<string, unknown>>(
   const sorted = [...items];
 
   sorted.sort((a, b) => {
+    const aRec = a as Record<string, unknown>;
+    const bRec = b as Record<string, unknown>;
     for (const part of parts) {
       const [field, dir] = part.split(/\s+/);
-      const aVal = String(a[field] ?? "");
-      const bVal = String(b[field] ?? "");
+      const aVal = String(aRec[field] ?? "");
+      const bVal = String(bRec[field] ?? "");
       const cmp = aVal.localeCompare(bVal);
       if (cmp !== 0) return dir === "desc" ? -cmp : cmp;
     }
