@@ -1,9 +1,11 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, keepPreviousData } from "@tanstack/react-query";
 import { fetchAutomatedSystems } from "@/api/automated-system";
+import type { AutomatedSystemFilters } from "@/types/api";
 
-export function automatedSystemsQueryOptions() {
+export function automatedSystemsQueryOptions(filters: AutomatedSystemFilters = {}) {
   return queryOptions({
-    queryKey: ["automated-systems"],
-    queryFn: fetchAutomatedSystems,
+    queryKey: ["automated-systems", filters],
+    queryFn: () => fetchAutomatedSystems(filters),
+    placeholderData: keepPreviousData,
   });
 }

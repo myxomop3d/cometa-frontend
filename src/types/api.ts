@@ -33,6 +33,15 @@ export interface AutomatedSystemDto {
   guid: string | null;
 }
 
+// Pagination & generic filters
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+export type Filters<T> = Partial<T & PaginationParams>;
+export type AutomatedSystemFilters = Filters<AutomatedSystemDto>;
+
 // Node hierarchy
 export interface NodeDto {
   id: number;
