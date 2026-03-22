@@ -158,12 +158,17 @@ export function SimpleTable<TData>({
       return;
     }
 
-    // Merge edits into original
-    const merged: TData = { ...original, ...formValues } as TData;
+    // Compute only the changed fields
+    const changedFields: Partial<TData> = {} as Partial<TData>;
+    for (const key of editableKeys) {
+      if (formValues[key] !== original[key]) {
+        (changedFields as Record<string, unknown>)[key] = formValues[key];
+      }
+    }
 
     setIsSaving(true);
     try {
-      await editConfig.onSave(editingRowId, merged);
+      await editConfig.onSave(editingRowId, changedFields);
       discardEditing();
     } catch (err) {
       const message =

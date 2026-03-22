@@ -33,8 +33,8 @@ export interface EditConfig<TData> {
   /** Zod schema to validate editable fields. */
   schema: ZodSchema;
 
-  /** Called on save with the row ID and the full merged row data. Reject to trigger error toast. */
-  onSave: (rowId: string | number, data: TData) => Promise<void>;
+  /** Called on save with the row ID and only the changed fields. Reject to trigger error toast. */
+  onSave: (rowId: string | number, data: Partial<TData>) => Promise<void>;
 
   /** Extracts the unique row identity from the data. */
   rowId: (row: TData) => string | number;

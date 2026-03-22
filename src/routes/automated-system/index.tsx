@@ -120,7 +120,7 @@ function AutomatedSystemPage() {
   const queryClient = useQueryClient();
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: AutomatedSystemDto }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<AutomatedSystemDto> }) =>
       updateAutomatedSystem(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["automated-systems"] });
