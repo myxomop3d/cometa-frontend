@@ -6,7 +6,13 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npx shadcn@latest add input --yes)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "WebSearch",
+      "WebFetch(domain:ui.shadcn.com)",
+      "mcp__plugin_context7_context7__query-docs",
+      "WebFetch(domain:tanstack.com)"
     ]
   }
 }
