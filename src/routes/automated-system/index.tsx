@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,10 +9,13 @@ import {
   type ColumnResizeMode,
   type VisibilityState,
 } from "@tanstack/react-table";
+import { z } from "zod";
 import { automatedSystemsQueryOptions } from "@/api/queries/automated-system";
 import type { AutomatedSystemDto, AutomatedSystemFilters } from "@/types/api";
 import { SimpleTable } from "@/components/SimpleTable";
 import { useFilters } from "@/hooks/useFilters";
+import { updateAutomatedSystem } from "@/api/mutations/automated-system";
+import type { EditConfig } from "@/types/table";
 
 function validateSearch(search: Record<string, unknown>): AutomatedSystemFilters {
   return {
@@ -38,13 +42,22 @@ export const Route = createFileRoute("/automated-system/")({
 const columnHelper = createColumnHelper<AutomatedSystemDto>();
 
 const columns = [
-  columnHelper.accessor("name",    { header: "Name",    size: 200 }),
-  columnHelper.accessor("ci",      { header: "CI",      size: 120 }),
-  columnHelper.accessor("block",   { header: "Block",   size: 150 }),
-  columnHelper.accessor("tribe",   { header: "Tribe",   size: 150 }),
-  columnHelper.accessor("cluster", { header: "Cluster", size: 150 }),
-  columnHelper.accessor("status",  { header: "Status",  size: 100 }),
-  columnHelper.accessor("leader",  { header: "Leader",  size: 180 }),
+  columnHelper.accessor("name",            { header: "Name",              size: 200 }),
+  columnHelper.accessor("objectCode",      { header: "Object Code",      size: 130 }),
+  columnHelper.accessor("fullName",        { header: "Full Name",        size: 250 }),
+  columnHelper.accessor("ci",              { header: "CI",               size: 120 }),
+  columnHelper.accessor("nameHpsm",        { header: "HPSM Name",       size: 150 }),
+  columnHelper.accessor("leader",          { header: "Leader",           size: 180 }),
+  columnHelper.accessor("leaderSapId",     { header: "Leader SAP ID",   size: 140 }),
+  columnHelper.accessor("block",           { header: "Block",            size: 150 }),
+  columnHelper.accessor("tribe",           { header: "Tribe",            size: 150 }),
+  columnHelper.accessor("cluster",         { header: "Cluster",          size: 150 }),
+  columnHelper.accessor("clusterHpsmId",   { header: "Cluster HPSM ID", size: 150 }),
+  columnHelper.accessor("status",          { header: "Status",           size: 200 }),
+  columnHelper.accessor("iftMailSupport",  { header: "IFT Mail",        size: 200 }),
+  columnHelper.accessor("uatMailSupport",  { header: "UAT Mail",        size: 200 }),
+  columnHelper.accessor("prodMailSupport", { header: "Prod Mail",       size: 200 }),
+  columnHelper.accessor("guid",            { header: "GUID",            size: 280 }),
 ];
 
 const columnResizeMode: ColumnResizeMode = "onChange";
@@ -58,6 +71,25 @@ const filterFields = [
   { key: "status",  label: "Status"  },
   { key: "leader",  label: "Leader"  },
 ];
+
+const automatedSystemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  objectCode: z.string().nullable(),
+  fullName: z.string().min(1, "Full name is required"),
+  ci: z.string().min(1, "CI is required"),
+  nameHpsm: z.string().nullable(),
+  leader: z.string().min(1, "Leader is required"),
+  leaderSapId: z.string().nullable(),
+  block: z.string().min(1, "Block is required"),
+  tribe: z.string().min(1, "Tribe is required"),
+  cluster: z.string().min(1, "Cluster is required"),
+  clusterHpsmId: z.string().nullable(),
+  status: z.string().nullable(),
+  iftMailSupport: z.string().nullable(),
+  uatMailSupport: z.string().nullable(),
+  prodMailSupport: z.string().nullable(),
+  guid: z.string().nullable(),
+});
 
 function AutomatedSystemPage() {
   const { filters, setFilters, setPage } = useFilters("/automated-system/");
@@ -85,6 +117,52 @@ function AutomatedSystemPage() {
     onColumnVisibilityChange: setColumnVisibility,
   });
 
+  const queryClient = useQueryClient();
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: AutomatedSystemDto }) =>
+      updateAutomatedSystem(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["automated-systems"] });
+    },
+  });
+
+  const editConfig = useMemo<EditConfig<AutomatedSystemDto>>(
+    () => ({
+      fields: {
+        name:            { type: "text" },
+        objectCode:      { type: "text" },
+        fullName:        { type: "text" },
+        ci:              { type: "text" },
+        nameHpsm:        { type: "text" },
+        leader:          { type: "text" },
+        leaderSapId:     { type: "text" },
+        block:           { type: "text" },
+        tribe:           { type: "text" },
+        cluster:         { type: "text" },
+        clusterHpsmId:   { type: "text" },
+        status: {
+          type: "select",
+          options: [
+            { label: "Находится в эксплуатации", value: "Находится в эксплуатации" },
+            { label: "Выведен из эксплуатации", value: "Выведен из эксплуатации" },
+          ],
+        },
+        iftMailSupport:  { type: "text" },
+        uatMailSupport:  { type: "text" },
+        prodMailSupport: { type: "text" },
+        guid:            { type: "text" },
+      },
+      disabledFields: ["id"],
+      schema: automatedSystemSchema,
+      onSave: async (id, data) => {
+        await updateMutation.mutateAsync({ id: id as number, data });
+      },
+      rowId: (row) => row.id,
+    }),
+    [updateMutation],
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -102,6 +180,7 @@ function AutomatedSystemPage() {
         filterFields={filterFields}
         filters={filters}
         onFilterChange={setFilters}
+        editConfig={editConfig}
       />
     </div>
   );
