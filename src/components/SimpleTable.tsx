@@ -1,3 +1,4 @@
+import { useState, useCallback, useEffect } from "react";
 import {
   flexRender,
   type Table as TanStackTable,
@@ -18,6 +19,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DebouncedInput } from "@/components/DebouncedInput";
+import type { EditConfig, EditFieldConfig } from "@/types/table";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Pencil, Check, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface FilterField {
   key: string;
@@ -36,6 +49,9 @@ interface SimpleTableProps<TData> {
   filterFields?: FilterField[];
   filters?: Record<string, unknown>;
   onFilterChange?: (partial: Record<string, unknown>) => void;
+
+  // Inline editing (optional)
+  editConfig?: EditConfig<TData>;
 }
 
 export function SimpleTable<TData>({
@@ -46,6 +62,7 @@ export function SimpleTable<TData>({
   filterFields,
   filters,
   onFilterChange,
+  editConfig,
 }: SimpleTableProps<TData>) {
   const hasPagination =
     page !== undefined && pageCount !== undefined && onPageChange !== undefined;
@@ -53,6 +70,202 @@ export function SimpleTable<TData>({
     filterFields !== undefined &&
     filters !== undefined &&
     onFilterChange !== undefined;
+
+  // Editing state
+  const [editingRowId, setEditingRowId] = useState<string | number | null>(null);
+  const [formValues, setFormValues] = useState<Record<string, unknown>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const isEditing = editingRowId !== null;
+
+  const validate = useCallback(
+    (values: Record<string, unknown>): Record<string, string> => {
+      if (!editConfig) return {};
+      const result = editConfig.schema.safeParse(values);
+      if (result.success) return {};
+      const errors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const field = issue.path[0];
+        if (field !== undefined && !errors[String(field)]) {
+          errors[String(field)] = issue.message;
+        }
+      }
+      return errors;
+    },
+    [editConfig],
+  );
+
+  const startEditing = useCallback(
+    (row: { original: TData }) => {
+      if (!editConfig) return;
+      const id = editConfig.rowId(row.original);
+      const values: Record<string, unknown> = { ...(row.original as Record<string, unknown>) };
+      setFormValues(values);
+      setValidationErrors({});
+      setEditingRowId(id);
+    },
+    [editConfig],
+  );
+
+  const updateField = useCallback(
+    (field: string, value: unknown) => {
+      setFormValues((prev) => {
+        const next = { ...prev, [field]: value };
+        setValidationErrors(validate(next));
+        return next;
+      });
+    },
+    [validate],
+  );
+
+  const discardEditing = useCallback(() => {
+    setEditingRowId(null);
+    setFormValues({});
+    setValidationErrors({});
+    setIsSaving(false);
+  }, []);
+
+  const saveEditing = useCallback(async () => {
+    if (!editConfig || editingRowId === null) return;
+
+    const errors = validate(formValues);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    // Find the original row data
+    const allRows = table.getRowModel().rows;
+    const editingRow = allRows.find(
+      (r) => editConfig.rowId(r.original) === editingRowId,
+    );
+    if (!editingRow) {
+      discardEditing();
+      return;
+    }
+
+    const original = editingRow.original as Record<string, unknown>;
+
+    // Check if any editable fields changed
+    const editableKeys = Object.keys(editConfig.fields);
+    const hasChanges = editableKeys.some((key) => formValues[key] !== original[key]);
+    if (!hasChanges) {
+      discardEditing();
+      return;
+    }
+
+    // Merge edits into original
+    const merged: TData = { ...original, ...formValues } as TData;
+
+    setIsSaving(true);
+    try {
+      await editConfig.onSave(editingRowId, merged);
+      discardEditing();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to save changes.";
+      toast.error(message);
+      setIsSaving(false);
+    }
+  }, [editConfig, editingRowId, formValues, table, validate, discardEditing]);
+
+  // Escape key discards editing
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isEditing) {
+        discardEditing();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isEditing, discardEditing]);
+
+  // Renders the editable cell for the currently-editing row
+  const renderEditCell = (columnId: string, value: unknown) => {
+    if (!editConfig) return null;
+
+    const disabledFields = (editConfig.disabledFields ?? []) as string[];
+    if (disabledFields.includes(columnId)) {
+      return <span className="text-muted-foreground">{String(value ?? "")}</span>;
+    }
+
+    const fieldConfig = (editConfig.fields as Record<string, EditFieldConfig | undefined>)[columnId];
+    if (!fieldConfig) {
+      return <span className="text-muted-foreground">{String(value ?? "")}</span>;
+    }
+
+    const error = validationErrors[columnId];
+
+    if (fieldConfig.type === "text") {
+      return (
+        <div>
+          <Input
+            type="text"
+            value={value === null || value === undefined ? "" : String(value)}
+            onChange={(e) =>
+              updateField(columnId, e.target.value === "" ? null : e.target.value)
+            }
+            className={error ? "border-destructive" : ""}
+          />
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+      );
+    }
+
+    if (fieldConfig.type === "number") {
+      return (
+        <div>
+          <Input
+            type="number"
+            value={value === null || value === undefined ? "" : String(value)}
+            onChange={(e) =>
+              updateField(columnId, e.target.value === "" ? null : Number(e.target.value))
+            }
+            className={error ? "border-destructive" : ""}
+          />
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+      );
+    }
+
+    if (fieldConfig.type === "select") {
+      return (
+        <div>
+          <Select
+            value={value === null || value === undefined ? "" : String(value)}
+            onValueChange={(v) => updateField(columnId, v)}
+          >
+            <SelectTrigger className={error ? "border-destructive" : ""}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {fieldConfig.options.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+      );
+    }
+
+    if (fieldConfig.type === "checkbox") {
+      return (
+        <div>
+          <Checkbox
+            checked={Boolean(value)}
+            onCheckedChange={(checked) => updateField(columnId, checked)}
+            className={error ? "border-destructive" : ""}
+          />
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <>
@@ -117,24 +330,83 @@ export function SimpleTable<TData>({
                   />
                 </TableHead>
               ))}
+              {editConfig && (
+                <TableHead style={{ width: 100 }} className="text-center">
+                  Actions
+                </TableHead>
+              )}
             </TableRow>
           ))}
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+            table.getRowModel().rows.map((row) => {
+              const rowId = editConfig ? editConfig.rowId(row.original) : null;
+              const isRowEditing = isEditing && rowId === editingRowId;
+              const isDimmed = isEditing && !isRowEditing;
+
+              return (
+                <TableRow
+                  key={row.id}
+                  className={
+                    isRowEditing
+                      ? "ring-2 ring-primary/30 bg-muted/30"
+                      : isDimmed
+                        ? "opacity-50"
+                        : ""
+                  }
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
+                      {isRowEditing
+                        ? renderEditCell(cell.column.id, formValues[cell.column.id])
+                        : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                  {editConfig && (
+                    <TableCell className="text-center">
+                      {isRowEditing ? (
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={Object.keys(validationErrors).length > 0 || isSaving}
+                            onClick={saveEditing}
+                          >
+                            {isSaving ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={isSaving}
+                            onClick={discardEditing}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={isEditing}
+                          onClick={() => startEditing(row)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })
           ) : (
             <TableRow>
               <TableCell
-                colSpan={table.getAllColumns().length}
+                colSpan={table.getAllColumns().length + (editConfig ? 1 : 0)}
                 className="h-24 text-center"
               >
                 No results.
