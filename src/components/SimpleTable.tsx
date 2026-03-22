@@ -52,6 +52,9 @@ interface SimpleTableProps<TData> {
 
   // Inline editing (optional)
   editConfig?: EditConfig<TData>;
+
+  // Column pinning (optional)
+  pinnedLeftColumnId?: string;
 }
 
 export function SimpleTable<TData>({
@@ -63,6 +66,7 @@ export function SimpleTable<TData>({
   filters,
   onFilterChange,
   editConfig,
+  pinnedLeftColumnId,
 }: SimpleTableProps<TData>) {
   const hasPagination =
     page !== undefined && pageCount !== undefined && onPageChange !== undefined;
@@ -305,33 +309,44 @@ export function SimpleTable<TData>({
         </div>
       )}
 
+      <div className="overflow-x-auto">
       <Table style={{ width: table.getCenterTotalSize() }} className="table-fixed">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  className="relative"
-                  style={{ width: header.getSize() }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                  <div
-                    onMouseDown={header.getResizeHandler()}
-                    onTouchStart={header.getResizeHandler()}
-                    onDoubleClick={() => header.column.resetSize()}
-                    className={`absolute top-0 right-0 h-full w-1 cursor-col-resize select-none touch-none ${
-                      header.column.getIsResizing()
-                        ? "bg-primary"
-                        : "bg-transparent hover:bg-border"
+              {headerGroup.headers.map((header) => {
+                const isPinnedLeft = pinnedLeftColumnId === header.column.id;
+                return (
+                  <TableHead
+                    key={header.id}
+                    className={`relative ${
+                      isPinnedLeft
+                        ? "sticky left-0 z-10 bg-background shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]"
+                        : ""
                     }`}
-                  />
-                </TableHead>
-              ))}
+                    style={{ width: header.getSize() }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                    <div
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      onDoubleClick={() => header.column.resetSize()}
+                      className={`absolute top-0 right-0 h-full w-1 cursor-col-resize select-none touch-none ${
+                        header.column.getIsResizing()
+                          ? "bg-primary"
+                          : "bg-transparent hover:bg-border"
+                      }`}
+                    />
+                  </TableHead>
+                );
+              })}
               {editConfig && (
-                <TableHead style={{ width: 100 }} className="text-center">
+                <TableHead
+                  style={{ width: 100 }}
+                  className="text-center sticky right-0 z-10 bg-background shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]"
+                >
                   Actions
                 </TableHead>
               )}
@@ -356,15 +371,32 @@ export function SimpleTable<TData>({
                         : ""
                   }
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
-                      {isRowEditing
-                        ? renderEditCell(cell.column.id, formValues[cell.column.id])
-                        : flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isPinnedLeft = pinnedLeftColumnId === cell.column.id;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        style={{ width: cell.column.getSize() }}
+                        className={
+                          isPinnedLeft
+                            ? `sticky left-0 z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] ${
+                                isRowEditing ? "bg-muted" : "bg-background"
+                              }`
+                            : ""
+                        }
+                      >
+                        {isRowEditing
+                          ? renderEditCell(cell.column.id, formValues[cell.column.id])
+                          : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    );
+                  })}
                   {editConfig && (
-                    <TableCell className="text-center">
+                    <TableCell
+                      className={`text-center sticky right-0 z-10 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)] ${
+                        isRowEditing ? "bg-muted" : "bg-background"
+                      }`}
+                    >
                       {isRowEditing ? (
                         <div className="flex items-center justify-center gap-1">
                           <Button
@@ -415,6 +447,7 @@ export function SimpleTable<TData>({
           )}
         </TableBody>
       </Table>
+      </div>
 
       {hasPagination && (
         <div className="flex items-center gap-2 mt-4">

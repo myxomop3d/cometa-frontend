@@ -181,6 +181,7 @@ function AutomatedSystemPage() {
         filters={filters}
         onFilterChange={setFilters}
         editConfig={editConfig}
+        pinnedLeftColumnId="name"
       />
     </div>
   );
