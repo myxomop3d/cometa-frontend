@@ -76,7 +76,7 @@ const automatedSystemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   objectCode: z.string().nullable(),
   fullName: z.string().min(1, "Full name is required"),
-  ci: z.string().min(1, "CI is required"),
+  ci: z.string("required").min(5, "CI is required"),
   nameHpsm: z.string().nullable(),
   leader: z.string().min(1, "Leader is required"),
   leaderSapId: z.string().nullable(),
