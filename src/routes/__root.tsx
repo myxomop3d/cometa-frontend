@@ -7,6 +7,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Toaster } from "sonner";
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -26,6 +27,7 @@ function RootLayout() {
       </main>
       <TanStackRouterDevtools position="bottom-right" />
       <ReactQueryDevtools buttonPosition="bottom-left" />
+      <Toaster />
     </SidebarProvider>
   );
 }
