@@ -17,6 +17,13 @@ import { useFilters } from "@/hooks/useFilters";
 import { updateAutomatedSystem } from "@/api/mutations/automated-system";
 import type { EditConfig } from "@/types/table";
 
+/**
+ * Validates and normalizes raw URL search parameters into a typed `AutomatedSystemFilters` object.
+ * Each parameter is checked for its expected type; invalid or missing values fall back to defaults
+ * (page=1, pageSize=20, undefined for optional string filters).
+ *
+ * @see https://tanstack.com/router/latest/docs/framework/react/guide/search-params#validating-search-params
+ */
 function validateSearch(search: Record<string, unknown>): AutomatedSystemFilters {
   return {
     page:     typeof search.page     === "number" ? search.page     : 1,
@@ -31,6 +38,16 @@ function validateSearch(search: Record<string, unknown>): AutomatedSystemFilters
   };
 }
 
+/**
+ * TanStack Router route definition for the "/automated-system/" path.
+ * - `validateSearch` — parses and validates URL search params on every navigation.
+ * - `loaderDeps` — declares which search params the loader depends on so it re-runs when they change.
+ * - `loader` — prefetches automated systems data via the query client before the component renders,
+ *   enabling instant page loads with `useSuspenseQuery`.
+ *
+ * @see https://tanstack.com/router/latest/docs/framework/react/guide/data-loading
+ * @see https://tanstack.com/query/latest/docs/framework/react/guides/suspense
+ */
 export const Route = createFileRoute("/automated-system/")({
   validateSearch,
   loaderDeps: ({ search }) => search,
@@ -39,8 +56,21 @@ export const Route = createFileRoute("/automated-system/")({
   component: AutomatedSystemPage,
 });
 
+/**
+ * Typed column helper scoped to `AutomatedSystemDto`.
+ * Provides type-safe `accessor()` calls that autocomplete field names and infer cell value types.
+ *
+ * @see https://tanstack.com/table/latest/docs/guide/column-defs#creating-accessor-columns
+ */
 const columnHelper = createColumnHelper<AutomatedSystemDto>();
 
+/**
+ * Column definitions for the automated systems table.
+ * Each entry maps a DTO field to a display header and an initial column width (in pixels).
+ * The order here determines the default column order in the rendered table.
+ *
+ * @see https://tanstack.com/table/latest/docs/guide/column-defs
+ */
 const columns = [
   columnHelper.accessor("name",            { header: "Name",              size: 200 }),
   columnHelper.accessor("objectCode",      { header: "Object Code",      size: 130 }),
@@ -60,8 +90,19 @@ const columns = [
   columnHelper.accessor("guid",            { header: "GUID",            size: 280 }),
 ];
 
+/**
+ * Column resize strategy. "onChange" updates column widths continuously as the user drags,
+ * providing real-time visual feedback (as opposed to "onEnd" which only updates on mouse release).
+ *
+ * @see https://tanstack.com/table/latest/docs/guide/column-sizing#column-resize-mode
+ */
 const columnResizeMode: ColumnResizeMode = "onChange";
 
+/**
+ * Defines which fields are shown in the table's filter panel.
+ * `key` must match an `AutomatedSystemFilters` property; `label` is the user-facing text.
+ * These filters are synced to URL search params via the `useFilters` hook.
+ */
 const filterFields = [
   { key: "name",    label: "Name"    },
   { key: "ci",      label: "CI"      },
@@ -72,6 +113,14 @@ const filterFields = [
   { key: "leader",  label: "Leader"  },
 ];
 
+/**
+ * Zod validation schema for inline-editing an automated system row.
+ * Required fields use `.min()` to enforce non-empty values; optional fields use `.nullable()`.
+ * This schema is passed to `editConfig` and validated before the save mutation fires.
+ *
+ * @see https://zod.dev/?id=strings
+ * @see docs/superpowers/specs/2026-03-22-inline-table-editing-design.md
+ */
 const automatedSystemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   objectCode: z.string().nullable(),
@@ -91,16 +140,39 @@ const automatedSystemSchema = z.object({
   guid: z.string().nullable(),
 });
 
+/**
+ * Main page component for the Automated Systems list view.
+ * Renders a filterable, paginated, inline-editable data table with server-side operations.
+ *
+ * @see docs/superpowers/specs/2026-03-22-inline-table-editing-design.md
+ * @see docs/superpowers/specs/2026-03-22-sticky-pinned-columns-design.md
+ */
 function AutomatedSystemPage() {
+  // URL-synced filter state: reads current filters from search params, provides setters
+  // that navigate (updating the URL) so filters are shareable and bookmarkable.
   const { filters, setFilters, setPage } = useFilters("/automated-system/");
+
+  // Suspense-enabled query — data is guaranteed to be available on first render
+  // because the route loader already prefetched it via `ensureQueryData`.
+  // @see https://tanstack.com/query/latest/docs/framework/react/guides/suspense
   const { data } = useSuspenseQuery(automatedSystemsQueryOptions(filters));
 
+  // Derive pagination values from current filters and the total row count returned by the API.
   const page      = filters.page     ?? 1;
   const pageSize  = filters.pageSize ?? 20;
   const pageCount = Math.ceil(data.count / pageSize);
 
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  // Column visibility state — GUID column is hidden by default since it's rarely needed.
+  // Users can toggle it via the column visibility dropdown.
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({guid: false});
 
+  /**
+   * TanStack Table instance configured for server-side operations.
+   * All filtering, pagination, and sorting are handled by the backend API,
+   * so `manual*` flags are set to `true` to prevent client-side processing.
+   *
+   * @see https://tanstack.com/table/latest/docs/guide/tables
+   */
   const table = useReactTable({
     data: data.data,
     columns,
@@ -117,8 +189,16 @@ function AutomatedSystemPage() {
     onColumnVisibilityChange: setColumnVisibility,
   });
 
+  // Query client instance for cache invalidation after mutations.
   const queryClient = useQueryClient();
 
+  /**
+   * Mutation for saving inline edits. Sends a PATCH request with only the changed fields
+   * (partial update), then invalidates the automated-systems query cache to refetch fresh data.
+   *
+   * @see docs/superpowers/specs/2026-03-22-patch-partial-update-design.md
+   * @see https://tanstack.com/query/latest/docs/framework/react/guides/mutations
+   */
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AutomatedSystemDto> }) =>
       updateAutomatedSystem(id, data),
@@ -127,6 +207,16 @@ function AutomatedSystemPage() {
     },
   });
 
+  /**
+   * Inline edit configuration for the SimpleTable component.
+   * - `fields` — maps each editable column to an input type ("text" or "select").
+   * - `disabledFields` — prevents editing of read-only fields like "id".
+   * - `schema` — Zod schema for form validation before save.
+   * - `onSave` — callback that fires the PATCH mutation with changed fields.
+   * - `rowId` — extracts the unique identifier used to target the correct row for updates.
+   *
+   * @see docs/superpowers/specs/2026-03-22-inline-table-editing-design.md
+   */
   const editConfig = useMemo<EditConfig<AutomatedSystemDto>>(
     () => ({
       fields: {
@@ -165,6 +255,7 @@ function AutomatedSystemPage() {
 
   return (
     <div>
+      {/* Page header with title and total system count */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Automated Systems</h1>
@@ -172,6 +263,8 @@ function AutomatedSystemPage() {
         </div>
       </div>
 
+      {/* Data table with server-side filtering, pagination, inline editing, and sticky pinned "name" column.
+          @see docs/superpowers/specs/2026-03-22-sticky-pinned-columns-design.md */}
       <SimpleTable
         table={table}
         page={page}
