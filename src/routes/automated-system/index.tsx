@@ -10,11 +10,10 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { z } from "zod";
-import { automatedSystemsQueryOptions } from "@/api/queries/automated-system";
+import { automatedSystemsQueryOptions, patchAutomatedSystem } from "@/api/automated-system";
 import type { AutomatedSystemDto, AutomatedSystemFilters } from "@/types/api";
 import { SimpleTable } from "@/components/SimpleTable";
 import { useFilters } from "@/hooks/useFilters";
-import { updateAutomatedSystem } from "@/api/mutations/automated-system";
 import type { EditConfig } from "@/types/table";
 
 /**
@@ -201,7 +200,7 @@ function AutomatedSystemPage() {
    */
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AutomatedSystemDto> }) =>
-      updateAutomatedSystem(id, data),
+      patchAutomatedSystem(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["automated-systems"] });
     },
