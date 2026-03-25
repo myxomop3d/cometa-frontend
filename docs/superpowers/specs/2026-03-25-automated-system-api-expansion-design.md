@@ -50,25 +50,36 @@ With a single `src/api/automated-system.ts` containing all functions:
 - `fetchAutomatedSystemGraph(id, fields?)` — GET `/graph/{id}` with optional `$fields`
 
 **Mutation functions:**
-- `createAutomatedSystem(data)` — POST
-- `updateAutomatedSystem(id, data)` — PUT (full replace)
-- `patchAutomatedSystem(id, data)` — PATCH (partial update, existing)
-- `deleteAutomatedSystem(id)` — DELETE
+- `createAutomatedSystem(data: Omit<AutomatedSystemDto, 'id'>)` — POST
+- `updateAutomatedSystem(id: number, data: AutomatedSystemDto)` — PUT (full replace)
+- `patchAutomatedSystem(id: number, data: Partial<AutomatedSystemDto>)` — PATCH (partial update)
+- `deleteAutomatedSystem(id: number)` — DELETE
 
 **Query options:**
-- `automatedSystemsQueryOptions(filters)` — existing, for the list
+- `automatedSystemsQueryOptions(filters)` — existing, for the list (uses `keepPreviousData`)
 - `automatedSystemQueryOptions(id)` — for single by ID
-- `automatedSystemsGraphQueryOptions(filters, fields?)` — for graph list
+- `automatedSystemsGraphQueryOptions(filters, fields?)` — for graph list (uses `keepPreviousData`)
 - `automatedSystemGraphQueryOptions(id, fields?)` — for graph single
+
+**Query keys** (all share `"automated-systems"` prefix for bulk invalidation):
+- `["automated-systems", "list", filters]` — list
+- `["automated-systems", "detail", id]` — single by ID
+- `["automated-systems", "graph-list", filters, fields]` — graph list
+- `["automated-systems", "graph-detail", id, fields]` — graph single
 
 ### Delete old files
 
 - `src/api/queries/automated-system.ts`
 - `src/api/mutations/automated-system.ts`
 
+### Migration: rename existing PATCH function
+
+The existing `updateAutomatedSystem` (PATCH) in `src/api/mutations/automated-system.ts` is renamed to `patchAutomatedSystem`. The name `updateAutomatedSystem` is reassigned to the new PUT full-replace endpoint. All call sites must be updated:
+- `src/routes/automated-system/index.tsx:204` — change `updateAutomatedSystem` → `patchAutomatedSystem`
+
 ### Update imports
 
-- `src/routes/automated-system/index.tsx` — update imports to point to `@/api/automated-system`
+- `src/routes/automated-system/index.tsx` — update imports to point to `@/api/automated-system` (both `automatedSystemsQueryOptions` and `patchAutomatedSystem`), and update `invalidateQueries` key from `["automated-systems"]` to `{ queryKey: ["automated-systems"] }` (prefix match still works)
 
 ## Types
 
