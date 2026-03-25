@@ -54,8 +54,8 @@ function matchCondition<T extends object>(
 ): boolean {
   const rec = item as Record<string, unknown>;
 
-  // contains(field,'value')
-  const containsMatch = condition.match(/^contains\((\w+),\s*'([^']*)'\)$/i);
+  // contains(field,'value') or contains_ignoring_case(field,'value')
+  const containsMatch = condition.match(/^contains(?:_ignoring_case)?\((\w+),\s*'([^']*)'\)$/i);
   if (containsMatch) {
     const [, field, value] = containsMatch;
     const fieldVal = String(rec[field] ?? "").toLowerCase();
