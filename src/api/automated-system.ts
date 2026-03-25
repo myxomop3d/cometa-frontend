@@ -23,7 +23,8 @@ function buildListParams(filters: AutomatedSystemFilters): URLSearchParams {
 
   const filterClauses = STRING_FILTER_FIELDS.filter(
     (f) => fieldFilters[f] !== undefined && fieldFilters[f] !== "",
-  ).map((f) => `contains(${f},'${fieldFilters[f]}')`);
+  ).map((f) => `contains(${f},'${String(fieldFilters[f]).replace(/'/g, "''")}')`);
+
 
   if (filterClauses.length > 0) {
     params.set("$filter", filterClauses.join(" and "));
