@@ -6,6 +6,12 @@ Create a new `/box` page for `BoxDto` entities, following the existing automated
 
 The key architectural change is moving from SimpleTable's built-in text-only filters to **composable filter components** — each filter type is an independent component that the page composes into a filter bar.
 
+## Design Decisions
+
+- **`BoxFilters` is a standalone interface**, not `Filters<BoxDto>`. Unlike `AutomatedSystemFilters` where filter params mirror DTO fields 1:1, Box filters use transformed names (`numMin`/`numMax`, `dateStrFrom`/`dateStrTo`, `itemId`, `thingIds`) because range and relation filters don't map directly to DTO field types. This is intentional.
+- **SimpleTable filter refactor is atomic** — both the Box page and automated-system page are updated in the same change. The old filter props are removed, not deprecated.
+- **`FilterField` type** is extracted from SimpleTable and exported from a shared location (e.g., `src/types/table.ts`) since `RelationFilter` also uses it for modal filter definitions.
+
 ## BoxDto Fields & Filter Mapping
 
 | Field | Type | Filter Component | URL Params | OData Clause |
@@ -18,7 +24,7 @@ The key architectural change is moving from SimpleTable's built-in text-only fil
 | `things` | `ThingDto[] \| null` | `RelationFilter` (multi) | `thingIds` | `things/any(t: t/id eq 1 or t/id eq 3)` |
 | `dateStr` | `string` | `DateRangeFilter` | `dateStrFrom`, `dateStrTo` | `dateStr ge '2025-01-01' and dateStr le '2025-12-31'` |
 | `checkbox` | `boolean` | `CheckboxFilter` | `checkbox` | `checkbox eq true` |
-| `tags` | `string[]` | `TextFilter` | `tags` | `contains_ignoring_case(tags,'v')` |
+| `tags` | `string[]` | `TextFilter` | `tags` | `tags/any(t: contains_ignoring_case(t,'v'))` |
 
 ## Architecture: Composable Filter Components
 
@@ -32,13 +38,15 @@ Remove the old `filterFields`, `filters`, and `onFilterChange` props. Replace wi
 
 ### Filter Component Contract
 
-All filter components follow a common pattern:
+Most filter components follow a common pattern:
 
 ```ts
 // Each component receives value + onChange, plus type-specific config props
 value: T | undefined;
 onChange: (value: T | undefined) => void;
 ```
+
+**Exceptions:** Range filters (`NumberRangeFilter`, `DateRangeFilter`) use split props (`valueMin`/`valueMax`/`onChangeMin`/`onChangeMax`) since they map to separate URL params.
 
 ### FilterBar
 
@@ -56,7 +64,7 @@ Two number inputs side-by-side within one grid cell. Props: `valueMin`, `valueMa
 
 ### CheckboxFilter
 
-Labeled checkbox. Props: `label`, `value` (boolean), `onChange`.
+Three-state filter using a shadcn Select with "All" / "Yes" / "No" options. Props: `label`, `value` (boolean | undefined), `onChange`. When `undefined`, no filter is applied (shows all rows). Default state is "All".
 
 ### SelectFilter
 
@@ -73,6 +81,8 @@ Requires new shadcn components: `calendar`, `popover`.
 The most complex filter. Handles three modes for both single and multi-select.
 
 **Props:**
+
+Note: The `multi` prop creates a type-level trade-off — `value` is `T | T[] | undefined` regardless of `multi`. This is a known simplification; runtime checks enforce correctness. If this proves problematic, split into `SingleRelationFilter` / `MultiRelationFilter` during implementation.
 
 ```ts
 interface RelationFilterProps<T> {
@@ -153,19 +163,20 @@ Also create `src/api/item.ts` and `src/api/thing.ts` with fetch + query options 
 
 ## OData Parser Extensions (`src/mocks/lib/odata.ts`)
 
-The mock OData parser needs new clause types:
+The mock OData parser needs new clause types and implementation guidance:
 
-- `field eq 'value'` — equality (already partially supported)
-- `field ge 'value'` / `field le 'value'` — comparison for number and date ranges
-- `field eq true` / `field eq false` — boolean equality
-- `item/id eq 5` — nested object path access
-- `things/any(t: t/id eq 1 or t/id eq 3)` — collection `any()` queries
+- **`ge` / `le` operators** — for number and date range comparisons. The current parser only supports `gt`/`lt`. Must handle both quoted strings (`dateStr ge '2025-01-01'`) and unquoted numbers (`num ge 100`).
+- **Boolean `eq`** — `checkbox eq true` / `checkbox eq false`. Currently `eq` regex expects single-quoted strings; extend to handle unquoted `true`/`false`.
+- **Unquoted numeric `eq`** — `item/id eq 5`. Extend `eq` to handle unquoted numbers for relation ID filtering.
+- **Nested object paths** — `item/id eq 5`. The current regex uses `(\w+)` for field names which won't match `/`. Implementation: split field on `/` and traverse the object (e.g., `rec["item"]["id"]`). Use `[\w/]+` or similar in the regex.
+- **Collection `any()` lambda** — `things/any(t: t/id eq 1 or t/id eq 3)`. Implementation: dedicated regex to extract collection name, alias, and inner conditions. Parse inner `or`-joined conditions, iterate the array, return true if any element matches at least one condition. Also needed for `tags/any(t: contains_ignoring_case(t,'v'))`.
+- **Inner `or` parsing** — only needed inside `any()` lambdas. Split inner expression on ` or `, evaluate each sub-condition against the array element.
 
 ## Route & Page Component
 
 **Route:** `src/routes/box/index.tsx`
 
-- `validateSearch` parses all BoxFilters fields from URL
+- `validateSearch` parses all BoxFilters fields from URL. For `thingIds` (array param), serialize as comma-separated string in URL (`?thingIds=1,3`) and parse in `validateSearch` by splitting on `,` and mapping to numbers.
 - `loaderDeps` + `loader` prefetch via `boxesQueryOptions`
 - Page composes filter bar with all filter components
 - Inline editing with Zod validation schema
