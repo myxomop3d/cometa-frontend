@@ -91,4 +91,5 @@ All functions follow the existing pattern:
 - Use `fetch()` with the proxy prefix `/api/v1/automated-system`
 - Throw on non-ok responses with descriptive error messages
 - Return typed `ApiResponse<T>` from `.json()`
-- OData query params: `$skip`, `$top`, `$filter`, `$orderby`, `$fields`
+- OData query params: `$skip`, `$top`, `$filter`, `$orderby`
+- `/graph` endpoints additionally support `$fields` (not a standard OData param — custom to this API for selecting nested entities)
