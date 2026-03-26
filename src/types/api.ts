@@ -12,6 +12,29 @@ export interface AppMessage {
   description: string | null;
 }
 
+export interface BoxDto {
+  id: number;
+  name: string;
+  objectCode: string | null;
+  shape: "O" | "X";
+  num: number;
+  item: ItemDto | null;
+  things: ThingDto[] | null;
+  dateStr: string;
+  checkbox: boolean;
+  tags: string[];
+}
+
+export interface ItemDto {
+  id: number;
+  name: string;
+}
+
+export interface ThingDto {
+  id: number;
+  name: string;
+}
+
 // AutomatedSystem
 export interface AutomatedSystemDto {
   id: number;
