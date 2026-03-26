@@ -67,7 +67,7 @@ export type AutomatedSystemFilters = Filters<AutomatedSystemDto>;
 
 // Box filters — standalone interface because filter params (ranges, relation IDs)
 // don't map 1:1 to BoxDto fields, unlike AutomatedSystemFilters.
-export interface BoxFilters extends PaginationParams {
+export interface BoxFilters extends Partial<PaginationParams> {
   // String contains
   name?: string;
   objectCode?: string;

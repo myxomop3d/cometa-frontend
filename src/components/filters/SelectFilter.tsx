@@ -25,7 +25,7 @@ export function SelectFilter({
     <div className={className}>
       <Select
         value={value ?? "__all__"}
-        onValueChange={(v) => onChange(v === "__all__" ? undefined : v)}
+        onValueChange={(v) => onChange(!v || v === "__all__" ? undefined : v)}
       >
         <SelectTrigger>
           <SelectValue placeholder={placeholder} />

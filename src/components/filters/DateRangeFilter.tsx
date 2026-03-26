@@ -33,14 +33,16 @@ export function DateRangeFilter({
   return (
     <div className={`flex gap-1 ${className ?? ""}`}>
       <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-start text-left font-normal"
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateFrom ? format(dateFrom, "yyyy-MM-dd") : placeholderFrom}
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+            />
+          }
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {dateFrom ? format(dateFrom, "yyyy-MM-dd") : placeholderFrom}
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
@@ -53,14 +55,16 @@ export function DateRangeFilter({
         </PopoverContent>
       </Popover>
       <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-start text-left font-normal"
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateTo ? format(dateTo, "yyyy-MM-dd") : placeholderTo}
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+            />
+          }
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {dateTo ? format(dateTo, "yyyy-MM-dd") : placeholderTo}
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
