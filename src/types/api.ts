@@ -65,6 +65,28 @@ export interface PaginationParams {
 export type Filters<T> = Partial<T & PaginationParams>;
 export type AutomatedSystemFilters = Filters<AutomatedSystemDto>;
 
+// Box filters — standalone interface because filter params (ranges, relation IDs)
+// don't map 1:1 to BoxDto fields, unlike AutomatedSystemFilters.
+export interface BoxFilters extends PaginationParams {
+  // String contains
+  name?: string;
+  objectCode?: string;
+  tags?: string;
+  // Literal/enum
+  shape?: "O" | "X";
+  // Number range
+  numMin?: number;
+  numMax?: number;
+  // Boolean
+  checkbox?: boolean;
+  // Date range
+  dateStrFrom?: string;
+  dateStrTo?: string;
+  // Relations (store IDs)
+  itemId?: number;
+  thingIds?: number[];
+}
+
 // Node hierarchy
 export interface NodeDto {
   id: number;
