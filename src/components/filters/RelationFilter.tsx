@@ -114,6 +114,7 @@ export function RelationFilter<T>({
           selectedItems={selectedItems}
           onChange={onChange}
           displayText={showDropdown ? undefined : displayText}
+          hasSelection={selectedItems.length > 0}
           tableColumns={tableColumns}
           modalFilterFields={modalFilterFields}
           modalQueryFn={modalQueryFn}
@@ -261,6 +262,7 @@ interface ModalPartProps<T> {
   selectedItems: T[];
   onChange: (value: T | T[] | undefined) => void;
   displayText: string | undefined;
+  hasSelection: boolean;
   tableColumns?: ColumnDef<T, unknown>[];
   modalFilterFields?: FilterField[];
   modalQueryFn?: (filters: Record<string, unknown>) => Promise<ApiResponse<T[]>>;
@@ -276,6 +278,7 @@ function ModalPart<T>({
   selectedItems,
   onChange,
   displayText,
+  hasSelection,
   tableColumns,
   modalFilterFields,
   modalQueryFn,
@@ -359,13 +362,28 @@ function ModalPart<T>({
   return (
     <>
       {displayText !== undefined ? (
-        <Button
-          variant="outline"
-          className="w-full justify-start text-left font-normal"
-          onClick={handleOpen}
-        >
-          {displayText}
-        </Button>
+        <ButtonGroup className="w-full">
+          <Button
+            variant="outline"
+            className="flex-1 justify-start text-left font-normal min-w-0"
+            onClick={handleOpen}
+          >
+            {displayText}
+          </Button>
+          {hasSelection && (
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label="Clear selection"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange(undefined);
+              }}
+            >
+              <X />
+            </Button>
+          )}
+        </ButtonGroup>
       ) : (
         <Button variant="outline" size="icon" onClick={handleOpen} title="Browse...">
           <Search className="h-4 w-4" />
