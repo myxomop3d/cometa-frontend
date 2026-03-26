@@ -15,6 +15,8 @@ import type { AutomatedSystemDto, AutomatedSystemFilters } from "@/types/api";
 import { SimpleTable } from "@/components/SimpleTable";
 import { useFilters } from "@/hooks/useFilters";
 import type { EditConfig } from "@/types/table";
+import { FilterBar } from "@/components/filters/FilterBar";
+import { TextFilter } from "@/components/filters/TextFilter";
 
 /**
  * Validates and normalizes raw URL search parameters into a typed `AutomatedSystemFilters` object.
@@ -269,9 +271,18 @@ function AutomatedSystemPage() {
         page={page}
         pageCount={pageCount}
         onPageChange={setPage}
-        filterFields={filterFields}
-        filters={filters}
-        onFilterChange={setFilters}
+        filterSlot={
+          <FilterBar>
+            {filterFields.map(({ key, label }) => (
+              <TextFilter
+                key={key}
+                placeholder={label}
+                value={filters[key as keyof typeof filters] as string | undefined}
+                onChange={(value) => setFilters({ [key]: value })}
+              />
+            ))}
+          </FilterBar>
+        }
         editConfig={editConfig}
         pinnedLeftColumnId="name"
       />
