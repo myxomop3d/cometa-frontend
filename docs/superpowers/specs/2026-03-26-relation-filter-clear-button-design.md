@@ -4,32 +4,15 @@
 
 Add a clear button to `RelationFilter` so users can reset their selection. The clear button appears only when items are selected. It is grouped with the dropdown trigger using a new `ButtonGroup` component, while the modal browse button remains separate.
 
-## New Component: ButtonGroup
+## ButtonGroup Component
 
-**File:** `src/components/ui/button-group.tsx`
+Install shadcn's official button-group component:
 
-A wrapper that emits `data-slot="button-group"` and handles first/last child rounding so grouped buttons visually merge into a single unit.
-
-```tsx
-function ButtonGroup({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="button-group"
-      className={cn(
-        "inline-flex items-center -space-x-px",
-        "[&>*:first-child]:rounded-r-none",
-        "[&>*:last-child]:rounded-l-none",
-        "[&>*:not(:first-child):not(:last-child)]:rounded-none",
-        "[&>*]:focus:z-10",
-        className
-      )}
-      {...props}
-    />
-  );
-}
+```bash
+npx shadcn@latest add button-group
 ```
 
-The existing button CVA config already has `in-data-[slot=button-group]:rounded-lg` on smaller sizes (normalizes their tighter radii). The `ButtonGroup` component itself handles the actual grouping: removing inner border-radii via first/last child selectors, `-space-x-px` for border overlap, and `focus:z-10` so focus rings render above neighbors.
+This adds `src/components/ui/button-group.tsx` with `data-slot="button-group"`, first/last child rounding, border overlap, and focus z-index — all matching the existing `in-data-[slot=button-group]` styles in the button CVA config.
 
 ## Changes to RelationFilter
 
@@ -70,5 +53,5 @@ No new props. `onChange(undefined)` already represents "clear" for both single (
 
 ## Affected Files
 
-1. `src/components/ui/button-group.tsx` — new file
+1. `src/components/ui/button-group.tsx` — added via `npx shadcn@latest add button-group`
 2. `src/components/filters/RelationFilter.tsx` — add clear button + ButtonGroup usage
