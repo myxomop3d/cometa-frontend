@@ -8,7 +8,7 @@ import {
   flexRender,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { DebouncedInput } from "@/components/DebouncedInput";
 import type { ApiResponse } from "@/types/api";
 import type { FilterField } from "@/types/table";
@@ -84,8 +85,9 @@ export function RelationFilter<T>({
       : getLabel(selectedItems[0]);
 
   return (
-    <div className={`flex gap-1 ${className ?? ""}`}>
+    <div className={`flex gap-1 min-w-0 ${className ?? ""}`}>
       {showDropdown && (
+        <div className="flex-1 min-w-0">
         <DropdownPart
           queryFn={queryFn}
           queryKey={queryKey}
@@ -96,7 +98,9 @@ export function RelationFilter<T>({
           selectedItems={selectedItems}
           onChange={onChange}
           displayText={displayText}
+          hasSelection={selectedItems.length > 0}
         />
+        </div>
       )}
       {showModal && (
         <ModalPart
@@ -131,6 +135,7 @@ interface DropdownPartProps<T> {
   selectedItems: T[];
   onChange: (value: T | T[] | undefined) => void;
   displayText: string;
+  hasSelection: boolean;
 }
 
 function DropdownPart<T>({
@@ -143,21 +148,19 @@ function DropdownPart<T>({
   selectedItems,
   onChange,
   displayText,
+  hasSelection,
 }: DropdownPartProps<T>) {
   const [search, setSearch] = useState("");
   const { data } = useQuery({
     queryKey,
-    queryFn: async () => {
-      const resp = await queryFn();
-      return resp.data;
-    },
+    queryFn: () => queryFn(),
   });
 
   const filtered = useMemo(() => {
-    if (!data) return [];
-    if (!search) return data;
+    const items = data?.data ?? [];
+    if (!search) return items;
     const lower = search.toLowerCase();
-    return data.filter((item) => getLabel(item).toLowerCase().includes(lower));
+    return items.filter((item) => getLabel(item).toLowerCase().includes(lower));
   }, [data, search, getLabel]);
 
   const toggleItem = (item: T) => {
@@ -179,54 +182,69 @@ function DropdownPart<T>({
   };
 
   return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button
-            variant="outline"
-            className="w-full justify-start text-left font-normal"
-          />
-        }
-      >
-        {displayText}
-      </PopoverTrigger>
-      <PopoverContent className="w-72 p-0" align="start">
-        <div className="p-2 border-b">
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border-0 p-0 h-8 focus-visible:ring-0"
+    <ButtonGroup className="w-full">
+      <Popover>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              className="flex-1 justify-start text-left font-normal min-w-0"
             />
-          </div>
-        </div>
-        <div className="max-h-60 overflow-y-auto">
-          {filtered.map((item) => {
-            const id = getId(item);
-            const isSelected = selectedIds.has(id);
-            return (
-              <div
-                key={id}
-                className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent ${
-                  isSelected ? "bg-accent/50" : ""
-                }`}
-                onClick={() => toggleItem(item)}
-              >
-                {multi && <Checkbox checked={isSelected} />}
-                <span className="text-sm">{getLabel(item)}</span>
-              </div>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div className="px-3 py-4 text-sm text-muted-foreground text-center">
-              No results
+          }
+        >
+          {displayText}
+        </PopoverTrigger>
+        <PopoverContent className="w-72 p-0" align="start">
+          <div className="p-2 border-b">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border-0 p-0 h-8 focus-visible:ring-0"
+              />
             </div>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+          </div>
+          <div className="max-h-60 overflow-y-auto">
+            {filtered.map((item) => {
+              const id = getId(item);
+              const isSelected = selectedIds.has(id);
+              return (
+                <div
+                  key={id}
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent ${
+                    isSelected ? "bg-accent/50" : ""
+                  }`}
+                  onClick={() => toggleItem(item)}
+                >
+                  {multi && <Checkbox checked={isSelected} />}
+                  <span className="text-sm">{getLabel(item)}</span>
+                </div>
+              );
+            })}
+            {filtered.length === 0 && (
+              <div className="px-3 py-4 text-sm text-muted-foreground text-center">
+                No results
+              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {hasSelection && (
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label="Clear selection"
+          onClick={(e) => {
+            e.stopPropagation();
+            onChange(undefined);
+          }}
+        >
+          <X />
+        </Button>
+      )}
+    </ButtonGroup>
   );
 }
 
@@ -278,16 +296,13 @@ function ModalPart<T>({
 
   const clientQuery = useQuery({
     queryKey,
-    queryFn: async () => {
-      const resp = await queryFn();
-      return resp.data;
-    },
+    queryFn: () => queryFn(),
     enabled: open && !useServerFiltering,
   });
 
   const modalData = useServerFiltering
     ? (serverQuery.data?.data ?? [])
-    : (clientQuery.data ?? []);
+    : (clientQuery.data?.data ?? []);
 
   const defaultColumns: ColumnDef<T, unknown>[] = useMemo(
     () => [
