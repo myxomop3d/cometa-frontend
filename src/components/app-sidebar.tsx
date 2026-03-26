@@ -39,6 +39,7 @@ const SidebarMenuButtonLink = createLink(
 
 const navItems = [
   { to: "/automated-system", label: "Automated Systems" },
+  { to: "/box", label: "Boxes" },
   { to: "/flow-graph", label: "Flow Graph" },
   { to: "/components", label: "Components" },
 ] as const;
