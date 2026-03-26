@@ -8,15 +8,28 @@ Add a clear button to `RelationFilter` so users can reset their selection. The c
 
 **File:** `src/components/ui/button-group.tsx`
 
-A minimal wrapper that emits `data-slot="button-group"` so child `Button` components pick up the existing `in-data-[slot=button-group]:rounded-lg` styles (border-radius adjustments, negative margin overlap).
+A wrapper that emits `data-slot="button-group"` and handles first/last child rounding so grouped buttons visually merge into a single unit.
 
 ```tsx
-<div data-slot="button-group" className="flex items-center -space-x-px ...">
-  {children}
-</div>
+function ButtonGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="button-group"
+      className={cn(
+        "inline-flex items-center -space-x-px",
+        "[&>*:first-child]:rounded-r-none",
+        "[&>*:last-child]:rounded-l-none",
+        "[&>*:not(:first-child):not(:last-child)]:rounded-none",
+        "[&>*]:focus:z-10",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 ```
 
-No new button variants needed — the existing CVA config already handles button-group context.
+The existing button CVA config already has `in-data-[slot=button-group]:rounded-lg` on smaller sizes (normalizes their tighter radii). The `ButtonGroup` component itself handles the actual grouping: removing inner border-radii via first/last child selectors, `-space-x-px` for border overlap, and `focus:z-10` so focus rings render above neighbors.
 
 ## Changes to RelationFilter
 
@@ -28,13 +41,14 @@ Wrap the `PopoverTrigger` button and a conditional clear button inside `<ButtonG
 [ Dropdown trigger | Clear X ]
 ```
 
-- Clear button: `<Button variant="outline" size="icon-sm">` with `X` icon from lucide-react
+- Clear button: `<Button variant="outline" size="icon-sm" aria-label="Clear selection">` with `X` icon from lucide-react
 - Rendered only when `selectedItems.length > 0`
 - On click: calls `onChange(undefined)` and `e.stopPropagation()` to prevent popover toggle
+- The PopoverTrigger button changes from `w-full` to `flex-1 min-w-0` so the clear button gets space within the flex group
 
 ### ModalPart (mode="modal")
 
-When `displayText` is rendered as a full button (mode="modal", no dropdown), wrap it with the clear button in `<ButtonGroup>` the same way. The browse icon button stays outside the group.
+When `displayText` is rendered as a full button (`displayText !== undefined` branch only), wrap it with the clear button in `<ButtonGroup>` the same way. The icon-only branch (`displayText === undefined`, used in `mode="both"`) remains unchanged — it renders just the browse icon button with no grouping.
 
 ### Main Layout
 
@@ -44,9 +58,15 @@ No changes to the outer `<div className="flex gap-1">`. The ButtonGroup is neste
 [ Dropdown trigger | Clear X ]  [ Browse icon ]
 ```
 
+For `mode="modal"`:
+
+```
+[ Display button | Clear X ]
+```
+
 ### Props
 
-No new props. `onChange(undefined)` already represents "clear" for both single (`T | undefined`) and multi (`T[] | undefined`) modes.
+No new props. `onChange(undefined)` already represents "clear" for both single (`T | undefined`) and multi (`T[] | undefined`) modes. No consumer changes needed — the clear button triggers the same `onChange` callback that already updates URL filters in `box/index.tsx`.
 
 ## Affected Files
 
