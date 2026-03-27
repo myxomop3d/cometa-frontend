@@ -4,6 +4,8 @@
 
 Split the monolithic `RelationFilter` component (~505 lines) into two independent, focused components: `RelationFilterDropdown` (client-side search popover) and `RelationFilterModal` (server-side filtered dialog with table). Delete the original `RelationFilter.tsx`. Update `box/index.tsx` to use the new components.
 
+The `mode="both"` combined layout is dropped — it is unused in practice (both usages in `box/index.tsx` use `mode="modal"`). Each usage site picks one component.
+
 ## Components
 
 ### RelationFilterDropdown
@@ -54,30 +56,31 @@ interface RelationFilterModalProps<T> {
 ```
 
 **Behavior:**
-- Always server-side filtering — `queryFn` receives current filter values.
+- Always server-side filtering — `queryFn` always receives filter values. No client-side fallback. Existing API functions (`fetchItems`, `fetchThings`) must be adapted to accept a filters parameter.
+- Trigger is always a full-width labeled button (the small icon-button variant from the old `mode="both"` layout is removed).
 - Button trigger shows: placeholder when empty, item label for single select, "N selected" for multi.
 - Clear button (ButtonGroup + Delete icon) appears when selection exists.
-- Dialog contains filter inputs (from `filterFields`) and a paginated data table.
+- Dialog contains debounced filter inputs (`DebouncedInput` component) built from `filterFields`, and a paginated data table.
+- Pagination uses TanStack Table's default page size with no explicit page navigation controls (matches current behavior).
 - Single select: clicking a row selects it and closes the dialog immediately.
 - Multi select: checkboxes, badge chips for selected items, Cancel/Confirm footer.
 - Default single "Name" column via `getLabel` if no `tableColumns` provided.
 - Uses `useReactTable` with `getCoreRowModel`, `getFilteredRowModel`, `getPaginationRowModel`.
 
+**Implementation note:** The `getLabel` callback must be stabilized via `useRef` to prevent infinite render loops from `useReactTable` (the original code uses this pattern at lines 293-295).
+
 ## Deletions
 
 - Delete `src/components/filters/RelationFilter.tsx` — replaced entirely by the two new components.
-- Remove the `mode` prop concept — no combined dropdown+modal layout.
 
 ## box/index.tsx Changes
 
-- Replace `RelationFilter<ItemDto>` and `RelationFilter<ThingDto>` with `RelationFilterModal<ItemDto>` and `RelationFilterModal<ThingDto>`.
-- Update imports accordingly.
-- Pass `fetchItems`/`fetchThings` as `queryFn` (must accept filters parameter — adapt API functions if needed).
+- Replace `RelationFilter<ItemDto>` with `RelationFilterModal<ItemDto>`, and `RelationFilter<ThingDto>` with `RelationFilterModal<ThingDto>`.
+- Update imports: remove `RelationFilter`, add `RelationFilterModal`.
+- Pass adapted `fetchItems`/`fetchThings` as `queryFn` (accepting filters parameter).
 - Add `filterFields` prop to both usages.
 - Existing hydration queries (`allItems`, `allThings`) and derived `selectedItem`/`selectedThings` remain unchanged.
 
-## API Considerations
+## API Changes
 
-The current `fetchItems` and `fetchThings` may not accept a filters parameter. Implementation should either:
-- Adapt existing functions to accept an optional filters object, or
-- Create filtered variants (e.g., `fetchItemsFiltered`).
+The current `fetchItems` and `fetchThings` do not accept a filters parameter. Adapt both functions to accept an optional `filters: Record<string, unknown>` parameter and pass it as query params to the API. This keeps a single function per entity rather than creating separate variants.
