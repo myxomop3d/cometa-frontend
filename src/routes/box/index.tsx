@@ -1,6 +1,11 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useSuspenseQuery,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,8 +15,8 @@ import {
 } from "@tanstack/react-table";
 import { z } from "zod";
 import { boxesQueryOptions, patchBox } from "@/api/box";
-import { fetchItems, itemsQueryOptions } from "@/api/item";
-import { fetchThings, thingsQueryOptions } from "@/api/thing";
+import { itemsQueryOptions, itemsFilteredQueryOptions } from "@/api/item";
+import { thingsQueryOptions, thingsFilteredQueryOptions } from "@/api/thing";
 import type { BoxDto, BoxFilters, ItemDto, ThingDto } from "@/types/api";
 import { SimpleTable } from "@/components/SimpleTable";
 import { useFilters } from "@/hooks/useFilters";
@@ -22,7 +27,7 @@ import { NumberRangeFilter } from "@/components/filters/NumberRangeFilter";
 import { CheckboxFilter } from "@/components/filters/CheckboxFilter";
 import { SelectFilter } from "@/components/filters/SelectFilter";
 import { DateRangeFilter } from "@/components/filters/DateRangeFilter";
-import { RelationFilter } from "@/components/filters/RelationFilter";
+import { RelationFilterModal } from "@/components/filters/RelationFilterModal";
 
 /**
  * Validates and normalizes raw URL search parameters into a typed `BoxFilters` object.
@@ -34,24 +39,32 @@ function validateSearch(search: Record<string, unknown>): BoxFilters {
   const rawThingIds = search.thingIds;
   let thingIds: number[] | undefined;
   if (typeof rawThingIds === "string" && rawThingIds.length > 0) {
-    thingIds = rawThingIds.split(",").map(Number).filter((n) => !isNaN(n));
+    thingIds = rawThingIds
+      .split(",")
+      .map(Number)
+      .filter((n) => !isNaN(n));
   } else if (Array.isArray(rawThingIds)) {
     thingIds = (rawThingIds as unknown[]).map(Number).filter((n) => !isNaN(n));
   }
 
   return {
-    page:        typeof search.page        === "number" ? search.page        : 1,
-    pageSize:    typeof search.pageSize    === "number" ? search.pageSize    : 20,
-    name:        typeof search.name        === "string" ? search.name        : undefined,
-    objectCode:  typeof search.objectCode  === "string" ? search.objectCode  : undefined,
-    shape:       search.shape === "O" || search.shape === "X" ? search.shape : undefined,
-    tags:        typeof search.tags        === "string" ? search.tags        : undefined,
-    numMin:      typeof search.numMin      === "number" ? search.numMin      : undefined,
-    numMax:      typeof search.numMax      === "number" ? search.numMax      : undefined,
-    checkbox:    typeof search.checkbox    === "boolean" ? search.checkbox   : undefined,
-    dateStrFrom: typeof search.dateStrFrom === "string" ? search.dateStrFrom : undefined,
-    dateStrTo:   typeof search.dateStrTo   === "string" ? search.dateStrTo   : undefined,
-    itemId:      typeof search.itemId      === "number" ? search.itemId      : undefined,
+    page: typeof search.page === "number" ? search.page : 1,
+    pageSize: typeof search.pageSize === "number" ? search.pageSize : 20,
+    name: typeof search.name === "string" ? search.name : undefined,
+    objectCode:
+      typeof search.objectCode === "string" ? search.objectCode : undefined,
+    shape:
+      search.shape === "O" || search.shape === "X" ? search.shape : undefined,
+    tags: typeof search.tags === "string" ? search.tags : undefined,
+    numMin: typeof search.numMin === "number" ? search.numMin : undefined,
+    numMax: typeof search.numMax === "number" ? search.numMax : undefined,
+    checkbox:
+      typeof search.checkbox === "boolean" ? search.checkbox : undefined,
+    dateStrFrom:
+      typeof search.dateStrFrom === "string" ? search.dateStrFrom : undefined,
+    dateStrTo:
+      typeof search.dateStrTo === "string" ? search.dateStrTo : undefined,
+    itemId: typeof search.itemId === "number" ? search.itemId : undefined,
     thingIds,
   };
 }
@@ -87,31 +100,33 @@ const columnHelper = createColumnHelper<BoxDto>();
  * @see https://tanstack.com/table/latest/docs/guide/column-defs
  */
 const columns = [
-  columnHelper.accessor("id",         { header: "ID",          size: 60  }),
-  columnHelper.accessor("name",       { header: "Name",        size: 200 }),
+  columnHelper.accessor("id", { header: "ID", size: 60 }),
+  columnHelper.accessor("name", { header: "Name", size: 200 }),
   columnHelper.accessor("objectCode", { header: "Object Code", size: 130 }),
-  columnHelper.accessor("shape",      { header: "Shape",       size: 80  }),
-  columnHelper.accessor("num",        { header: "Num",         size: 100 }),
-  columnHelper.accessor("item",       {
+  columnHelper.accessor("shape", { header: "Shape", size: 80 }),
+  columnHelper.accessor("num", { header: "Num", size: 100 }),
+  columnHelper.accessor("item", {
     header: "Item",
     size: 180,
     cell: (info) => info.getValue()?.name ?? "—",
   }),
-  columnHelper.accessor("things",     {
+  columnHelper.accessor("things", {
     header: "Things",
     size: 200,
     cell: (info) => {
       const things = info.getValue();
-      return things && things.length > 0 ? things.map((t) => t.name).join(", ") : "—";
+      return things && things.length > 0
+        ? things.map((t) => t.name).join(", ")
+        : "—";
     },
   }),
-  columnHelper.accessor("dateStr",    { header: "Date",        size: 120 }),
-  columnHelper.accessor("checkbox",   {
+  columnHelper.accessor("dateStr", { header: "Date", size: 120 }),
+  columnHelper.accessor("checkbox", {
     header: "Checkbox",
     size: 90,
-    cell: (info) => info.getValue() ? "Yes" : "No",
+    cell: (info) => (info.getValue() ? "Yes" : "No"),
   }),
-  columnHelper.accessor("tags",       {
+  columnHelper.accessor("tags", {
     header: "Tags",
     size: 200,
     cell: (info) => {
@@ -134,12 +149,12 @@ const columnResizeMode: ColumnResizeMode = "onChange";
  * @see https://zod.dev/?id=strings
  */
 const boxSchema = z.object({
-  name:       z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Name is required"),
   objectCode: z.string().nullable(),
-  shape:      z.enum(["O", "X"]),
-  num:        z.number(),
-  dateStr:    z.string(),
-  checkbox:   z.boolean(),
+  shape: z.enum(["O", "X"]),
+  num: z.number(),
+  dateStr: z.string(),
+  checkbox: z.boolean(),
 });
 
 /**
@@ -162,8 +177,8 @@ function BoxPage() {
   const { data } = useSuspenseQuery(boxesQueryOptions(filters));
 
   // Pagination
-  const page      = filters.page     ?? 1;
-  const pageSize  = filters.pageSize ?? 20;
+  const page = filters.page ?? 1;
+  const pageSize = filters.pageSize ?? 20;
   const pageCount = Math.ceil(data.count / pageSize);
 
   // Fetch all items when itemId filter is active (for label hydration on reload)
@@ -178,6 +193,18 @@ function BoxPage() {
     enabled: !!filters.thingIds && filters.thingIds.length > 0,
   });
 
+  // Modal filter state for RelationFilterModal instances
+  const [itemModalFilters, setItemModalFilters] = useState<Record<string, unknown>>({});
+  const [thingModalFilters, setThingModalFilters] = useState<Record<string, unknown>>({});
+
+  // Server-filtered queries for modal data
+  const { data: filteredItems, isFetching: isItemsLoading } = useQuery(
+    itemsFilteredQueryOptions(itemModalFilters),
+  );
+  const { data: filteredThings, isFetching: isThingsLoading } = useQuery(
+    thingsFilteredQueryOptions(thingModalFilters),
+  );
+
   // Derive the selected ItemDto from URL-stored itemId
   const selectedItem = useMemo<ItemDto | undefined>(() => {
     if (filters.itemId === undefined || !allItems) return undefined;
@@ -186,7 +213,8 @@ function BoxPage() {
 
   // Derive the selected ThingDto[] from URL-stored thingIds
   const selectedThings = useMemo<ThingDto[]>(() => {
-    if (!filters.thingIds || filters.thingIds.length === 0 || !allThings) return [];
+    if (!filters.thingIds || filters.thingIds.length === 0 || !allThings)
+      return [];
     const idSet = new Set(filters.thingIds);
     return allThings.data.filter((t) => idSet.has(t.id));
   }, [filters.thingIds, allThings]);
@@ -204,9 +232,9 @@ function BoxPage() {
     columns,
     columnResizeMode,
     getCoreRowModel: getCoreRowModel(),
-    manualFiltering:  true,
+    manualFiltering: true,
     manualPagination: true,
-    manualSorting:    true,
+    manualSorting: true,
     rowCount: data.count,
     state: {
       columnVisibility,
@@ -236,7 +264,7 @@ function BoxPage() {
   const editConfig = useMemo<EditConfig<BoxDto>>(
     () => ({
       fields: {
-        name:       { type: "text" },
+        name: { type: "text" },
         objectCode: { type: "text" },
         shape: {
           type: "select",
@@ -245,8 +273,8 @@ function BoxPage() {
             { label: "X", value: "X" },
           ],
         },
-        num:      { type: "number" },
-        dateStr:  { type: "text" },
+        num: { type: "number" },
+        dateStr: { type: "text" },
         checkbox: { type: "checkbox" },
       },
       disabledFields: ["id"],
@@ -288,17 +316,21 @@ function BoxPage() {
               value={filters.objectCode}
               onChange={(value) => setFilters({ objectCode: value })}
             />
-            <SelectFilter
-              placeholder="Shape"
-              options={shapeOptions}
-              value={filters.shape}
-              onChange={(value) => setFilters({ shape: value as "O" | "X" | undefined })}
-            />
-            <CheckboxFilter
-              label="Checkbox"
-              value={filters.checkbox}
-              onChange={(value) => setFilters({ checkbox: value })}
-            />
+            <div className="grid grid-cols-2">
+              <SelectFilter
+                placeholder="Shape"
+                options={shapeOptions}
+                value={filters.shape}
+                onChange={(value) =>
+                  setFilters({ shape: value as "O" | "X" | undefined })
+                }
+              />
+              <CheckboxFilter
+                label="Checkbox"
+                value={filters.checkbox}
+                onChange={(value) => setFilters({ checkbox: value })}
+              />
+            </div>
 
             {/* Row 2: num range, tags, dateStr range (col-span-2) */}
             <NumberRangeFilter
@@ -321,43 +353,45 @@ function BoxPage() {
               onChangeTo={(value) => setFilters({ dateStrTo: value })}
               placeholderFrom="Date From"
               placeholderTo="Date To"
-              className="col-span-2"
             />
 
             {/* Row 3: item (single, col-span-2), things (multi, col-span-2) */}
-            <RelationFilter<ItemDto>
-              mode="both"
+            <RelationFilterModal<ItemDto>
               multi={false}
               value={selectedItem}
               onChange={(val) => {
                 const item = val as ItemDto | undefined;
                 setFilters({ itemId: item?.id });
               }}
-              queryFn={fetchItems}
-              queryKey={["items", "all"]}
+              data={filteredItems?.data ?? []}
+              isLoading={isItemsLoading}
               getLabel={(item) => item.name}
               getId={(item) => item.id}
               placeholder="Item..."
               className="col-span-2"
+              filterFields={[{ key: "name", label: "Name" }]}
+              onFiltersChange={setItemModalFilters}
             />
-            <RelationFilter<ThingDto>
-              mode="both"
+            <RelationFilterModal<ThingDto>
               multi={true}
               value={selectedThings}
               onChange={(val) => {
                 const things = val as ThingDto[] | undefined;
                 setFilters({
-                  thingIds: things && things.length > 0
-                    ? things.map((t) => t.id)
-                    : undefined,
+                  thingIds:
+                    things && things.length > 0
+                      ? things.map((t) => t.id)
+                      : undefined,
                 });
               }}
-              queryFn={fetchThings}
-              queryKey={["things", "all"]}
+              data={filteredThings?.data ?? []}
+              isLoading={isThingsLoading}
               getLabel={(thing) => thing.name}
               getId={(thing) => thing.id}
               placeholder="Things..."
               className="col-span-2"
+              filterFields={[{ key: "name", label: "Name" }]}
+              onFiltersChange={setThingModalFilters}
             />
           </FilterBar>
         }
