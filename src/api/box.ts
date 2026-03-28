@@ -58,6 +58,15 @@ function buildListParams(filters: BoxFilters): URLSearchParams {
     clauses.push(`things/any(t: ${inner})`);
   }
 
+  if (rest.oldItemId !== undefined) {
+    clauses.push(`oldItem/id eq ${rest.oldItemId}`);
+  }
+
+  if (rest.oldThingIds && rest.oldThingIds.length > 0) {
+    const inner = rest.oldThingIds.map((id) => `t/id eq ${id}`).join(" or ");
+    clauses.push(`oldThings/any(t: ${inner})`);
+  }
+
   if (clauses.length > 0) {
     params.set("$filter", clauses.join(" and "));
   }

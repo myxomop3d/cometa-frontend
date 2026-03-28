@@ -28,6 +28,7 @@ import { CheckboxFilter } from "@/components/filters/CheckboxFilter";
 import { SelectFilter } from "@/components/filters/SelectFilter";
 import { DateRangeFilter } from "@/components/filters/DateRangeFilter";
 import { RelationFilterModal } from "@/components/filters/RelationFilterModal";
+import { RelationFilterDropdown } from "@/components/filters/RelationFilterDropdown";
 import { DebouncedInput } from "@/components/DebouncedInput";
 
 /**
@@ -36,18 +37,17 @@ import { DebouncedInput } from "@/components/DebouncedInput";
  *
  * @see https://tanstack.com/router/latest/docs/framework/react/guide/search-params#validating-search-params
  */
-function validateSearch(search: Record<string, unknown>): BoxFilters {
-  const rawThingIds = search.thingIds;
-  let thingIds: number[] | undefined;
-  if (typeof rawThingIds === "string" && rawThingIds.length > 0) {
-    thingIds = rawThingIds
-      .split(",")
-      .map(Number)
-      .filter((n) => !isNaN(n));
-  } else if (Array.isArray(rawThingIds)) {
-    thingIds = (rawThingIds as unknown[]).map(Number).filter((n) => !isNaN(n));
+function parseIdList(raw: unknown): number[] | undefined {
+  if (typeof raw === "string" && raw.length > 0) {
+    return raw.split(",").map(Number).filter((n) => !isNaN(n));
   }
+  if (Array.isArray(raw)) {
+    return (raw as unknown[]).map(Number).filter((n) => !isNaN(n));
+  }
+  return undefined;
+}
 
+function validateSearch(search: Record<string, unknown>): BoxFilters {
   return {
     page: typeof search.page === "number" ? search.page : 1,
     pageSize: typeof search.pageSize === "number" ? search.pageSize : 20,
@@ -66,7 +66,9 @@ function validateSearch(search: Record<string, unknown>): BoxFilters {
     dateStrTo:
       typeof search.dateStrTo === "string" ? search.dateStrTo : undefined,
     itemId: typeof search.itemId === "number" ? search.itemId : undefined,
-    thingIds,
+    thingIds: parseIdList(search.thingIds),
+    oldItemId: typeof search.oldItemId === "number" ? search.oldItemId : undefined,
+    oldThingIds: parseIdList(search.oldThingIds),
   };
 }
 
@@ -118,6 +120,21 @@ const columns = [
       const things = info.getValue();
       return things && things.length > 0
         ? things.map((t) => t.name).join(", ")
+        : "—";
+    },
+  }),
+  columnHelper.accessor("oldItem", {
+    header: "Old Item",
+    size: 180,
+    cell: (info) => info.getValue()?.name ?? "—",
+  }),
+  columnHelper.accessor("oldThings", {
+    header: "Old Things",
+    size: 200,
+    cell: (info) => {
+      const oldThings = info.getValue();
+      return oldThings && oldThings.length > 0
+        ? oldThings.map((t) => t.name).join(", ")
         : "—";
     },
   }),
@@ -182,17 +199,11 @@ function BoxPage() {
   const pageSize = filters.pageSize ?? 20;
   const pageCount = Math.ceil(data.count / pageSize);
 
-  // Fetch all items when itemId filter is active (for label hydration on reload)
-  const { data: allItems } = useQuery({
-    ...itemsQueryOptions(),
-    enabled: filters.itemId !== undefined,
-  });
+  // Fetch all items — needed for oldItem dropdown and label hydration
+  const { data: allItems } = useQuery(itemsQueryOptions());
 
-  // Fetch all things when thingIds filter is active (for label hydration on reload)
-  const { data: allThings } = useQuery({
-    ...thingsQueryOptions(),
-    enabled: !!filters.thingIds && filters.thingIds.length > 0,
-  });
+  // Fetch all things — needed for oldThings dropdown and label hydration
+  const { data: allThings } = useQuery(thingsQueryOptions());
 
   // Modal filter state for RelationFilterModal instances
   const [itemModalFilters, setItemModalFilters] = useState<Record<string, unknown>>({});
@@ -219,6 +230,20 @@ function BoxPage() {
     const idSet = new Set(filters.thingIds);
     return allThings.data.filter((t) => idSet.has(t.id));
   }, [filters.thingIds, allThings]);
+
+  // Derive the selected ItemDto from URL-stored oldItemId
+  const selectedOldItem = useMemo<ItemDto | undefined>(() => {
+    if (filters.oldItemId === undefined || !allItems) return undefined;
+    return allItems.data.find((i) => i.id === filters.oldItemId);
+  }, [filters.oldItemId, allItems]);
+
+  // Derive the selected ThingDto[] from URL-stored oldThingIds
+  const selectedOldThings = useMemo<ThingDto[]>(() => {
+    if (!filters.oldThingIds || filters.oldThingIds.length === 0 || !allThings)
+      return [];
+    const idSet = new Set(filters.oldThingIds);
+    return allThings.data.filter((t) => idSet.has(t.id));
+  }, [filters.oldThingIds, allThings]);
 
   // Column visibility state
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -411,6 +436,38 @@ function BoxPage() {
                   />
                 </div>
               }
+            />
+            {/* Row 4: oldItem (single, dropdown), oldThings (multi, dropdown) */}
+            <RelationFilterDropdown<ItemDto>
+              multi={false}
+              value={selectedOldItem}
+              onChange={(val) => {
+                const item = val as ItemDto | undefined;
+                setFilters({ oldItemId: item?.id });
+              }}
+              data={allItems?.data ?? []}
+              getLabel={(item) => item.name}
+              getId={(item) => item.id}
+              placeholder="Old Item..."
+              className="col-span-2"
+            />
+            <RelationFilterDropdown<ThingDto>
+              multi={true}
+              value={selectedOldThings}
+              onChange={(val) => {
+                const things = val as ThingDto[] | undefined;
+                setFilters({
+                  oldThingIds:
+                    things && things.length > 0
+                      ? things.map((t) => t.id)
+                      : undefined,
+                });
+              }}
+              data={allThings?.data ?? []}
+              getLabel={(thing) => thing.name}
+              getId={(thing) => thing.id}
+              placeholder="Old Things..."
+              className="col-span-2"
             />
           </FilterBar>
         }

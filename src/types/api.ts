@@ -20,6 +20,8 @@ export interface BoxDto {
   num: number;
   item: ItemDto | null;
   things: ThingDto[] | null;
+  oldItem: ItemDto | null;
+  oldThings: ThingDto[] | null;
   dateStr: string;
   checkbox: boolean;
   tags: string[];
@@ -28,11 +30,17 @@ export interface BoxDto {
 export interface ItemDto {
   id: number;
   name: string;
+  status: "ON" | "OFF";
+  date: string;
+  count: number;
 }
 
 export interface ThingDto {
   id: number;
   name: string;
+  status: "ON" | "OFF";
+  date: string;
+  count: number;
 }
 
 // AutomatedSystem
@@ -85,6 +93,8 @@ export interface BoxFilters extends Partial<PaginationParams> {
   // Relations (store IDs)
   itemId?: number;
   thingIds?: number[];
+  oldItemId?: number;
+  oldThingIds?: number[];
 }
 
 // Node hierarchy
