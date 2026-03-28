@@ -28,6 +28,7 @@ import { CheckboxFilter } from "@/components/filters/CheckboxFilter";
 import { SelectFilter } from "@/components/filters/SelectFilter";
 import { DateRangeFilter } from "@/components/filters/DateRangeFilter";
 import { RelationFilterModal } from "@/components/filters/RelationFilterModal";
+import { DebouncedInput } from "@/components/DebouncedInput";
 
 /**
  * Validates and normalizes raw URL search parameters into a typed `BoxFilters` object.
@@ -369,8 +370,17 @@ function BoxPage() {
               getId={(item) => item.id}
               placeholder="Item..."
               className="col-span-2"
-              filterFields={[{ key: "name", label: "Name" }]}
-              onFiltersChange={setItemModalFilters}
+              filterSlot={
+                <div className="grid grid-cols-3 gap-2">
+                  <DebouncedInput
+                    placeholder="Name"
+                    value={(itemModalFilters.name as string) ?? ""}
+                    onChange={(v) =>
+                      setItemModalFilters((prev) => ({ ...prev, name: v || undefined }))
+                    }
+                  />
+                </div>
+              }
             />
             <RelationFilterModal<ThingDto>
               multi={true}
@@ -390,8 +400,17 @@ function BoxPage() {
               getId={(thing) => thing.id}
               placeholder="Things..."
               className="col-span-2"
-              filterFields={[{ key: "name", label: "Name" }]}
-              onFiltersChange={setThingModalFilters}
+              filterSlot={
+                <div className="grid grid-cols-3 gap-2">
+                  <DebouncedInput
+                    placeholder="Name"
+                    value={(thingModalFilters.name as string) ?? ""}
+                    onChange={(v) =>
+                      setThingModalFilters((prev) => ({ ...prev, name: v || undefined }))
+                    }
+                  />
+                </div>
+              }
             />
           </FilterBar>
         }

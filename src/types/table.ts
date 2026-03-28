@@ -1,10 +1,5 @@
 import type { ZodSchema } from "zod";
 
-export interface FilterField {
-  key: string;
-  label: string;
-}
-
 export interface TextFieldConfig {
   type: "text";
 }

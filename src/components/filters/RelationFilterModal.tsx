@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, type ReactNode } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -7,7 +7,7 @@ import {
   flexRender,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { Search, Delete, Loader2 } from "lucide-react";
+import { Delete, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,8 +27,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { DebouncedInput } from "@/components/DebouncedInput";
-import type { FilterField } from "@/types/table";
 
 interface RelationFilterModalProps<T> {
   multi: boolean;
@@ -41,8 +39,7 @@ interface RelationFilterModalProps<T> {
   placeholder?: string;
   className?: string;
   tableColumns?: ColumnDef<T, unknown>[];
-  filterFields?: FilterField[];
-  onFiltersChange?: (filters: Record<string, unknown>) => void;
+  filterSlot?: ReactNode;
 }
 
 export function RelationFilterModal<T>({
@@ -56,12 +53,10 @@ export function RelationFilterModal<T>({
   placeholder = "Select...",
   className,
   tableColumns,
-  filterFields,
-  onFiltersChange,
+  filterSlot,
 }: RelationFilterModalProps<T>) {
   const [open, setOpen] = useState(false);
   const [modalSelection, setModalSelection] = useState<T[]>([]);
-  const [modalFilters, setModalFilters] = useState<Record<string, unknown>>({});
 
   // Stabilize getLabel via ref to prevent useReactTable infinite render loop.
   const getLabelRef = useRef(getLabel);
@@ -137,12 +132,6 @@ export function RelationFilterModal<T>({
 
   const modalSelectionIds = new Set(modalSelection.map(getId));
 
-  const handleFilterChange = (key: string, val: string) => {
-    const next = { ...modalFilters, [key]: val || undefined };
-    setModalFilters(next);
-    onFiltersChange?.(next);
-  };
-
   return (
     <div className={className}>
       <ButtonGroup className="w-full">
@@ -173,18 +162,7 @@ export function RelationFilterModal<T>({
             <DialogTitle>Select {multi ? "items" : "item"}</DialogTitle>
           </DialogHeader>
 
-          {filterFields && filterFields.length > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              {filterFields.map(({ key, label }) => (
-                <DebouncedInput
-                  key={key}
-                  placeholder={label}
-                  value={(modalFilters[key] as string) ?? ""}
-                  onChange={(v) => handleFilterChange(key, v)}
-                />
-              ))}
-            </div>
-          )}
+          {filterSlot}
 
           {multi && modalSelection.length > 0 && (
             <div className="flex flex-wrap gap-1">
