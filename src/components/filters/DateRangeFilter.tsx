@@ -31,7 +31,7 @@ export function DateRangeFilter({
   const dateTo = valueTo ? new Date(valueTo) : undefined;
 
   return (
-    <div className={`flex gap-1 ${className ?? ""}`}>
+    <div className={`grid grid-cols-2 gap-1 ${className ?? ""}`}>
       <Popover>
         <PopoverTrigger
           render={

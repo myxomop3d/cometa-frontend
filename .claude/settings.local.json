@@ -13,7 +13,15 @@
       "WebFetch(domain:ui.shadcn.com)",
       "mcp__plugin_context7_context7__query-docs",
       "WebFetch(domain:tanstack.com)",
-      "Bash(npx shadcn@latest add select)"
+      "Bash(npx shadcn@latest add select)",
+      "Bash(find F:/programming/react/cometa-frontend -maxdepth 1 -name .env* -o -name *.env)",
+      "Bash(npx shadcn@latest add dialog -y)",
+      "Bash(npx shadcn@latest add dialog -y -o)",
+      "Bash(npx shadcn@latest add popover -y -o)",
+      "Bash(npx shadcn@latest add badge -y -o)",
+      "Bash(npx shadcn@latest add calendar -y -o)",
+      "Bash(npm run:*)",
+      "Bash(npx shadcn@latest add button-group)"
     ]
   }
 }

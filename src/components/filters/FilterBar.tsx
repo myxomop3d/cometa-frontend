@@ -3,5 +3,5 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ children }: FilterBarProps) {
-  return <div className="grid grid-cols-4 gap-2 my-4">{children}</div>;
+  return <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 my-4 w-full">{children}</div>;
 }
