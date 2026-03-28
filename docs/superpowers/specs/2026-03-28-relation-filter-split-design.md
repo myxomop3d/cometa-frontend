@@ -46,6 +46,7 @@ interface RelationFilterModalProps<T> {
   value: T | T[] | undefined;
   onChange: (value: T | T[] | undefined) => void;
   data: T[];
+  isLoading?: boolean;
   getLabel: (item: T) => string;
   getId: (item: T) => number;
   placeholder?: string;
@@ -59,6 +60,8 @@ interface RelationFilterModalProps<T> {
 **Behavior:**
 - Receives `data` from parent. The component is stateless for data — parent owns fetching.
 - Modal manages its own filter input state. When filter inputs change, calls `onFiltersChange(filters)` so the parent can re-query and pass updated `data` back.
+- `filterFields` and `onFiltersChange` are paired: if `filterFields` is provided, `onFiltersChange` must also be provided. If neither is provided, the modal shows only the data table with no filter inputs.
+- When `isLoading` is true, the table shows a loading indicator. This covers the window between `onFiltersChange` firing and the parent providing fresh `data`.
 - Filter inputs use `DebouncedInput` component built from `filterFields`.
 - Trigger is always a full-width labeled button.
 - Button trigger shows: placeholder when empty, item label for single select, "N selected" for multi.
@@ -80,11 +83,14 @@ interface RelationFilterModalProps<T> {
 
 - Replace `RelationFilter<ItemDto>` with `RelationFilterModal<ItemDto>`, and `RelationFilter<ThingDto>` with `RelationFilterModal<ThingDto>`.
 - Update imports: remove `RelationFilter`, add `RelationFilterModal`.
-- Parent component owns data fetching: use `useQuery` to fetch items/things data, passing modal filter state as query params.
-- Wire `onFiltersChange` to update query parameters so data re-fetches when modal filters change.
+- Parent owns data fetching using existing filtered query options:
+  - Use `itemsFilteredQueryOptions(modalFilters)` from `src/api/item.ts` (uses `fetchItemsFiltered`).
+  - Use `thingsFilteredQueryOptions(modalFilters)` from `src/api/thing.ts` (uses `fetchThingsFiltered`).
+  - Add `useState` for modal filter state per filter instance; pass to query options and wire to `onFiltersChange`.
+  - Pass `isLoading` from query's `isFetching` state.
 - Add `filterFields` prop to both usages.
 - Existing hydration queries (`allItems`, `allThings`) and derived `selectedItem`/`selectedThings` remain unchanged.
 
 ## API Changes
 
-The current `fetchItems` and `fetchThings` may need to accept a filters parameter if server-side filtering is used from `box/index.tsx`. Adapt both functions to accept an optional `filters: Record<string, unknown>` parameter and pass it as query params to the API.
+No API changes needed. `fetchItemsFiltered` and `fetchThingsFiltered` already exist in `src/api/item.ts` and `src/api/thing.ts` and accept filter parameters.
