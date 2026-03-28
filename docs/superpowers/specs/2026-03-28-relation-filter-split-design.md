@@ -4,6 +4,8 @@
 
 Split the monolithic `RelationFilter` component (~505 lines) into two independent, focused components: `RelationFilterDropdown` (client-side search popover) and `RelationFilterModal` (server-side filtered dialog with table). Delete the original `RelationFilter.tsx`. Update `box/index.tsx` to use the new components.
 
+Both components are **data-agnostic** — they receive `data: T[]` from the parent instead of fetching data themselves. This keeps data-fetching concerns in the parent and makes the components simpler and more reusable.
+
 The `mode="both"` combined layout is dropped — it is unused in practice (both usages in `box/index.tsx` use `mode="modal"`). Each usage site picks one component.
 
 ## Components
@@ -18,8 +20,7 @@ interface RelationFilterDropdownProps<T> {
   multi: boolean;
   value: T | T[] | undefined;
   onChange: (value: T | T[] | undefined) => void;
-  queryFn: () => Promise<ApiResponse<T[]>>;
-  queryKey: string[];
+  data: T[];
   getLabel: (item: T) => string;
   getId: (item: T) => number;
   placeholder?: string;
@@ -28,7 +29,7 @@ interface RelationFilterDropdownProps<T> {
 ```
 
 **Behavior:**
-- Fetches all data via `queryFn`, filters client-side with a search input inside a Popover.
+- Receives `data` from parent, filters client-side with a search input inside a Popover.
 - Popover trigger shows: placeholder when empty, item label for single select, "N selected" for multi.
 - Clear button (ButtonGroup + Delete icon) appears when selection exists.
 - Single select: clicking an item toggles selection on/off.
@@ -44,23 +45,25 @@ interface RelationFilterModalProps<T> {
   multi: boolean;
   value: T | T[] | undefined;
   onChange: (value: T | T[] | undefined) => void;
-  queryFn: (filters: Record<string, unknown>) => Promise<ApiResponse<T[]>>;
-  queryKey: string[];
+  data: T[];
   getLabel: (item: T) => string;
   getId: (item: T) => number;
   placeholder?: string;
   className?: string;
   tableColumns?: ColumnDef<T, unknown>[];
   filterFields?: FilterField[];
+  onFiltersChange?: (filters: Record<string, unknown>) => void;
 }
 ```
 
 **Behavior:**
-- Always server-side filtering — `queryFn` always receives filter values. No client-side fallback. Existing API functions (`fetchItems`, `fetchThings`) must be adapted to accept a filters parameter.
-- Trigger is always a full-width labeled button (the small icon-button variant from the old `mode="both"` layout is removed).
+- Receives `data` from parent. The component is stateless for data — parent owns fetching.
+- Modal manages its own filter input state. When filter inputs change, calls `onFiltersChange(filters)` so the parent can re-query and pass updated `data` back.
+- Filter inputs use `DebouncedInput` component built from `filterFields`.
+- Trigger is always a full-width labeled button.
 - Button trigger shows: placeholder when empty, item label for single select, "N selected" for multi.
 - Clear button (ButtonGroup + Delete icon) appears when selection exists.
-- Dialog contains debounced filter inputs (`DebouncedInput` component) built from `filterFields`, and a paginated data table.
+- Dialog contains filter inputs and a paginated data table.
 - Pagination uses TanStack Table's default page size with no explicit page navigation controls (matches current behavior).
 - Single select: clicking a row selects it and closes the dialog immediately.
 - Multi select: checkboxes, badge chips for selected items, Cancel/Confirm footer.
@@ -77,10 +80,11 @@ interface RelationFilterModalProps<T> {
 
 - Replace `RelationFilter<ItemDto>` with `RelationFilterModal<ItemDto>`, and `RelationFilter<ThingDto>` with `RelationFilterModal<ThingDto>`.
 - Update imports: remove `RelationFilter`, add `RelationFilterModal`.
-- Pass adapted `fetchItems`/`fetchThings` as `queryFn` (accepting filters parameter).
+- Parent component owns data fetching: use `useQuery` to fetch items/things data, passing modal filter state as query params.
+- Wire `onFiltersChange` to update query parameters so data re-fetches when modal filters change.
 - Add `filterFields` prop to both usages.
 - Existing hydration queries (`allItems`, `allThings`) and derived `selectedItem`/`selectedThings` remain unchanged.
 
 ## API Changes
 
-The current `fetchItems` and `fetchThings` do not accept a filters parameter. Adapt both functions to accept an optional `filters: Record<string, unknown>` parameter and pass it as query params to the API. This keeps a single function per entity rather than creating separate variants.
+The current `fetchItems` and `fetchThings` may need to accept a filters parameter if server-side filtering is used from `box/index.tsx`. Adapt both functions to accept an optional `filters: Record<string, unknown>` parameter and pass it as query params to the API.
