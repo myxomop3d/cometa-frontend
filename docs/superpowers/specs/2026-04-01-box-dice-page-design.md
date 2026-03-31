@@ -106,12 +106,23 @@ export type CreateBoxDto = {
 };
 ```
 
+### New SortByParams interface
+
+Reusable sorting params, defined in `src/types/api.ts` alongside `PaginationParams`:
+
+```typescript
+export interface SortByParams {
+  sortBy?: string;  // e.g. "name:asc,num:desc"
+}
+```
+
+Other table filter interfaces (e.g. `AutomatedSystemFilters`) can extend `Partial<SortByParams>` the same way when multi-column sorting is needed.
+
 ### Extended BoxFilters
 
 ```typescript
-export interface BoxFilters extends Partial<PaginationParams> {
-  // ... existing fields ...
-  sortBy?: string;  // e.g. "name:asc,num:desc"
+export interface BoxFilters extends Partial<PaginationParams>, Partial<SortByParams> {
+  // ... existing fields unchanged ...
 }
 ```
 
