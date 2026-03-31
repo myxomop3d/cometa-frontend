@@ -182,7 +182,7 @@ Add "Box Dice" entry to `__root.tsx` sidebar, linking to `/box-dice/`.
 - **Edit:** Popover with compact searchable table
 - **Single mode:** Selecting a row closes popover and saves immediately
 - **Multi mode:** Checkboxes on rows, "Apply" button to confirm
-- **Search:** Server-side via `itemsFilteredQueryOptions` / `thingsFilteredQueryOptions`
+- **Data fetching:** Always server-side, paginated to 10 items per request. Never fetch all records. Search query is sent to backend, results are filtered server-side. Uses `itemsFilteredQueryOptions` / `thingsFilteredQueryOptions` with `$top=10`.
 
 ### Edit triggers
 
