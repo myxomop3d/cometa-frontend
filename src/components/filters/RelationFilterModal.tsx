@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, type ReactNode } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -38,7 +38,7 @@ interface RelationFilterModalProps<T> {
   getId: (item: T) => number;
   placeholder?: string;
   className?: string;
-  tableColumns?: ColumnDef<T, unknown>[];
+  tableColumns: ColumnDef<T, unknown>[];
   filterSlot?: ReactNode;
 }
 
@@ -58,10 +58,6 @@ export function RelationFilterModal<T>({
   const [open, setOpen] = useState(false);
   const [modalSelection, setModalSelection] = useState<T[]>([]);
 
-  // Stabilize getLabel via ref to prevent useReactTable infinite render loop.
-  const getLabelRef = useRef(getLabel);
-  getLabelRef.current = getLabel;
-
   const selectedItems: T[] = multi
     ? Array.isArray(value) ? value : []
     : value !== undefined ? [value as T] : [];
@@ -76,18 +72,7 @@ export function RelationFilterModal<T>({
 
   const hasSelection = selectedItems.length > 0;
 
-  const defaultColumns: ColumnDef<T, unknown>[] = useMemo(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        accessorFn: (row: T) => getLabelRef.current(row),
-      },
-    ],
-    [],
-  );
-
-  const columns = tableColumns ?? defaultColumns;
+  const columns = tableColumns;
 
   const coreRowModel = useMemo(() => getCoreRowModel<T>(), []);
   const filteredRowModel = useMemo(() => getFilteredRowModel<T>(), []);
@@ -157,7 +142,7 @@ export function RelationFilterModal<T>({
       </ButtonGroup>
 
       <Dialog open={open} onOpenChange={(nextOpen) => setOpen(nextOpen)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+        <DialogContent className="w-min h-min max-w-5/6 max-h-5/6 sm:max-w-5/6 sm:max-h-5/6 flex flex-col">
           <DialogHeader>
             <DialogTitle>Select {multi ? "items" : "item"}</DialogTitle>
           </DialogHeader>

@@ -21,7 +21,8 @@
       "Bash(npx shadcn@latest add badge -y -o)",
       "Bash(npx shadcn@latest add calendar -y -o)",
       "Bash(npm run:*)",
-      "Bash(npx shadcn@latest add button-group)"
+      "Bash(npx shadcn@latest add button-group)",
+      "mcp__playwright__browser_navigate"
     ]
   }
 }

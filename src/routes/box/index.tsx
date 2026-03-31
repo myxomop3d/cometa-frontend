@@ -18,6 +18,7 @@ import { boxesQueryOptions, patchBox } from "@/api/box";
 import { itemsQueryOptions, itemsFilteredQueryOptions } from "@/api/item";
 import { thingsQueryOptions, thingsFilteredQueryOptions } from "@/api/thing";
 import type { BoxDto, BoxFilters, ItemDto, ThingDto } from "@/types/api";
+import type { ColumnDef } from "@tanstack/react-table";
 import { SimpleTable } from "@/components/SimpleTable";
 import { useFilters } from "@/hooks/useFilters";
 import type { EditConfig } from "@/types/table";
@@ -178,6 +179,22 @@ const boxSchema = z.object({
 /**
  * Shape options for the filter and edit select.
  */
+const itemColumns: ColumnDef<ItemDto, unknown>[] = [
+  { accessorKey: "id", header: "ID" },
+  { accessorKey: "name", header: "Name" },
+  { accessorKey: "status", header: "Status" },
+  { accessorKey: "date", header: "Date" },
+  { accessorKey: "count", header: "Count" },
+];
+
+const thingColumns: ColumnDef<ThingDto, unknown>[] = [
+  { accessorKey: "id", header: "ID" },
+  { accessorKey: "name", header: "Name" },
+  { accessorKey: "status", header: "Status" },
+  { accessorKey: "date", header: "Date" },
+  { accessorKey: "count", header: "Count" },
+];
+
 const shapeOptions = [
   { label: "O", value: "O" },
   { label: "X", value: "X" },
@@ -395,6 +412,7 @@ function BoxPage() {
               getId={(item) => item.id}
               placeholder="Item..."
               className="col-span-2"
+              tableColumns={itemColumns}
               filterSlot={
                 <div className="grid grid-cols-3 gap-2">
                   <DebouncedInput
@@ -425,6 +443,7 @@ function BoxPage() {
               getId={(thing) => thing.id}
               placeholder="Things..."
               className="col-span-2"
+              tableColumns={thingColumns}
               filterSlot={
                 <div className="grid grid-cols-3 gap-2">
                   <DebouncedInput
