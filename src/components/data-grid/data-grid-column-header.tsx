@@ -34,21 +34,23 @@ export function DataGridColumnHeader<TData>({
   return (
     <div className="flex w-full items-center justify-between gap-1">
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-2 h-7 gap-1 text-xs font-medium data-[state=open]:bg-accent"
-          >
-            <span className="truncate">{title}</span>
-            {sortDirection === "asc" ? (
-              <ArrowUpIcon className="size-3.5" />
-            ) : sortDirection === "desc" ? (
-              <ArrowDownIcon className="size-3.5" />
-            ) : (
-              <ChevronsUpDownIcon className="size-3.5" />
-            )}
-          </Button>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-ml-2 h-7 gap-1 text-xs font-medium data-[state=open]:bg-accent"
+            />
+          }
+        >
+          <span className="truncate">{title}</span>
+          {sortDirection === "asc" ? (
+            <ArrowUpIcon className="size-3.5" />
+          ) : sortDirection === "desc" ? (
+            <ArrowDownIcon className="size-3.5" />
+          ) : (
+            <ChevronsUpDownIcon className="size-3.5" />
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={() => onSort?.(column.id, "asc")}>

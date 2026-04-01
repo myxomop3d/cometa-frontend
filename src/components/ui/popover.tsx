@@ -78,8 +78,27 @@ function PopoverDescription({
   )
 }
 
+function PopoverAnchor({
+  className,
+  children,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <PopoverPrimitive.Trigger
+      data-slot="popover-anchor"
+      render={<div />}
+      className={className}
+    >
+      {children}
+    </PopoverPrimitive.Trigger>
+  )
+}
+
 export {
   Popover,
+  PopoverAnchor,
   PopoverContent,
   PopoverDescription,
   PopoverHeader,

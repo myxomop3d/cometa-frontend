@@ -8,7 +8,7 @@ import {
   ListChecksIcon,
   ListIcon,
 } from "lucide-react";
-import type { CellOpts, CellPosition } from "@/types/data-grid";
+import type { CellOpts } from "@/types/data-grid";
 
 export function flexRender<TProps extends object>(
   Comp: ((props: TProps) => React.ReactNode) | string | undefined,

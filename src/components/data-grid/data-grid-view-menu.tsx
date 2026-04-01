@@ -29,11 +29,11 @@ export function DataGridViewMenu<TData>({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1">
-          <ColumnsIcon className="size-3.5" />
-          Columns
-        </Button>
+      <PopoverTrigger
+        render={<Button variant="outline" size="sm" className="gap-1" />}
+      >
+        <ColumnsIcon className="size-3.5" />
+        Columns
       </PopoverTrigger>
       <PopoverContent className="w-50 p-0" align="end">
         <Command>

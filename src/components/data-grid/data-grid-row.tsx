@@ -83,7 +83,11 @@ function DataGridRowImpl<TData>({
     [rowIndex, rowMapRef],
   );
 
-  const composedRef = useComposedRefs(ref, measureElement, onRowChange);
+  const composedRef = useComposedRefs(
+    ref,
+    measureElement as (node: HTMLDivElement | null) => void,
+    onRowChange,
+  );
 
   const visibleCells = row.getVisibleCells();
 

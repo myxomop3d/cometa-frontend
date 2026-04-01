@@ -62,7 +62,6 @@ export function RelationFilterModal<T>({
     ? Array.isArray(value) ? value : []
     : value !== undefined ? [value as T] : [];
 
-  const selectedIds = new Set(selectedItems.map(getId));
 
   const displayText = selectedItems.length === 0
     ? placeholder

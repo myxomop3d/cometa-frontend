@@ -40,6 +40,7 @@ export function useServerDataGrid<TData>({
   onDataUpdate,
   readOnly = false,
 }: UseServerDataGridProps<TData>) {
+  void totalCount;
   // Refs
   const dataGridRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);

@@ -324,8 +324,8 @@ export function SelectCell<TData>({
   const initialValue = cell.getValue() as string;
 
   const onValueChange = useCallback(
-    (newValue: string) => {
-      if (newValue !== initialValue) {
+    (newValue: string | null) => {
+      if (newValue !== null && newValue !== initialValue) {
         tableMeta?.onDataUpdate?.({ rowIndex, columnId, value: newValue });
       }
       tableMeta?.onCellEditingStop?.();
