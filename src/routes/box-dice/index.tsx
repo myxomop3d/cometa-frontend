@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   useSuspenseQuery,
@@ -280,10 +280,16 @@ function BoxDicePage() {
     },
   });
 
+  // Refs to break dependency cycles (setFilters is not stable)
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+  const setFiltersRef = useRef(setFilters);
+  setFiltersRef.current = setFilters;
+
   // Sort handler: toggles or sets sort direction, updates URL
   const onSort = useCallback(
     (columnId: string, direction: "asc" | "desc") => {
-      const currentSortBy = filters.sortBy ?? "";
+      const currentSortBy = filtersRef.current.sortBy ?? "";
       const parts = currentSortBy
         .split(",")
         .filter((p) => p.trim().length > 0);
@@ -296,17 +302,17 @@ function BoxDicePage() {
       // Check if same direction already set (toggle off)
       const existing = parts.find((p) => p.trim().startsWith(columnId + ":"));
       if (existing === `${columnId}:${direction}`) {
-        setFilters({
+        setFiltersRef.current({
           sortBy: filtered.length > 0 ? filtered.join(",") : undefined,
         } as Partial<BoxFilters>);
       } else {
         filtered.unshift(`${columnId}:${direction}`);
-        setFilters({
+        setFiltersRef.current({
           sortBy: filtered.join(","),
         } as Partial<BoxFilters>);
       }
     },
-    [filters.sortBy, setFilters],
+    [],
   );
 
   const columns = useMemo(
@@ -315,11 +321,16 @@ function BoxDicePage() {
   );
 
   // Handle cell data updates
+  const boxesRef = useRef(boxes);
+  boxesRef.current = boxes;
+  const mutateRef = useRef(patchMutation.mutate);
+  mutateRef.current = patchMutation.mutate;
+
   const onDataUpdate = useCallback(
     (params: CellUpdate | CellUpdate[]) => {
       const updates = Array.isArray(params) ? params : [params];
       for (const update of updates) {
-        const row = boxes[update.rowIndex];
+        const row = boxesRef.current[update.rowIndex];
         if (!row) continue;
 
         const patch: Partial<BoxDto> = {};
@@ -346,10 +357,10 @@ function BoxDicePage() {
           (patch as Record<string, unknown>)[columnId] = update.value;
         }
 
-        patchMutation.mutate({ id: row.id, data: patch });
+        mutateRef.current({ id: row.id, data: patch });
       }
     },
-    [boxes, patchMutation],
+    [],
   );
 
   const grid = useServerDataGrid({

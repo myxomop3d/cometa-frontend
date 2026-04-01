@@ -89,6 +89,7 @@ function PopoverAnchor({
     <PopoverPrimitive.Trigger
       data-slot="popover-anchor"
       render={<div />}
+      nativeButton={false}
       className={className}
     >
       {children}

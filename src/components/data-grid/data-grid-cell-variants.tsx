@@ -126,14 +126,19 @@ export function ShortTextCell<TData>({
     [isEditing, isFocused, initialValue, tableMeta, rowIndex, columnId],
   );
 
+  // Sync display text imperatively to avoid React/contentEditable conflicts
+  useEffect(() => {
+    if (cellRef.current && !isEditing) {
+      cellRef.current.textContent = value ?? "";
+    }
+  }, [value, isEditing]);
+
   useEffect(() => {
     const wasEditing = prevIsEditingRef.current;
     prevIsEditingRef.current = isEditing;
     if (isEditing && !wasEditing && cellRef.current) {
+      cellRef.current.textContent = value ?? "";
       cellRef.current.focus();
-      if (!cellRef.current.textContent && value) {
-        cellRef.current.textContent = value;
-      }
       if (cellRef.current.textContent) {
         const range = document.createRange();
         const selection = window.getSelection();
@@ -169,9 +174,7 @@ export function ShortTextCell<TData>({
           isEditing && "cursor-text",
           !isEditing && "truncate",
         )}
-      >
-        {!isEditing ? (value ?? "") : ""}
-      </div>
+      />
     </DataGridCellWrapper>
   );
 }

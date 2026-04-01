@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useQuery, queryOptions } from "@tanstack/react-query";
 import { DataGridCellWrapper } from "@/components/data-grid/data-grid-cell-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -153,8 +153,11 @@ export function RelationMultiCell<TData>({
     displayField,
     idField = "id",
   } = cellOpts;
-  const initialValue =
-    (cell.getValue() as Record<string, unknown>[] | null) ?? [];
+  const rawValue = cell.getValue() as Record<string, unknown>[] | null;
+  const initialValue = useMemo(
+    () => rawValue ?? [],
+    [rawValue],
+  );
   const [selected, setSelected] =
     useState<Record<string, unknown>[]>(initialValue);
   const [search, setSearch] = useState("");

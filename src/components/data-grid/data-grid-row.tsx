@@ -68,6 +68,9 @@ function DataGridRowImpl<TData>({
   readOnly,
   className,
   ref,
+  // Used only in memo comparator, not for rendering
+  columnVisibility: _cv,
+  columnPinning: _cp,
   ...props
 }: DataGridRowProps<TData>) {
   const rowIndex = virtualItem.index;

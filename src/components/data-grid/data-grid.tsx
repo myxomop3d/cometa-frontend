@@ -36,6 +36,9 @@ export function DataGrid<TData>({
   onGridBlur,
   height = 600,
   className,
+  // Destructure non-DOM props to prevent them from spreading onto the div
+  cellMapRef: _cellMapRef,
+  columns: _columns,
   ...props
 }: DataGridProps<TData>) {
   const rows = table.getRowModel().rows;
