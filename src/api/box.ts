@@ -1,15 +1,23 @@
 import { queryOptions, keepPreviousData } from "@tanstack/react-query";
-import type { ApiResponse, BoxDto, BoxFilters } from "@/types/api";
+import type { ApiResponse, BoxDto, BoxFilters, CreateBoxDto } from "@/types/api";
 
 const BASE = "/api/v1/box";
 
 const STRING_FILTER_FIELDS = ["name", "objectCode"] as const;
 
 function buildListParams(filters: BoxFilters): URLSearchParams {
-  const { page = 1, pageSize = 20, ...rest } = filters;
+  const { page = 1, pageSize = 20, sortBy, ...rest } = filters;
   const params = new URLSearchParams();
   params.set("$skip", String((page - 1) * pageSize));
   params.set("$top", String(pageSize));
+
+  if (sortBy) {
+    const orderby = sortBy
+      .split(",")
+      .map((s) => s.trim().replace(":", " "))
+      .join(",");
+    params.set("$orderby", orderby);
+  }
 
   const clauses: string[] = [];
 
@@ -105,6 +113,20 @@ export async function patchBox(
   });
   if (!response.ok) {
     throw new Error(`Failed to patch box ${id}: ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function createBox(
+  data: CreateBoxDto,
+): Promise<ApiResponse<BoxDto>> {
+  const response = await fetch(BASE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to create box: ${response.status}`);
   }
   return response.json();
 }

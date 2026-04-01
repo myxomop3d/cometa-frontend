@@ -70,12 +70,16 @@ export interface PaginationParams {
   pageSize: number;
 }
 
+export interface SortByParams {
+  sortBy?: string; // e.g. "name:asc,num:desc"
+}
+
 export type Filters<T> = Partial<T & PaginationParams>;
 export type AutomatedSystemFilters = Filters<AutomatedSystemDto>;
 
 // Box filters — standalone interface because filter params (ranges, relation IDs)
 // don't map 1:1 to BoxDto fields, unlike AutomatedSystemFilters.
-export interface BoxFilters extends Partial<PaginationParams> {
+export interface BoxFilters extends Partial<PaginationParams>, Partial<SortByParams> {
   // String contains
   name?: string;
   objectCode?: string;
@@ -96,6 +100,20 @@ export interface BoxFilters extends Partial<PaginationParams> {
   oldItemId?: number;
   oldThingIds?: number[];
 }
+
+export type CreateBoxDto = {
+  name: string;
+  objectCode?: string | null;
+  shape: "O" | "X";
+  num: number;
+  dateStr: string;
+  checkbox: boolean;
+  tags?: string[];
+  itemId?: number | null;
+  thingIds?: number[];
+  oldItemId?: number | null;
+  oldThingIds?: number[];
+};
 
 // Node hierarchy
 export interface NodeDto {
