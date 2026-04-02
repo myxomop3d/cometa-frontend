@@ -1,0 +1,65 @@
+<h2>Architecture Approaches</h2>
+<p class="subtitle">How to structure the new filter system for BoxDto and reuse across pages</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Extend SimpleTable with new filter types</h3>
+      <p>Add filter type definitions to <code>SimpleTable</code>'s <code>filterFields</code> prop. Each field declares its type (<code>text</code>, <code>number-range</code>, <code>checkbox</code>, <code>select</code>, <code>date-range</code>, <code>relation-dropdown</code>, <code>relation-modal</code>, <code>relation-both</code>). SimpleTable renders the right input component based on type.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Single component handles everything</li>
+          <li>Consistent with current pattern</li>
+          <li>Filter state stays URL-synced via existing useFilters</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>SimpleTable grows large with many filter types</li>
+          <li>Relation filters need query hooks — tight coupling</li>
+          <li>Hard to test individual filter types</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Composable filter components + enhanced SimpleTable</h3>
+      <p>Create individual filter components (<code>NumberRangeFilter</code>, <code>DateRangeFilter</code>, <code>RelationFilter</code>, etc.) that each manage their own UI but report values through a shared <code>onFilterChange</code> callback. SimpleTable accepts a <code>filterSlot</code> render prop or children instead of building filters internally. The route page composes the filter bar.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Each filter is an independent, testable component</li>
+          <li>SimpleTable stays focused on table rendering</li>
+          <li>Easy to add new filter types without touching SimpleTable</li>
+          <li>Relation filters can use their own query hooks cleanly</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>More files to create</li>
+          <li>Page component has more wiring code</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Config-driven filter builder</h3>
+      <p>Define a filter schema object (similar to editConfig) that declaratively describes all filters. A <code>FilterBuilder</code> component reads the schema and renders the right inputs. Relation configs include query functions and display extractors.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Very declarative — adding a page is just writing a config</li>
+          <li>Uniform API for all filter types</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Abstracts too early — only 2 pages so far</li>
+          <li>Config objects become complex (query fns, display fns, modal configs)</li>
+          <li>Harder to customize per-page edge cases</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 1.5rem; color: var(--text-secondary)"><strong>Recommendation:</strong> Option B — composable filter components. It keeps SimpleTable clean, each filter type is self-contained, and relation filters with their query hooks stay decoupled. The slight extra wiring in the page component is worth the modularity.</p>

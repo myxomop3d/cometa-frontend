@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { NodeDto } from "@/types/api";
+import type { MicroserviceNodeDto, NodeDto, TopicNodeDto } from "@/types/api";
 import { nodes } from "../data/nodes";
 import { interfaces } from "../data/interfaces";
 import { apiError, apiResponse } from "../lib/response";
@@ -76,11 +76,11 @@ export const nodeHandlers = [
 
   // CREATE
   http.post("/api/v1/node", async ({ request }) => {
-    const body = (await request.json()) as NodeDto;
+    const body = (await request.json()) as MicroserviceNodeDto | TopicNodeDto;
     const newItem = {
       ...body,
       id: Math.max(...db.map((i) => i.id)) + 1,
-    };
+    } as MicroserviceNodeDto | TopicNodeDto;
     db.push(newItem);
     return apiResponse(newItem);
   }),
@@ -89,8 +89,8 @@ export const nodeHandlers = [
   http.put("/api/v1/node/:id", async ({ request, params }) => {
     const idx = db.findIndex((n) => n.id === Number(params.id));
     if (idx === -1) return apiError("Запись не найдена", 404);
-    const body = (await request.json()) as NodeDto;
-    db[idx] = { ...body, id: db[idx].id };
+    const body = (await request.json()) as MicroserviceNodeDto | TopicNodeDto;
+    db[idx] = { ...body, id: db[idx].id } as MicroserviceNodeDto | TopicNodeDto;
     return apiResponse(db[idx]);
   }),
 
@@ -98,8 +98,8 @@ export const nodeHandlers = [
   http.patch("/api/v1/node/:id", async ({ request, params }) => {
     const idx = db.findIndex((n) => n.id === Number(params.id));
     if (idx === -1) return apiError("Запись не найдена", 404);
-    const body = (await request.json()) as Partial<NodeDto>;
-    db[idx] = { ...db[idx], ...body };
+    const body = (await request.json()) as Partial<MicroserviceNodeDto | TopicNodeDto>;
+    db[idx] = { ...db[idx], ...body } as MicroserviceNodeDto | TopicNodeDto;
     return apiResponse(db[idx]);
   }),
 

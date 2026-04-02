@@ -12,6 +12,37 @@ export interface AppMessage {
   description: string | null;
 }
 
+export interface BoxDto {
+  id: number;
+  name: string;
+  objectCode: string | null;
+  shape: "O" | "X";
+  num: number;
+  item: ItemDto | null;
+  things: ThingDto[] | null;
+  oldItem: ItemDto | null;
+  oldThings: ThingDto[] | null;
+  dateStr: string;
+  checkbox: boolean;
+  tags: string[];
+}
+
+export interface ItemDto {
+  id: number;
+  name: string;
+  status: "ON" | "OFF";
+  date: string;
+  count: number;
+}
+
+export interface ThingDto {
+  id: number;
+  name: string;
+  status: "ON" | "OFF";
+  date: string;
+  count: number;
+}
+
 // AutomatedSystem
 export interface AutomatedSystemDto {
   id: number;
@@ -39,8 +70,50 @@ export interface PaginationParams {
   pageSize: number;
 }
 
+export interface SortByParams {
+  sortBy?: string; // e.g. "name:asc,num:desc"
+}
+
 export type Filters<T> = Partial<T & PaginationParams>;
 export type AutomatedSystemFilters = Filters<AutomatedSystemDto>;
+
+// Box filters — standalone interface because filter params (ranges, relation IDs)
+// don't map 1:1 to BoxDto fields, unlike AutomatedSystemFilters.
+export interface BoxFilters extends Partial<PaginationParams>, Partial<SortByParams> {
+  // String contains
+  name?: string;
+  objectCode?: string;
+  tags?: string;
+  // Literal/enum
+  shape?: "O" | "X";
+  // Number range
+  numMin?: number;
+  numMax?: number;
+  // Boolean
+  checkbox?: boolean;
+  // Date range
+  dateStrFrom?: string;
+  dateStrTo?: string;
+  // Relations (store IDs)
+  itemId?: number;
+  thingIds?: number[];
+  oldItemId?: number;
+  oldThingIds?: number[];
+}
+
+export type CreateBoxDto = {
+  name: string;
+  objectCode?: string | null;
+  shape: "O" | "X";
+  num: number;
+  dateStr: string;
+  checkbox: boolean;
+  tags?: string[];
+  itemId?: number | null;
+  thingIds?: number[];
+  oldItemId?: number | null;
+  oldThingIds?: number[];
+};
 
 // Node hierarchy
 export interface NodeDto {

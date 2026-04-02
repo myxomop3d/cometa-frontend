@@ -1,0 +1,62 @@
+<h2>Architecture Approaches for box-dice page</h2>
+<p class="subtitle">How to integrate tablecn's data grid with your server-side pattern</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Thin Adapter Layer</h3>
+      <p>Copy tablecn's data grid components as-is into <code>src/components/data-grid/</code>. Create a thin <code>useServerDataGrid</code> hook that replaces TanStack DB with your existing TanStack Query + URL-synced filters pattern. The hook translates grid state (sorting, filtering, pagination) into your OData API params.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Minimal changes to tablecn components</li>
+          <li>Easier to pull upstream updates</li>
+          <li>Clean separation: grid UI vs data fetching</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Unused code paths remain in components</li>
+          <li>Larger bundle — features you don't use still ship</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Trimmed Fork</h3>
+      <p>Copy only the components you need from tablecn, removing undo/redo, paste, dnd, cell range selection, and TanStack DB references. Adapt the <code>useDataGrid</code> hook to accept server-side state directly. Keep cell variants, column header, filter/sort/view menus.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>No dead code — every line serves your use case</li>
+          <li>Smaller bundle and simpler debugging</li>
+          <li>Full control over the implementation</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>More upfront work to strip and adapt</li>
+          <li>Harder to pull upstream changes</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Inspired Rebuild</h3>
+      <p>Don't copy tablecn code. Instead, use it as a reference to build your own data grid components from scratch, using the same patterns (TanStack Table + virtual scrolling + cell variants) but designed from the start for your server-side architecture.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Purpose-built for your exact needs</li>
+          <li>No adaptation friction</li>
+          <li>Deepest understanding of every line</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Significantly more work</li>
+          <li>Risk of missing edge cases tablecn already handles</li>
+          <li>Cell editing UX is hard to get right from scratch</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</div>
