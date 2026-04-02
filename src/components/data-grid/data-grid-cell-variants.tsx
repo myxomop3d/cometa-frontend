@@ -42,7 +42,9 @@ export function ShortTextCell<TData>({
   isFocused,
   readOnly,
 }: DataGridCellProps<TData>) {
-  const initialValue = cell.getValue() as string;
+  const rawValue = cell.getValue();
+  const initialValue =
+    typeof rawValue === "string" ? rawValue : String(rawValue ?? "");
   const [value, setValue] = useState(initialValue);
   const cellRef = useRef<HTMLDivElement>(null);
   const prevIsEditingRef = useRef(false);
