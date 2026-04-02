@@ -85,3 +85,79 @@ export interface DataGridCellProps<TData> {
   isFocused: boolean;
   readOnly: boolean;
 }
+
+// ── Filter Types ──
+
+export type TextFilterOperator =
+  | "contains"
+  | "notContains"
+  | "equals"
+  | "notEquals"
+  | "startsWith"
+  | "endsWith"
+  | "isEmpty"
+  | "isNotEmpty";
+
+export type NumberFilterOperator =
+  | "equals"
+  | "notEquals"
+  | "lessThan"
+  | "lessThanOrEqual"
+  | "greaterThan"
+  | "greaterThanOrEqual"
+  | "isBetween"
+  | "isEmpty"
+  | "isNotEmpty";
+
+export type DateFilterOperator =
+  | "equals"
+  | "notEquals"
+  | "before"
+  | "after"
+  | "onOrBefore"
+  | "onOrAfter"
+  | "isBetween"
+  | "isEmpty"
+  | "isNotEmpty";
+
+export type SelectFilterOperator =
+  | "is"
+  | "isNot"
+  | "isAnyOf"
+  | "isNoneOf"
+  | "isEmpty"
+  | "isNotEmpty";
+
+export type BooleanFilterOperator = "isTrue" | "isFalse";
+
+export type FilterOperator =
+  | TextFilterOperator
+  | NumberFilterOperator
+  | DateFilterOperator
+  | SelectFilterOperator
+  | BooleanFilterOperator;
+
+export interface FilterValue {
+  operator: FilterOperator;
+  value?: string | number | string[];
+  endValue?: string | number;
+}
+
+export interface FilterEntry {
+  id: string;
+  operator: FilterOperator;
+  value?: string | number | string[];
+  endValue?: string | number;
+}
+
+export interface SortEntry {
+  id: string;
+  desc: boolean;
+}
+
+export interface FilterColumnDef {
+  id: string;
+  label: string;
+  variant: string;
+  options?: CellSelectOption[];
+}

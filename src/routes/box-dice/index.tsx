@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   useSuspenseQuery,
@@ -6,17 +6,28 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
+import { PlusIcon } from "lucide-react";
 import { boxesQueryOptions, patchBox } from "@/api/box";
 import { itemsFilteredQueryOptions } from "@/api/item";
 import { thingsFilteredQueryOptions } from "@/api/thing";
 import type { BoxDto, BoxFilters } from "@/types/api";
-import type { CellUpdate } from "@/types/data-grid";
+import type {
+  CellUpdate,
+  FilterColumnDef,
+  FilterEntry,
+  SortEntry,
+} from "@/types/data-grid";
 import { useFilters } from "@/hooks/useFilters";
 import { useServerDataGrid } from "@/hooks/useServerDataGrid";
+import { Button } from "@/components/ui/button";
 import { DataGrid } from "@/components/data-grid/data-grid";
+import { DataGridAddRow } from "@/components/data-grid/data-grid-add-row";
 import { DataGridColumnHeader } from "@/components/data-grid/data-grid-column-header";
-import { DataGridViewMenu } from "@/components/data-grid/data-grid-view-menu";
+import { DataGridFilterMenu } from "@/components/data-grid/data-grid-filter-menu";
 import { DataGridPagination } from "@/components/data-grid/data-grid-pagination";
+import { DataGridSortMenu } from "@/components/data-grid/data-grid-sort-menu";
+import { DataGridViewMenu } from "@/components/data-grid/data-grid-view-menu";
+import { AddBoxDialog } from "./add-box-dialog";
 
 // ── URL Search Params ──
 
@@ -261,11 +272,211 @@ function getColumns(
   ];
 }
 
+// ── Sort/Filter Helpers ──
+
+function parseSortBy(sortBy: string | undefined): SortEntry[] {
+  if (!sortBy) return [];
+  return sortBy
+    .split(",")
+    .map((part) => {
+      const [field, dir] = part.trim().split(":");
+      if (field && (dir === "asc" || dir === "desc")) {
+        return { id: field, desc: dir === "desc" };
+      }
+      return null;
+    })
+    .filter((s): s is SortEntry => s !== null);
+}
+
+function serializeSortBy(sorting: SortEntry[]): string | undefined {
+  if (sorting.length === 0) return undefined;
+  return sorting.map((s) => `${s.id}:${s.desc ? "desc" : "asc"}`).join(",");
+}
+
+const FILTER_COLUMNS: FilterColumnDef[] = [
+  { id: "name", label: "Name", variant: "short-text" },
+  { id: "objectCode", label: "Object Code", variant: "short-text" },
+  {
+    id: "shape",
+    label: "Shape",
+    variant: "select",
+    options: [
+      { label: "O", value: "O" },
+      { label: "X", value: "X" },
+    ],
+  },
+  { id: "num", label: "Num", variant: "number" },
+  { id: "dateStr", label: "Date", variant: "date" },
+  { id: "checkbox", label: "Checkbox", variant: "checkbox" },
+  { id: "tags", label: "Tags", variant: "short-text" },
+];
+
+const SORTABLE_COLUMNS = [
+  { id: "id", label: "ID" },
+  { id: "name", label: "Name" },
+  { id: "objectCode", label: "Object Code" },
+  { id: "shape", label: "Shape" },
+  { id: "num", label: "Num" },
+  { id: "dateStr", label: "Date" },
+  { id: "checkbox", label: "Checkbox" },
+];
+
+function filtersToEntries(filters: BoxFilters): FilterEntry[] {
+  const entries: FilterEntry[] = [];
+  if (filters.name) {
+    entries.push({ id: "name", operator: "contains", value: filters.name });
+  }
+  if (filters.objectCode) {
+    entries.push({
+      id: "objectCode",
+      operator: "contains",
+      value: filters.objectCode,
+    });
+  }
+  if (filters.shape) {
+    entries.push({ id: "shape", operator: "is", value: filters.shape });
+  }
+  if (filters.numMin != null || filters.numMax != null) {
+    if (filters.numMin != null && filters.numMax != null) {
+      entries.push({
+        id: "num",
+        operator: "isBetween",
+        value: filters.numMin,
+        endValue: filters.numMax,
+      });
+    } else if (filters.numMin != null) {
+      entries.push({
+        id: "num",
+        operator: "greaterThanOrEqual",
+        value: filters.numMin,
+      });
+    } else if (filters.numMax != null) {
+      entries.push({
+        id: "num",
+        operator: "lessThanOrEqual",
+        value: filters.numMax,
+      });
+    }
+  }
+  if (filters.dateStrFrom || filters.dateStrTo) {
+    if (filters.dateStrFrom && filters.dateStrTo) {
+      entries.push({
+        id: "dateStr",
+        operator: "isBetween",
+        value: filters.dateStrFrom,
+        endValue: filters.dateStrTo,
+      });
+    } else if (filters.dateStrFrom) {
+      entries.push({
+        id: "dateStr",
+        operator: "onOrAfter",
+        value: filters.dateStrFrom,
+      });
+    } else if (filters.dateStrTo) {
+      entries.push({
+        id: "dateStr",
+        operator: "onOrBefore",
+        value: filters.dateStrTo,
+      });
+    }
+  }
+  if (filters.checkbox != null) {
+    entries.push({
+      id: "checkbox",
+      operator: filters.checkbox ? "isTrue" : "isFalse",
+    });
+  }
+  if (filters.tags) {
+    entries.push({ id: "tags", operator: "contains", value: filters.tags });
+  }
+  return entries;
+}
+
+function entriesToFilters(entries: FilterEntry[]): Partial<BoxFilters> {
+  const result: Partial<BoxFilters> = {
+    name: undefined,
+    objectCode: undefined,
+    shape: undefined,
+    numMin: undefined,
+    numMax: undefined,
+    dateStrFrom: undefined,
+    dateStrTo: undefined,
+    checkbox: undefined,
+    tags: undefined,
+  };
+
+  for (const entry of entries) {
+    switch (entry.id) {
+      case "name":
+        result.name = entry.value as string | undefined;
+        break;
+      case "objectCode":
+        result.objectCode = entry.value as string | undefined;
+        break;
+      case "shape":
+        result.shape = entry.value as "O" | "X" | undefined;
+        break;
+      case "num":
+        if (entry.operator === "isBetween") {
+          result.numMin = entry.value as number | undefined;
+          result.numMax = entry.endValue as number | undefined;
+        } else if (
+          entry.operator === "greaterThan" ||
+          entry.operator === "greaterThanOrEqual"
+        ) {
+          result.numMin = entry.value as number | undefined;
+        } else if (
+          entry.operator === "lessThan" ||
+          entry.operator === "lessThanOrEqual"
+        ) {
+          result.numMax = entry.value as number | undefined;
+        } else if (entry.operator === "equals") {
+          result.numMin = entry.value as number | undefined;
+          result.numMax = entry.value as number | undefined;
+        }
+        break;
+      case "dateStr":
+        if (entry.operator === "isBetween") {
+          result.dateStrFrom = entry.value as string | undefined;
+          result.dateStrTo = (entry.endValue as string) ?? undefined;
+        } else if (
+          entry.operator === "after" ||
+          entry.operator === "onOrAfter"
+        ) {
+          result.dateStrFrom = entry.value as string | undefined;
+        } else if (
+          entry.operator === "before" ||
+          entry.operator === "onOrBefore"
+        ) {
+          result.dateStrTo = entry.value as string | undefined;
+        } else if (entry.operator === "equals") {
+          result.dateStrFrom = entry.value as string | undefined;
+          result.dateStrTo = entry.value as string | undefined;
+        }
+        break;
+      case "checkbox":
+        result.checkbox =
+          entry.operator === "isTrue"
+            ? true
+            : entry.operator === "isFalse"
+              ? false
+              : undefined;
+        break;
+      case "tags":
+        result.tags = entry.value as string | undefined;
+        break;
+    }
+  }
+
+  return result;
+}
+
 // ── Page Component ──
 
 function BoxDicePage() {
   const { filters, setFilters, setPage } = useFilters("/box-dice/");
   const queryClient = useQueryClient();
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const { data: boxesResponse } = useSuspenseQuery(boxesQueryOptions(filters));
   const boxes = boxesResponse.data;
@@ -320,6 +531,37 @@ function BoxDicePage() {
     [filters.sortBy, onSort],
   );
 
+  // Sort menu state
+  const sorting = useMemo(
+    () => parseSortBy(filters.sortBy),
+    [filters.sortBy],
+  );
+
+  const onSortingChange = useCallback(
+    (newSorting: SortEntry[]) => {
+      setFiltersRef.current({
+        sortBy: serializeSortBy(newSorting),
+      } as Partial<BoxFilters>);
+    },
+    [],
+  );
+
+  // Filter menu state
+  const filterEntries = useMemo(
+    () => filtersToEntries(filters),
+    [filters],
+  );
+
+  const onFiltersChange = useCallback(
+    (entries: FilterEntry[]) => {
+      setFiltersRef.current({
+        ...entriesToFilters(entries),
+        page: 1,
+      } as Partial<BoxFilters>);
+    },
+    [],
+  );
+
   // Handle cell data updates
   const boxesRef = useRef(boxes);
   boxesRef.current = boxes;
@@ -346,13 +588,6 @@ function BoxDicePage() {
           } else {
             patch.tags = val as string[];
           }
-        } else if (
-          columnId === "item" ||
-          columnId === "oldItem" ||
-          columnId === "things" ||
-          columnId === "oldThings"
-        ) {
-          (patch as Record<string, unknown>)[columnId] = update.value;
         } else {
           (patch as Record<string, unknown>)[columnId] = update.value;
         }
@@ -379,20 +614,38 @@ function BoxDicePage() {
           <p className="text-sm text-muted-foreground">{totalCount} boxes</p>
         </div>
         <div className="flex items-center gap-2">
+          <DataGridFilterMenu
+            columns={FILTER_COLUMNS}
+            filters={filterEntries}
+            onFiltersChange={onFiltersChange}
+          />
+          <DataGridSortMenu
+            columns={SORTABLE_COLUMNS}
+            sorting={sorting}
+            onSortingChange={onSortingChange}
+          />
           <DataGridViewMenu table={grid.table} />
+          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+            <PlusIcon className="size-4" />
+            Add Box
+          </Button>
         </div>
       </div>
 
       {/* Data Grid */}
       <DataGrid {...grid} height={600} />
 
-      {/* Pagination */}
+      {/* Add Row + Pagination */}
+      <DataGridAddRow onAddRow={() => setAddDialogOpen(true)} label="Add box" />
       <DataGridPagination
         page={filters.page ?? 1}
         pageSize={filters.pageSize ?? 20}
         totalCount={totalCount}
         onPageChange={setPage}
       />
+
+      {/* Add Box Dialog */}
+      <AddBoxDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
     </div>
   );
 }
