@@ -100,7 +100,7 @@ function getColumns(
       ),
       size: 80,
       meta: { label: "ID" },
-      enableHiding: false,
+      enableHiding: true,
     }),
     columnHelper.accessor("name", {
       header: ({ column }) => (
