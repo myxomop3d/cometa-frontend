@@ -70,6 +70,10 @@ export interface PaginationParams {
   pageSize: number;
 }
 
+export interface SortByParams {
+  sortBy?: string; // comma-separated: "name.asc,num.desc"
+}
+
 export type Filters<T> = Partial<T & PaginationParams>;
 export type AutomatedSystemFilters = Filters<AutomatedSystemDto>;
 
