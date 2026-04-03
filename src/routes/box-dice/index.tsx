@@ -7,6 +7,7 @@ import { DataTable } from "@/components/data-table/data-table";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import { useDataTable } from "@/hooks/use-data-table";
 import { boxDiceQueryOptions } from "@/api/box";
+import { calculatePageSize } from "@/lib/data-table";
 import { getBoxColumns } from "./components/-box-table-columns";
 import { BoxSheet } from "./components/-box-sheet";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ function parseIdList(raw: unknown): number[] | undefined {
 
 interface BoxDiceSearchParams {
   page: number;
-  pageSize: number;
+  pageSize: number | undefined;
   sort: string | undefined;
   name: string | undefined;
   objectCode: string | undefined;
@@ -45,7 +46,7 @@ interface BoxDiceSearchParams {
 function validateSearch(search: Record<string, unknown>): BoxDiceSearchParams {
   return {
     page: typeof search.page === "number" ? search.page : 1,
-    pageSize: typeof search.pageSize === "number" ? search.pageSize : 20,
+    pageSize: typeof search.pageSize === "number" ? search.pageSize : undefined,
     sort: typeof search.sort === "string" ? search.sort : undefined,
     name: typeof search.name === "string" ? search.name : undefined,
     objectCode: typeof search.objectCode === "string" ? search.objectCode : undefined,
@@ -113,7 +114,7 @@ export const Route = createFileRoute("/box-dice/")({
     return context.queryClient.ensureQueryData(
       boxDiceQueryOptions({
         page: page ?? 1,
-        pageSize: pageSize ?? 20,
+        pageSize: pageSize ?? calculatePageSize(),
         sort,
         columnFilters: deriveColumnFiltersFromSearch(filterParams, columns as any),
         columns: columns.map((c) => ({
@@ -141,7 +142,7 @@ function BoxDicePage() {
     const { page, pageSize, sort, ...filterParams } = search;
     return boxDiceQueryOptions({
       page: page ?? 1,
-      pageSize: pageSize ?? 20,
+      pageSize: pageSize ?? calculatePageSize(),
       sort,
       columnFilters: deriveColumnFiltersFromSearch(filterParams, columns as any),
       columns: columns.map((c) => ({
@@ -154,7 +155,7 @@ function BoxDicePage() {
   const { data } = useSuspenseQuery(queryOptions);
 
   const page = search.page ?? 1;
-  const pageSize = search.pageSize ?? 20;
+  const pageSize = search.pageSize ?? calculatePageSize();
   const pageCount = Math.ceil(data.count / pageSize);
 
   const onNavigate = useCallback(

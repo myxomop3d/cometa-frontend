@@ -59,12 +59,16 @@ export function RelationPicker<TRelated>({
   variant = "toolbar",
 }: RelationPickerProps<TRelated>) {
   const [open, setOpen] = React.useState(false);
-  const [modalFilters, setModalFilters] = React.useState<Record<string, unknown>>({});
+  const [modalFilters, setModalFilters] = React.useState<
+    Record<string, unknown>
+  >({});
   const [modalSelection, setModalSelection] = React.useState<number[]>([]);
 
   // Fetch filtered data for modal (pageSize=10)
   const { data: filteredData, isFetching } = useQuery(
-    queryOptionsFn({ ...modalFilters, pageSize: 10, page: 1 }) as Parameters<typeof useQuery>[0],
+    queryOptionsFn({ ...modalFilters, pageSize: 10, page: 1 }) as Parameters<
+      typeof useQuery
+    >[0],
   );
 
   // Hydrate labels for selected IDs by fetching only those items via id filter
@@ -95,7 +99,7 @@ export function RelationPicker<TRelated>({
   React.useEffect(() => {
     if (open) {
       const ids = multi
-        ? (value as number[] | undefined) ?? []
+        ? ((value as number[] | undefined) ?? [])
         : value !== undefined
           ? [value as number]
           : [];
@@ -129,7 +133,8 @@ export function RelationPicker<TRelated>({
   };
 
   // Modal table
-  const modalRows = (filteredData as ApiResponse<TRelated[]> | undefined)?.data ?? [];
+  const modalRows =
+    (filteredData as ApiResponse<TRelated[]> | undefined)?.data ?? [];
   const modalTable = useReactTable({
     data: modalRows,
     columns,
@@ -166,12 +171,19 @@ export function RelationPicker<TRelated>({
           {hasValue && selectedLabels.length > 0 && (
             <div className="hidden items-center gap-1 lg:flex">
               {selectedLabels.length > 2 ? (
-                <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                <Badge
+                  variant="secondary"
+                  className="rounded-sm px-1 font-normal"
+                >
                   {selectedLabels.length} selected
                 </Badge>
               ) : (
                 selectedLabels.map((s) => (
-                  <Badge key={s.id} variant="secondary" className="rounded-sm px-1 font-normal">
+                  <Badge
+                    key={s.id}
+                    variant="secondary"
+                    className="rounded-sm px-1 font-normal"
+                  >
                     {s.label}
                   </Badge>
                 ))
@@ -189,7 +201,11 @@ export function RelationPicker<TRelated>({
           {hasValue && selectedLabels.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {selectedLabels.map((s) => (
-                <Badge key={s.id} variant="secondary" className="rounded-sm px-1 font-normal">
+                <Badge
+                  key={s.id}
+                  variant="secondary"
+                  className="rounded-sm px-1 font-normal"
+                >
                   {s.label}
                 </Badge>
               ))}
@@ -201,7 +217,7 @@ export function RelationPicker<TRelated>({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-min h-min max-w-5/6 max-h-5/6 sm:max-w-5/6 sm:max-h-5/6 flex flex-col">
           <DialogHeader>
             <DialogTitle>{placeholder}</DialogTitle>
           </DialogHeader>
@@ -232,7 +248,10 @@ export function RelationPicker<TRelated>({
                       <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -266,7 +285,10 @@ export function RelationPicker<TRelated>({
                         )}
                         {row.getVisibleCells().map((cell) => (
                           <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
                           </TableCell>
                         ))}
                       </TableRow>
