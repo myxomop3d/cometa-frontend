@@ -22,7 +22,8 @@
       "Bash(npx shadcn@latest add calendar -y -o)",
       "Bash(npm run:*)",
       "Bash(npx shadcn@latest add button-group)",
-      "mcp__playwright__browser_navigate"
+      "mcp__playwright__browser_navigate",
+      "Bash(find F:/programming/react/cometa-frontend/src/routes -name *.tsx)"
     ]
   }
 }
