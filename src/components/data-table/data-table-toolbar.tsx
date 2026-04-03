@@ -2,6 +2,8 @@ import type { Column, Table } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import * as React from "react";
 
+import { RelationPicker, type RelationPickerProps } from "@/components/relation-picker";
+
 import { DataTableDateFilter } from "@/components/data-table/data-table-date-filter";
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 import { DataTableSliderFilter } from "@/components/data-table/data-table-slider-filter";
@@ -151,9 +153,34 @@ function DataTableToolbarFilter<TData>({
           );
 
         case "relation":
+          return columnMeta.relationConfig ? (
+            <RelationPicker
+              multi={false}
+              value={column.getFilterValue() as number | undefined}
+              onChange={(val) => column.setFilterValue(val ?? undefined)}
+              queryOptionsFn={columnMeta.relationConfig.queryOptionsFn as RelationPickerProps<unknown>["queryOptionsFn"]}
+              columns={columnMeta.relationConfig.columns}
+              getLabel={columnMeta.relationConfig.getLabel}
+              getId={columnMeta.relationConfig.getId}
+              placeholder={columnMeta.label ?? column.id}
+              variant="toolbar"
+            />
+          ) : null;
+
         case "multiRelation":
-          // Will be wired in a later task
-          return null;
+          return columnMeta.relationConfig ? (
+            <RelationPicker
+              multi={true}
+              value={column.getFilterValue() as number[] | undefined}
+              onChange={(val) => column.setFilterValue(val ?? undefined)}
+              queryOptionsFn={columnMeta.relationConfig.queryOptionsFn as RelationPickerProps<unknown>["queryOptionsFn"]}
+              columns={columnMeta.relationConfig.columns}
+              getLabel={columnMeta.relationConfig.getLabel}
+              getId={columnMeta.relationConfig.getId}
+              placeholder={columnMeta.label ?? column.id}
+              variant="toolbar"
+            />
+          ) : null;
 
         default:
           return null;
