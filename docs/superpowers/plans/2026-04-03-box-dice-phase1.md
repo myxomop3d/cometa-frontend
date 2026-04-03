@@ -95,7 +95,6 @@ declare module "@tanstack/react-table" {
 
 export interface RelationConfig<TRelated> {
   queryOptionsFn: (filters: Record<string, unknown>) => QueryOptions;
-  allQueryOptionsFn: () => QueryOptions;
   columns: ColumnDef<TRelated, unknown>[];
   getLabel: (item: TRelated) => string;
   getId: (item: TRelated) => number;
@@ -2206,10 +2205,6 @@ interface RelationPickerProps<TRelated> {
     queryKey: unknown[];
     queryFn: () => Promise<ApiResponse<TRelated>>;
   };
-  allQueryOptionsFn: () => {
-    queryKey: unknown[];
-    queryFn: () => Promise<ApiResponse<TRelated>>;
-  };
   columns: ColumnDef<TRelated, unknown>[];
   getLabel: (item: TRelated) => string;
   getId: (item: TRelated) => number;
@@ -2224,7 +2219,6 @@ export function RelationPicker<TRelated>({
   value,
   onChange,
   queryOptionsFn,
-  allQueryOptionsFn,
   columns,
   getLabel,
   getId,
@@ -2241,20 +2235,28 @@ export function RelationPicker<TRelated>({
     queryOptionsFn({ ...modalFilters, pageSize: 10, page: 1 }),
   );
 
-  // Fetch all data for label hydration
-  const { data: allData } = useQuery(allQueryOptionsFn());
+  // Hydrate labels for selected IDs by fetching only those items via OData id filter
+  const selectedIds = React.useMemo(() => {
+    if (!value) return [];
+    return multi ? (value as number[]) : [value as number];
+  }, [value, multi]);
 
-  // Derive selected labels
+  const { data: labelData } = useQuery({
+    ...queryOptionsFn({ ids: selectedIds }),
+    enabled: selectedIds.length > 0,
+  });
+
+  // Derive selected labels from the ID-filtered query
   const selectedLabels = React.useMemo(() => {
-    if (!allData?.data) return [];
-    const ids = multi
-      ? (value as number[] | undefined) ?? []
-      : value !== undefined ? [value as number] : [];
-    return ids.map((id) => {
-      const item = allData.data.find((i) => getId(i) === id);
+    if (selectedIds.length === 0) return [];
+    if (!labelData?.data) {
+      return selectedIds.map((id) => ({ id, label: `#${id}` }));
+    }
+    return selectedIds.map((id) => {
+      const item = labelData.data.find((i: TRelated) => getId(i) === id);
       return { id, label: item ? getLabel(item) : `#${id}` };
     });
-  }, [value, allData, multi, getLabel, getId]);
+  }, [selectedIds, labelData, getLabel, getId]);
 
   // On modal open, initialize selection from current value
   React.useEffect(() => {
@@ -2486,7 +2488,7 @@ Replace the `case "relation":` and `case "multiRelation":` blocks:
           value={column.getFilterValue() as number | undefined}
           onChange={(val) => column.setFilterValue(val ?? undefined)}
           queryOptionsFn={columnMeta.relationConfig.queryOptionsFn}
-          allQueryOptionsFn={columnMeta.relationConfig.allQueryOptionsFn}
+
           columns={columnMeta.relationConfig.columns}
           getLabel={columnMeta.relationConfig.getLabel}
           getId={columnMeta.relationConfig.getId}
@@ -2502,7 +2504,7 @@ Replace the `case "relation":` and `case "multiRelation":` blocks:
           value={column.getFilterValue() as number[] | undefined}
           onChange={(val) => column.setFilterValue(val ?? undefined)}
           queryOptionsFn={columnMeta.relationConfig.queryOptionsFn}
-          allQueryOptionsFn={columnMeta.relationConfig.allQueryOptionsFn}
+
           columns={columnMeta.relationConfig.columns}
           getLabel={columnMeta.relationConfig.getLabel}
           getId={columnMeta.relationConfig.getId}
@@ -2531,6 +2533,22 @@ git commit -m "feat: add RelationPicker and wire relation filters in toolbar"
 
 **Files:**
 - Modify: `src/api/box.ts`
+- Modify: `src/api/item.ts`
+- Modify: `src/api/thing.ts`
+
+- [ ] **Step 0: Add `ids` filter support to item and thing APIs**
+
+In `src/api/item.ts`, update `fetchItemsFiltered` to support an `ids` filter param that builds an OData `id in (1,4,5)` clause:
+
+```typescript
+// Inside fetchItemsFiltered, after the existing name filter clause:
+if (fieldFilters.ids && Array.isArray(fieldFilters.ids) && fieldFilters.ids.length > 0) {
+  const idList = (fieldFilters.ids as number[]).join(",");
+  filterClauses.push(`id in (${idList})`);
+}
+```
+
+Apply the same change to `fetchThingsFiltered` in `src/api/thing.ts`.
 
 - [ ] **Step 1: Add `buildDataTableParams`, `boxDiceQueryOptions`, and `createBox` to `src/api/box.ts`**
 
@@ -2749,8 +2767,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { BoxDto, ItemDto, ThingDto } from "@/types/api";
 import type { DataTableRowAction } from "@/types/data-table";
-import { itemsFilteredQueryOptions, itemsQueryOptions } from "@/api/item";
-import { thingsFilteredQueryOptions, thingsQueryOptions } from "@/api/thing";
+import { itemsFilteredQueryOptions } from "@/api/item";
+import { thingsFilteredQueryOptions } from "@/api/thing";
 
 const itemColumns: ColumnDef<ItemDto, unknown>[] = [
   { accessorKey: "id", header: "ID" },
@@ -2890,7 +2908,7 @@ export function getBoxColumns({
         relationConfig: {
           queryOptionsFn: (filters: Record<string, unknown>) =>
             itemsFilteredQueryOptions(filters),
-          allQueryOptionsFn: () => itemsQueryOptions(),
+
           columns: itemColumns,
           getLabel: (item: ItemDto) => item.name,
           getId: (item: ItemDto) => item.id,
@@ -2919,7 +2937,7 @@ export function getBoxColumns({
         relationConfig: {
           queryOptionsFn: (filters: Record<string, unknown>) =>
             thingsFilteredQueryOptions(filters),
-          allQueryOptionsFn: () => thingsQueryOptions(),
+
           columns: thingColumns,
           getLabel: (thing: ThingDto) => thing.name,
           getId: (thing: ThingDto) => thing.id,
@@ -2943,7 +2961,7 @@ export function getBoxColumns({
         relationConfig: {
           queryOptionsFn: (filters: Record<string, unknown>) =>
             itemsFilteredQueryOptions(filters),
-          allQueryOptionsFn: () => itemsQueryOptions(),
+
           columns: itemColumns,
           getLabel: (item: ItemDto) => item.name,
           getId: (item: ItemDto) => item.id,
@@ -2972,7 +2990,7 @@ export function getBoxColumns({
         relationConfig: {
           queryOptionsFn: (filters: Record<string, unknown>) =>
             thingsFilteredQueryOptions(filters),
-          allQueryOptionsFn: () => thingsQueryOptions(),
+
           columns: thingColumns,
           getLabel: (thing: ThingDto) => thing.name,
           getId: (thing: ThingDto) => thing.id,
@@ -3116,8 +3134,8 @@ import {
 } from "@/components/ui/sheet";
 import { RelationPicker } from "@/components/relation-picker";
 import { patchBox, createBox } from "@/api/box";
-import { itemsFilteredQueryOptions, itemsQueryOptions } from "@/api/item";
-import { thingsFilteredQueryOptions, thingsQueryOptions } from "@/api/thing";
+import { itemsFilteredQueryOptions } from "@/api/item";
+import { thingsFilteredQueryOptions } from "@/api/thing";
 import type { BoxDto, ItemDto, ThingDto } from "@/types/api";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -3304,7 +3322,7 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                   value={field.value ?? undefined}
                   onChange={(val) => field.onChange(val ?? null)}
                   queryOptionsFn={(filters) => itemsFilteredQueryOptions(filters)}
-                  allQueryOptionsFn={() => itemsQueryOptions()}
+
                   columns={itemColumns}
                   getLabel={(item) => item.name}
                   getId={(item) => item.id}
@@ -3333,7 +3351,7 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                   queryOptionsFn={(filters) =>
                     thingsFilteredQueryOptions(filters)
                   }
-                  allQueryOptionsFn={() => thingsQueryOptions()}
+
                   columns={thingColumns}
                   getLabel={(thing) => thing.name}
                   getId={(thing) => thing.id}
@@ -3356,7 +3374,7 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                   value={field.value ?? undefined}
                   onChange={(val) => field.onChange(val ?? null)}
                   queryOptionsFn={(filters) => itemsFilteredQueryOptions(filters)}
-                  allQueryOptionsFn={() => itemsQueryOptions()}
+
                   columns={itemColumns}
                   getLabel={(item) => item.name}
                   getId={(item) => item.id}
@@ -3385,7 +3403,7 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                   queryOptionsFn={(filters) =>
                     thingsFilteredQueryOptions(filters)
                   }
-                  allQueryOptionsFn={() => thingsQueryOptions()}
+
                   columns={thingColumns}
                   getLabel={(thing) => thing.name}
                   getId={(thing) => thing.id}
