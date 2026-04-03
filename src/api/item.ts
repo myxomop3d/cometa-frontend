@@ -25,6 +25,10 @@ export async function fetchItemsFiltered(
       `contains_ignoring_case(name,'${String(fieldFilters.name).replace(/'/g, "''")}')`
     );
   }
+  if (fieldFilters.ids && Array.isArray(fieldFilters.ids) && fieldFilters.ids.length > 0) {
+    const idList = (fieldFilters.ids as number[]).join(",");
+    filterClauses.push(`id in (${idList})`);
+  }
   if (filterClauses.length > 0) {
     params.set("$filter", filterClauses.join(" and "));
   }
