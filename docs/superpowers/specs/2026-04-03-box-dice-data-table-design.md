@@ -10,7 +10,7 @@ New `/box-dice/` page displaying `BoxDto` data using a reusable data-table compo
 ## Decisions
 
 - **URL state:** Extend existing `useFilters` pattern (TanStack Router search params) — no `nuqs`
-- **Advanced filtering:** Notion/Airtable-style FilterList only (no Linear command-palette)
+- **Filtering:** Phase 1 uses basic DataTableToolbar; Phase 2 adds Notion/Airtable-style FilterList (no Linear command-palette)
 - **Edit/Add UI:** Sheet (slide-out panel) with react-hook-form + zod
 - **Relation filter modals:** Use the same data-table components recursively
 - **Page size:** Calculated on mount, snapped to discrete steps (10, 20, 30, 40, 50)
