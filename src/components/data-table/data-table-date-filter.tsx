@@ -3,7 +3,7 @@ import { CalendarIcon, XCircle } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 type DateSelection = Date[] | DateRange;
 
@@ -166,12 +167,12 @@ export function DataTableDateFilter<TData>({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-dashed font-normal"
-        >
+      <PopoverTrigger
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "border-dashed font-normal",
+        )}
+      >
           {hasValue ? (
             <div
               role="button"
@@ -186,7 +187,6 @@ export function DataTableDateFilter<TData>({
             <CalendarIcon />
           )}
           {label}
-        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         {multiple ? (

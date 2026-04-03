@@ -3,7 +3,7 @@ import { Check, PlusCircle, XCircle } from "lucide-react";
 import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -73,12 +73,12 @@ export function DataTableFacetedFilter<TData, TValue>({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-dashed font-normal"
-        >
+      <PopoverTrigger
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "border-dashed font-normal",
+        )}
+      >
           {selectedValues?.size > 0 ? (
             <div
               role="button"
@@ -126,7 +126,6 @@ export function DataTableFacetedFilter<TData, TValue>({
               </div>
             </>
           )}
-        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-50 p-0" align="start">
         <Command>

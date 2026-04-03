@@ -3,7 +3,7 @@ import { Ellipsis } from "lucide-react";
 import * as React from "react";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import type { BoxDto, ItemDto, ThingDto } from "@/types/api";
 import type { DataTableRowAction } from "@/types/data-table";
 import { itemsFilteredQueryOptions } from "@/api/item";
@@ -298,14 +299,14 @@ export function getBoxColumns({
       cell: function Cell({ row }) {
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label="Open menu"
-                variant="ghost"
-                className="flex size-8 p-0"
-              >
-                <Ellipsis className="size-4" />
-              </Button>
+            <DropdownMenuTrigger
+              aria-label="Open menu"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon" }),
+                "flex size-8 p-0",
+              )}
+            >
+              <Ellipsis className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem

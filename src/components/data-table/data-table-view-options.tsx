@@ -1,7 +1,7 @@
 import type { Table } from "@tanstack/react-table";
 import { Check, Settings2 } from "lucide-react";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -41,18 +41,17 @@ export function DataTableViewOptions<TData>({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          aria-label="Toggle columns"
-          role="combobox"
-          variant="outline"
-          size="sm"
-          className="ml-auto hidden h-8 font-normal lg:flex"
-          disabled={disabled}
-        >
-          <Settings2 className="text-muted-foreground" />
-          View
-        </Button>
+      <PopoverTrigger
+        aria-label="Toggle columns"
+        role="combobox"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "ml-auto hidden h-8 font-normal lg:flex",
+        )}
+        disabled={disabled}
+      >
+        <Settings2 className="text-muted-foreground" />
+        View
       </PopoverTrigger>
       <PopoverContent className="w-44 p-0" {...props}>
         <Command>

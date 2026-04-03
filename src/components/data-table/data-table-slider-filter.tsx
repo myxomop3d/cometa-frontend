@@ -1,7 +1,7 @@
 import type { Column } from "@tanstack/react-table";
 import { PlusCircle, XCircle } from "lucide-react";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -140,12 +140,12 @@ export function DataTableSliderFilter<TData>({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-dashed font-normal"
-        >
+      <PopoverTrigger
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "border-dashed font-normal",
+        )}
+      >
           {columnFilterValue ? (
             <div
               role="button"
@@ -168,7 +168,6 @@ export function DataTableSliderFilter<TData>({
               {unit ? ` ${unit}` : ""}
             </>
           ) : null}
-        </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="flex w-auto flex-col gap-4">
         <div className="flex flex-col gap-3">
