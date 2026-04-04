@@ -25,7 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, XCircle } from "lucide-react";
+import { Delete, PlusCircle, XCircle } from "lucide-react";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { cn } from "@/lib/utils";
 import type { ApiResponse } from "@/types/api";
 
@@ -192,28 +193,40 @@ export function RelationPicker<TRelated>({
           )}
         </Button>
       ) : (
-        <Button
-          type="button"
-          variant="outline"
-          className={cn("h-auto min-h-9 justify-start font-normal", className)}
-          onClick={() => setOpen(true)}
-        >
-          {hasValue && selectedLabels.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {selectedLabels.map((s) => (
-                <Badge
-                  key={s.id}
-                  variant="secondary"
-                  className="rounded-sm px-1 font-normal"
-                >
-                  {s.label}
-                </Badge>
-              ))}
-            </div>
-          ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
+        <ButtonGroup className={className}>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto min-h-9 flex-1 min-w-0 justify-start font-normal"
+            onClick={() => setOpen(true)}
+          >
+            {hasValue && selectedLabels.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {selectedLabels.map((s) => (
+                  <Badge
+                    key={s.id}
+                    variant="secondary"
+                    className="rounded-sm px-1 font-normal"
+                  >
+                    {s.label}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
+          </Button>
+          {hasValue && (
+            <Button
+              type="button"
+              variant="outline"
+              aria-label="Clear selection"
+              onClick={handleClear}
+            >
+              <Delete />
+            </Button>
           )}
-        </Button>
+        </ButtonGroup>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>

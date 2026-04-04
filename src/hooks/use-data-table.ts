@@ -1,6 +1,7 @@
 import {
   type ColumnDef,
   type ColumnFiltersState,
+  type ColumnPinningState,
   type PaginationState,
   type RowSelectionState,
   type SortingState,
@@ -33,6 +34,7 @@ interface UseDataTableOptions<TData, TSearch extends Record<string, unknown>> {
   pageKey?: string;
   pageSizeKey?: string;
   defaultPageSize?: number;
+  initialColumnPinning?: ColumnPinningState;
 }
 
 export function useDataTable<TData, TSearch extends Record<string, unknown>>({
@@ -45,6 +47,7 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
   pageKey = "page",
   pageSizeKey = "pageSize",
   defaultPageSize,
+  initialColumnPinning,
 }: UseDataTableOptions<TData, TSearch>) {
   const computedDefaultPageSize = React.useMemo(
     () => defaultPageSize ?? calculatePageSize(),
@@ -95,6 +98,7 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
     return filters;
   }, [search, columns]);
 
+  const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>(initialColumnPinning ?? {});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
@@ -188,6 +192,7 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
       pagination,
       sorting,
       columnFilters,
+      columnPinning,
       columnVisibility,
       rowSelection,
     },
@@ -195,6 +200,7 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
       enableColumnFilter: false,
     },
     enableRowSelection: true,
+    onColumnPinningChange: setColumnPinning,
     onRowSelectionChange: setRowSelection,
     onPaginationChange,
     onSortingChange,

@@ -1,9 +1,12 @@
 import type { Column } from "@tanstack/react-table";
 import {
+  ArrowLeftToLine,
+  ArrowRightToLine,
   ChevronDown,
   ChevronsUpDown,
   ChevronUp,
   EyeOff,
+  PinOff,
   X,
 } from "lucide-react";
 
@@ -12,6 +15,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -90,6 +94,38 @@ export function DataTableColumnHeader<TData, TValue>({
             <EyeOff />
             Hide
           </DropdownMenuCheckboxItem>
+        )}
+        {column.getCanPin() && (
+          <>
+            <DropdownMenuSeparator />
+            {column.getIsPinned() !== "left" && (
+              <DropdownMenuItem
+                className="pl-2 [&_svg]:text-muted-foreground"
+                onClick={() => column.pin("left")}
+              >
+                <ArrowLeftToLine />
+                Pin Left
+              </DropdownMenuItem>
+            )}
+            {column.getIsPinned() !== "right" && (
+              <DropdownMenuItem
+                className="pl-2 [&_svg]:text-muted-foreground"
+                onClick={() => column.pin("right")}
+              >
+                <ArrowRightToLine />
+                Pin Right
+              </DropdownMenuItem>
+            )}
+            {column.getIsPinned() && (
+              <DropdownMenuItem
+                className="pl-2 [&_svg]:text-muted-foreground"
+                onClick={() => column.pin(false)}
+              >
+                <PinOff />
+                Unpin
+              </DropdownMenuItem>
+            )}
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

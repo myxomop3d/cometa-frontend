@@ -16,7 +16,10 @@ import type { DataTableRowAction } from "@/types/data-table";
 
 function parseIdList(raw: unknown): number[] | undefined {
   if (typeof raw === "string" && raw.length > 0) {
-    return raw.split(",").map(Number).filter((n) => !isNaN(n));
+    return raw
+      .split(",")
+      .map(Number)
+      .filter((n) => !isNaN(n));
   }
   if (Array.isArray(raw)) {
     return (raw as unknown[]).map(Number).filter((n) => !isNaN(n));
@@ -49,7 +52,8 @@ function validateSearch(search: Record<string, unknown>): BoxDiceSearchParams {
     pageSize: typeof search.pageSize === "number" ? search.pageSize : undefined,
     sort: typeof search.sort === "string" ? search.sort : undefined,
     name: typeof search.name === "string" ? search.name : undefined,
-    objectCode: typeof search.objectCode === "string" ? search.objectCode : undefined,
+    objectCode:
+      typeof search.objectCode === "string" ? search.objectCode : undefined,
     shape: Array.isArray(search.shape)
       ? (search.shape as string[])
       : typeof search.shape === "string"
@@ -57,13 +61,17 @@ function validateSearch(search: Record<string, unknown>): BoxDiceSearchParams {
         : undefined,
     numMin: typeof search.numMin === "number" ? search.numMin : undefined,
     numMax: typeof search.numMax === "number" ? search.numMax : undefined,
-    checkbox: typeof search.checkbox === "boolean" ? search.checkbox : undefined,
-    dateStrFrom: typeof search.dateStrFrom === "string" ? search.dateStrFrom : undefined,
-    dateStrTo: typeof search.dateStrTo === "string" ? search.dateStrTo : undefined,
+    checkbox:
+      typeof search.checkbox === "boolean" ? search.checkbox : undefined,
+    dateStrFrom:
+      typeof search.dateStrFrom === "string" ? search.dateStrFrom : undefined,
+    dateStrTo:
+      typeof search.dateStrTo === "string" ? search.dateStrTo : undefined,
     tags: typeof search.tags === "string" ? search.tags : undefined,
     itemId: typeof search.itemId === "number" ? search.itemId : undefined,
     thingIds: parseIdList(search.thingIds),
-    oldItemId: typeof search.oldItemId === "number" ? search.oldItemId : undefined,
+    oldItemId:
+      typeof search.oldItemId === "number" ? search.oldItemId : undefined,
     oldThingIds: parseIdList(search.oldThingIds),
   };
 }
@@ -92,10 +100,19 @@ function deriveColumnFiltersFromSearch(
     } else if (meta.filterKey) {
       const value = search[meta.filterKey];
       if (value !== undefined && value !== null) {
-        if (meta.variant === "multiSelect" || meta.variant === "multiRelation") {
-          filters.push({ id: colId, value: Array.isArray(value) ? value : [value] });
+        if (
+          meta.variant === "multiSelect" ||
+          meta.variant === "multiRelation"
+        ) {
+          filters.push({
+            id: colId,
+            value: Array.isArray(value) ? value : [value],
+          });
         } else if (meta.variant === "boolean") {
-          filters.push({ id: colId, value: typeof value === "boolean" ? [String(value)] : [value] });
+          filters.push({
+            id: colId,
+            value: typeof value === "boolean" ? [String(value)] : [value],
+          });
         } else {
           filters.push({ id: colId, value });
         }
@@ -116,9 +133,15 @@ export const Route = createFileRoute("/box-dice/")({
         page: page ?? 1,
         pageSize: pageSize ?? calculatePageSize(),
         sort,
-        columnFilters: deriveColumnFiltersFromSearch(filterParams, columns as any),
+        columnFilters: deriveColumnFiltersFromSearch(
+          filterParams,
+          columns as any,
+        ),
         columns: columns.map((c) => ({
-          id: (c as { id?: string }).id ?? (c as { accessorKey?: string }).accessorKey ?? "",
+          id:
+            (c as { id?: string }).id ??
+            (c as { accessorKey?: string }).accessorKey ??
+            "",
           meta: c.meta as any,
         })),
       }),
@@ -132,8 +155,9 @@ function BoxDicePage() {
   const navigate = useNavigate({ from: "/box-dice/" });
   const queryClient = useQueryClient();
 
-  const [rowAction, setRowAction] =
-    useState<DataTableRowAction<BoxDto> | null>(null);
+  const [rowAction, setRowAction] = useState<DataTableRowAction<BoxDto> | null>(
+    null,
+  );
 
   const columns = useMemo(() => getBoxColumns({ setRowAction }), []);
 
@@ -144,7 +168,10 @@ function BoxDicePage() {
       page: page ?? 1,
       pageSize: pageSize ?? calculatePageSize(),
       sort,
-      columnFilters: deriveColumnFiltersFromSearch(filterParams, columns as any),
+      columnFilters: deriveColumnFiltersFromSearch(
+        filterParams,
+        columns as any,
+      ),
       columns: columns.map((c) => ({
         id: (c as any).id ?? (c as any).accessorKey ?? "",
         meta: c.meta as any,
@@ -182,7 +209,10 @@ function BoxDicePage() {
     data: data.data,
     pageCount,
     search: search as Record<string, unknown>,
-    onNavigate: onNavigate as (updates: Partial<Record<string, unknown>>) => void,
+    onNavigate: onNavigate as (
+      updates: Partial<Record<string, unknown>>,
+    ) => void,
+    initialColumnPinning: { left: ["select", "id"], right: ["actions"] },
   });
 
   const handleSheetSuccess = () => {
@@ -219,9 +249,7 @@ function BoxDicePage() {
         onOpenChange={(open) => {
           if (!open) setRowAction(null);
         }}
-        box={
-          rowAction?.variant === "update" ? rowAction.row.original : null
-        }
+        box={rowAction?.variant === "update" ? rowAction.row.original : null}
         variant={rowAction?.variant === "create" ? "create" : "update"}
         onSuccess={handleSheetSuccess}
       />

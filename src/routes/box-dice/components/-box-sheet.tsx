@@ -119,9 +119,11 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
 
   return (
     <Sheet {...props}>
-      <SheetContent className="flex flex-col gap-6 overflow-y-auto sm:max-w-lg">
+      <SheetContent className="flex flex-col gap-6 overflow-y-auto sm:max-w-lg m-2 p-2">
         <SheetHeader className="text-left">
-          <SheetTitle>{variant === "update" ? "Edit Box" : "Add Box"}</SheetTitle>
+          <SheetTitle>
+            {variant === "update" ? "Edit Box" : "Add Box"}
+          </SheetTitle>
           <SheetDescription>
             {variant === "update"
               ? "Update the box details and save changes."
@@ -213,7 +215,9 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                   multi={false}
                   value={field.value ?? undefined}
                   onChange={(val) => field.onChange(val ?? null)}
-                  queryOptionsFn={(filters) => itemsFilteredQueryOptions(filters)}
+                  queryOptionsFn={(filters) =>
+                    itemsFilteredQueryOptions(filters)
+                  }
                   columns={itemColumns}
                   getLabel={(item) => item.name}
                   getId={(item) => item.id}
@@ -263,7 +267,9 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                   multi={false}
                   value={field.value ?? undefined}
                   onChange={(val) => field.onChange(val ?? null)}
-                  queryOptionsFn={(filters) => itemsFilteredQueryOptions(filters)}
+                  queryOptionsFn={(filters) =>
+                    itemsFilteredQueryOptions(filters)
+                  }
                   columns={itemColumns}
                   getLabel={(item) => item.name}
                   getId={(item) => item.id}
@@ -312,7 +318,10 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && (
-                <Loader className="mr-2 size-4 animate-spin" aria-hidden="true" />
+                <Loader
+                  className="mr-2 size-4 animate-spin"
+                  aria-hidden="true"
+                />
               )}
               {variant === "update" ? "Save" : "Create"}
             </Button>

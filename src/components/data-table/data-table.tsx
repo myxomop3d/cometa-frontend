@@ -41,7 +41,7 @@ export function DataTable<TData>({
                     key={header.id}
                     colSpan={header.colSpan}
                     style={{
-                      ...getColumnPinningStyle({ column: header.column }),
+                      ...getColumnPinningStyle({ column: header.column, withBorder: true }),
                     }}
                   >
                     {header.isPlaceholder
@@ -66,7 +66,7 @@ export function DataTable<TData>({
                     <TableCell
                       key={cell.id}
                       style={{
-                        ...getColumnPinningStyle({ column: cell.column }),
+                        ...getColumnPinningStyle({ column: cell.column, withBorder: true }),
                       }}
                     >
                       {flexRender(

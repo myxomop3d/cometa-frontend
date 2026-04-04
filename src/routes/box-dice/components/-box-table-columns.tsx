@@ -310,7 +310,7 @@ export function getBoxColumns({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
-                onSelect={() => setRowAction({ row, variant: "update" })}
+                onClick={() => setRowAction({ row, variant: "update" })}
               >
                 Edit
               </DropdownMenuItem>
