@@ -64,7 +64,7 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
   );
 
   // Derive column filters from URL search params using column meta
-  const columnFilters = React.useMemo(() => {
+  const urlColumnFilters = React.useMemo(() => {
     const filters: ColumnFiltersState = [];
     for (const col of columns) {
       const meta = col.meta;
@@ -97,6 +97,14 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
     }
     return filters;
   }, [search, columns]);
+
+  // Local state so the table (and inputs) reflect typed values immediately,
+  // while the URL update is debounced.
+  const [columnFilters, setColumnFilters] = React.useState(urlColumnFilters);
+
+  React.useEffect(() => {
+    setColumnFilters(urlColumnFilters);
+  }, [urlColumnFilters]);
 
   const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>(initialColumnPinning ?? {});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -151,6 +159,8 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
           }
         }
       }
+
+      setColumnFilters(nextFilters);
 
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {

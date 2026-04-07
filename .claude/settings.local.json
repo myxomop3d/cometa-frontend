@@ -26,7 +26,8 @@
       "Bash(find F:/programming/react/cometa-frontend/src/routes -name *.tsx)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(xargs grep:*)"
     ]
   }
 }
