@@ -21,12 +21,20 @@ const itemColumns: ColumnDef<ItemDto, unknown>[] = [
   { accessorKey: "id", header: "ID" },
   { accessorKey: "name", header: "Name" },
   { accessorKey: "status", header: "Status" },
+  { accessorKey: "date", header: "Date" },
+  { accessorKey: "count", header: "Count" },
+  /*
+  date: string;
+  count: number;
+  */
 ];
 
 const thingColumns: ColumnDef<ThingDto, unknown>[] = [
   { accessorKey: "id", header: "ID" },
   { accessorKey: "name", header: "Name" },
   { accessorKey: "status", header: "Status" },
+  { accessorKey: "date", header: "Date" },
+  { accessorKey: "count", header: "Count" },
 ];
 
 interface GetBoxColumnsProps {
@@ -134,7 +142,7 @@ export function getBoxColumns({
       meta: {
         label: "Num",
         variant: "range",
-        range: [0, 1000],
+        range: [0, 10000],
         filterKeys: ["numMin", "numMax"],
       },
       enableColumnFilter: true,

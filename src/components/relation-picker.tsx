@@ -251,7 +251,7 @@ export function RelationPicker<TRelated>({
           </div>
 
           {/* Modal table */}
-          <div className="max-h-[400px] overflow-auto rounded-md border">
+          <div className="min-h-0 flex-1 overflow-auto rounded-md border">
             <Table>
               <TableHeader>
                 {modalTable.getHeaderGroups().map((hg) => (
