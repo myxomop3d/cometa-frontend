@@ -17,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init);
   let body: unknown = undefined;
   // 204 No Content (and other empty bodies) have no JSON to parse.
