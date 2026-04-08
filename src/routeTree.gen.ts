@@ -14,6 +14,7 @@ import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as BoxIndexRouteImport } from './routes/box/index'
 import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
+import { Route as BoxDiceAdvancedIndexRouteImport } from './routes/box-dice-advanced/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const BoxDiceIndexRoute = BoxDiceIndexRouteImport.update({
   path: '/box-dice/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BoxDiceAdvancedIndexRoute = BoxDiceAdvancedIndexRouteImport.update({
+  id: '/box-dice-advanced/',
+  path: '/box-dice-advanced/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AutomatedSystemIndexRoute = AutomatedSystemIndexRouteImport.update({
   id: '/automated-system/',
   path: '/automated-system/',
@@ -50,6 +56,7 @@ const AutomatedSystemIndexRoute = AutomatedSystemIndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
+  '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
   '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/automated-system': typeof AutomatedSystemIndexRoute
+  '/box-dice-advanced': typeof BoxDiceAdvancedIndexRoute
   '/box-dice': typeof BoxDiceIndexRoute
   '/box': typeof BoxIndexRoute
   '/components': typeof ComponentsIndexRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
+  '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
   '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/automated-system/'
+    | '/box-dice-advanced/'
     | '/box-dice/'
     | '/box/'
     | '/components/'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/automated-system'
+    | '/box-dice-advanced'
     | '/box-dice'
     | '/box'
     | '/components'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/automated-system/'
+    | '/box-dice-advanced/'
     | '/box-dice/'
     | '/box/'
     | '/components/'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AutomatedSystemIndexRoute: typeof AutomatedSystemIndexRoute
+  BoxDiceAdvancedIndexRoute: typeof BoxDiceAdvancedIndexRoute
   BoxDiceIndexRoute: typeof BoxDiceIndexRoute
   BoxIndexRoute: typeof BoxIndexRoute
   ComponentsIndexRoute: typeof ComponentsIndexRoute
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoxDiceIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/box-dice-advanced/': {
+      id: '/box-dice-advanced/'
+      path: '/box-dice-advanced'
+      fullPath: '/box-dice-advanced/'
+      preLoaderRoute: typeof BoxDiceAdvancedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/automated-system/': {
       id: '/automated-system/'
       path: '/automated-system'
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AutomatedSystemIndexRoute: AutomatedSystemIndexRoute,
+  BoxDiceAdvancedIndexRoute: BoxDiceAdvancedIndexRoute,
   BoxDiceIndexRoute: BoxDiceIndexRoute,
   BoxIndexRoute: BoxIndexRoute,
   ComponentsIndexRoute: ComponentsIndexRoute,
