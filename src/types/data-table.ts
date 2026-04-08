@@ -54,3 +54,18 @@ export interface DataTableRowAction<TData> {
   row: Row<TData>;
   variant: "update" | "delete" | "create";
 }
+
+export interface ExtendedColumnFilter {
+  /** Column id. */
+  id: string;
+  operator: FilterOperator;
+  /** Shape depends on operator + variant:
+   *  text/number -> string | number
+   *  isBetween   -> [min, max]
+   *  inArray/notInArray (select/multiSelect) -> string[]
+   *  inArray/notInArray (multiRelation) -> { id: number; label: string }[]
+   *  relation eq/ne -> { id: number; label: string }
+   *  isEmpty/isNotEmpty -> undefined
+   */
+  value: unknown;
+}
