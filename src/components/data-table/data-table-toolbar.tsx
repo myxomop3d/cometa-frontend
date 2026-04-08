@@ -2,7 +2,7 @@ import type { Column, Table } from "@tanstack/react-table";
 import { X } from "lucide-react";
 import * as React from "react";
 
-import { RelationPicker, type RelationPickerProps } from "@/components/relation-picker";
+import { RelationPicker } from "@/components/relation-picker";
 
 import { DataTableDateFilter } from "@/components/data-table/data-table-date-filter";
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
@@ -158,7 +158,7 @@ function DataTableToolbarFilter<TData>({
               multi={false}
               value={column.getFilterValue() as number | undefined}
               onChange={(val) => column.setFilterValue(val ?? undefined)}
-              queryOptionsFn={columnMeta.relationConfig.queryOptionsFn as RelationPickerProps<unknown>["queryOptionsFn"]}
+              queryOptionsFn={columnMeta.relationConfig.queryOptionsFn}
               columns={columnMeta.relationConfig.columns}
               getLabel={columnMeta.relationConfig.getLabel}
               getId={columnMeta.relationConfig.getId}
@@ -173,7 +173,7 @@ function DataTableToolbarFilter<TData>({
               multi={true}
               value={column.getFilterValue() as number[] | undefined}
               onChange={(val) => column.setFilterValue(val ?? undefined)}
-              queryOptionsFn={columnMeta.relationConfig.queryOptionsFn as RelationPickerProps<unknown>["queryOptionsFn"]}
+              queryOptionsFn={columnMeta.relationConfig.queryOptionsFn}
               columns={columnMeta.relationConfig.columns}
               getLabel={columnMeta.relationConfig.getLabel}
               getId={columnMeta.relationConfig.getId}

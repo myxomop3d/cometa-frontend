@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DebouncedInput } from "@/components/DebouncedInput";
 import {
   Table,
   TableBody,
@@ -28,16 +28,13 @@ import {
 import { Delete, PlusCircle, XCircle } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { cn } from "@/lib/utils";
-import type { ApiResponse } from "@/types/api";
+import type { RelationQueryOptionsFn } from "@/types/data-table";
 
 export interface RelationPickerProps<TRelated> {
   multi: boolean;
   value: number | number[] | undefined;
   onChange: (value: number | number[] | undefined) => void;
-  queryOptionsFn: (filters: Record<string, unknown>) => {
-    queryKey: unknown[];
-    queryFn: () => Promise<ApiResponse<TRelated[]>>;
-  };
+  queryOptionsFn: RelationQueryOptionsFn<TRelated>;
   columns: ColumnDef<TRelated, unknown>[];
   getLabel: (item: TRelated) => string;
   getId: (item: TRelated) => number;
@@ -67,9 +64,7 @@ export function RelationPicker<TRelated>({
 
   // Fetch filtered data for modal (pageSize=10)
   const { data: filteredData, isFetching } = useQuery(
-    queryOptionsFn({ ...modalFilters, pageSize: 10, page: 1 }) as Parameters<
-      typeof useQuery
-    >[0],
+    queryOptionsFn({ ...modalFilters, pageSize: 10, page: 1 }),
   );
 
   // Hydrate labels for selected IDs by fetching only those items via id filter
@@ -79,14 +74,14 @@ export function RelationPicker<TRelated>({
   }, [value, multi]);
 
   const { data: labelData } = useQuery({
-    ...(queryOptionsFn({ ids: selectedIds }) as Parameters<typeof useQuery>[0]),
+    ...queryOptionsFn({ ids: selectedIds }),
     enabled: selectedIds.length > 0,
   });
 
   // Derive selected labels from the ID-filtered query
   const selectedLabels = React.useMemo(() => {
     if (selectedIds.length === 0) return [];
-    const items = (labelData as ApiResponse<TRelated[]> | undefined)?.data;
+    const items = labelData?.data;
     if (!items) {
       return selectedIds.map((id) => ({ id, label: `#${id}` }));
     }
@@ -134,8 +129,7 @@ export function RelationPicker<TRelated>({
   };
 
   // Modal table
-  const modalRows =
-    (filteredData as ApiResponse<TRelated[]> | undefined)?.data ?? [];
+  const modalRows = filteredData?.data ?? [];
   const modalTable = useReactTable({
     data: modalRows,
     columns,
@@ -237,13 +231,13 @@ export function RelationPicker<TRelated>({
 
           {/* Modal filters */}
           <div className="flex gap-2">
-            <Input
+            <DebouncedInput
               placeholder="Search..."
               value={(modalFilters.name as string) ?? ""}
-              onChange={(e) =>
+              onChange={(value) =>
                 setModalFilters((prev) => ({
                   ...prev,
-                  name: e.target.value || undefined,
+                  name: value || undefined,
                 }))
               }
               className="h-8"

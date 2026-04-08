@@ -1,8 +1,3 @@
-❯ i want to ask senior react reviewer to look throught dataflow of creating/editing Box starting from @src/routes/box-dice/components/-box-sheet.tsx user form up to sending PUT/PATCH request to the   
-backend. is there ani problems we need to resolv? Do we need separate BoxForm type or we can use BoxDto as a Form? do we need to accumulate types and zod schemas in one place or not. Do we need any   
-kind of mapper to convert DTO -> FORM or FORM -> DTO? Mabe we can make some of our logic generic to reuse it in other pages with similar logic (showing table, filtering, create, edit)?
-
-
 
 ● Box Dataflow Review — Senior React Reviewer Findings
 

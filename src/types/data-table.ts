@@ -1,6 +1,7 @@
 import type { ColumnDef, ColumnSort, Row, RowData } from "@tanstack/react-table";
-import type { QueryOptions } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import type { DataTableConfig } from "@/config/data-table";
+import type { ApiResponse } from "@/types/api";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -14,12 +15,21 @@ declare module "@tanstack/react-table" {
     icon?: React.FC<React.SVGProps<SVGSVGElement>>;
     filterKey?: string;
     filterKeys?: [string, string];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     relationConfig?: RelationConfig<any>;
   }
 }
 
+export type RelationQueryOptionsFn<TRelated> = (
+  filters: Record<string, unknown>,
+) => UseQueryOptions<
+  ApiResponse<TRelated[]>,
+  Error,
+  ApiResponse<TRelated[]>
+>;
+
 export interface RelationConfig<TRelated> {
-  queryOptionsFn: (filters: Record<string, unknown>) => QueryOptions;
+  queryOptionsFn: RelationQueryOptionsFn<TRelated>;
   columns: ColumnDef<TRelated, unknown>[];
   getLabel: (item: TRelated) => string;
   getId: (item: TRelated) => number;

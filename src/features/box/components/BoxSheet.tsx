@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import * as React from "react";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
+import { useForm, Controller, type Path } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -25,26 +25,15 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { RelationPicker } from "@/components/relation-picker";
-import { patchBox, createBox } from "@/api/box";
 import { itemsFilteredQueryOptions } from "@/api/item";
 import { thingsFilteredQueryOptions } from "@/api/thing";
-import type { BoxDto, ItemDto, ThingDto } from "@/types/api";
+import type { BoxDto, ItemDto, ThingDto, AppMessage } from "@/types/api";
 import type { ColumnDef } from "@tanstack/react-table";
 
-const boxFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  objectCode: z.string().nullable(),
-  shape: z.enum(["O", "X"]),
-  num: z.number(),
-  dateStr: z.string(),
-  checkbox: z.boolean(),
-  itemId: z.number().nullable(),
-  thingIds: z.array(z.number()),
-  oldItemId: z.number().nullable(),
-  oldThingIds: z.array(z.number()),
-});
-
-type BoxFormValues = z.infer<typeof boxFormSchema>;
+import { boxApi } from "../api";
+import { boxFormSchema, type BoxFormValues } from "../schema";
+import { boxDtoToForm, boxFormToCreate, boxFormToPatch } from "../mappers";
+import { ApiError } from "@/lib/api/create-crud-api";
 
 const itemColumns: ColumnDef<ItemDto, unknown>[] = [
   { accessorKey: "id", header: "ID" },
@@ -58,6 +47,23 @@ const thingColumns: ColumnDef<ThingDto, unknown>[] = [
   { accessorKey: "status", header: "Status" },
 ];
 
+const BOX_FORM_FIELDS: readonly (keyof BoxFormValues)[] = [
+  "name",
+  "objectCode",
+  "shape",
+  "num",
+  "dateStr",
+  "checkbox",
+  "itemId",
+  "thingIds",
+  "oldItemId",
+  "oldThingIds",
+];
+
+function isBoxField(target: string): target is keyof BoxFormValues {
+  return (BOX_FORM_FIELDS as readonly string[]).includes(target);
+}
+
 interface BoxSheetProps extends React.ComponentPropsWithRef<typeof Sheet> {
   box: BoxDto | null;
   variant: "update" | "create";
@@ -65,57 +71,76 @@ interface BoxSheetProps extends React.ComponentPropsWithRef<typeof Sheet> {
 }
 
 export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
-  const [isPending, startTransition] = React.useTransition();
+  const queryClient = useQueryClient();
+
+  // base-ui's `onOpenChange` signature requires an eventDetails object as the
+  // second argument. When closing programmatically we don't have one; cast to
+  // a 1-arg handler so TS doesn't complain.
+  const closeSheet = React.useCallback(() => {
+    (props.onOpenChange as ((open: boolean) => void) | undefined)?.(false);
+  }, [props.onOpenChange]);
 
   const form = useForm<BoxFormValues>({
     resolver: zodResolver(boxFormSchema),
-    defaultValues: {
-      name: box?.name ?? "",
-      objectCode: box?.objectCode ?? null,
-      shape: box?.shape ?? "O",
-      num: box?.num ?? 0,
-      dateStr: box?.dateStr ?? "",
-      checkbox: box?.checkbox ?? false,
-      itemId: box?.item?.id ?? null,
-      thingIds: box?.things?.map((t) => t.id) ?? [],
-      oldItemId: box?.oldItem?.id ?? null,
-      oldThingIds: box?.oldThings?.map((t) => t.id) ?? [],
+    defaultValues: box
+      ? boxDtoToForm(box)
+      : {
+          name: "",
+          objectCode: null,
+          shape: "O",
+          num: 0,
+          dateStr: "",
+          checkbox: false,
+          itemId: null,
+          thingIds: [],
+          oldItemId: null,
+          oldThingIds: [],
+        },
+  });
+
+  function applyServerErrors(messages: AppMessage[]): boolean {
+    let hadFieldError = false;
+    for (const m of messages) {
+      if (m.semantic !== "E") continue;
+      if (m.target && isBoxField(m.target)) {
+        form.setError(m.target as Path<BoxFormValues>, { message: m.message });
+        hadFieldError = true;
+      }
+    }
+    return hadFieldError;
+  }
+
+  const mutation = useMutation({
+    mutationFn: async (data: BoxFormValues) => {
+      if (variant === "update" && box) {
+        const patch = boxFormToPatch(data, form.formState.dirtyFields);
+        return boxApi.patch(box.id, patch);
+      }
+      return boxApi.create(boxFormToCreate(data));
+    },
+    onSuccess: (res) => {
+      if (variant === "update" && box) {
+        queryClient.setQueryData(["boxes", "detail", box.id], res);
+        toast.success("Box updated");
+      } else {
+        toast.success("Box created");
+      }
+      onSuccess();
+      closeSheet();
+    },
+    onError: (err) => {
+      if (err instanceof ApiError) {
+        const hadFieldError = applyServerErrors(err.messages);
+        if (!hadFieldError) {
+          toast.error(err.message || "Failed to save box");
+        }
+      } else {
+        toast.error("Failed to save box");
+      }
     },
   });
 
-  // Reset form when box changes
-  React.useEffect(() => {
-    form.reset({
-      name: box?.name ?? "",
-      objectCode: box?.objectCode ?? null,
-      shape: box?.shape ?? "O",
-      num: box?.num ?? 0,
-      dateStr: box?.dateStr ?? "",
-      checkbox: box?.checkbox ?? false,
-      itemId: box?.item?.id ?? null,
-      thingIds: box?.things?.map((t) => t.id) ?? [],
-      oldItemId: box?.oldItem?.id ?? null,
-      oldThingIds: box?.oldThings?.map((t) => t.id) ?? [],
-    });
-  }, [box, form]);
-
-  function onSubmit(data: BoxFormValues) {
-    startTransition(async () => {
-      try {
-        if (variant === "update" && box) {
-          await patchBox(box.id, data);
-          toast.success("Box updated");
-        } else {
-          await createBox(data);
-          toast.success("Box created");
-        }
-        onSuccess();
-        props.onOpenChange?.(false);
-      } catch {
-        toast.error("Failed to save box");
-      }
-    });
-  }
+  const isPending = mutation.isPending;
 
   return (
     <Sheet {...props}>
@@ -132,7 +157,7 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
         </SheetHeader>
 
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
           className="flex flex-col gap-4"
         >
           {/* Name */}
@@ -149,7 +174,20 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
           {/* Object Code */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="objectCode">Object Code</Label>
-            <Input id="objectCode" {...form.register("objectCode")} />
+            <Controller
+              control={form.control}
+              name="objectCode"
+              render={({ field }) => (
+                <Input
+                  id="objectCode"
+                  value={field.value ?? ""}
+                  onChange={(e) =>
+                    field.onChange(e.target.value === "" ? null : e.target.value)
+                  }
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
           </div>
 
           {/* Shape */}
@@ -186,6 +224,11 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
           <div className="flex flex-col gap-2">
             <Label htmlFor="dateStr">Date</Label>
             <Input id="dateStr" {...form.register("dateStr")} />
+            {form.formState.errors.dateStr && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.dateStr.message}
+              </p>
+            )}
           </div>
 
           {/* Checkbox */}
@@ -214,7 +257,9 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                 <RelationPicker<ItemDto>
                   multi={false}
                   value={field.value ?? undefined}
-                  onChange={(val) => field.onChange(val ?? null)}
+                  onChange={(val) =>
+                    field.onChange(typeof val === "number" ? val : null)
+                  }
                   queryOptionsFn={(filters) =>
                     itemsFilteredQueryOptions(filters)
                   }
@@ -266,7 +311,9 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
                 <RelationPicker<ItemDto>
                   multi={false}
                   value={field.value ?? undefined}
-                  onChange={(val) => field.onChange(val ?? null)}
+                  onChange={(val) =>
+                    field.onChange(typeof val === "number" ? val : null)
+                  }
                   queryOptionsFn={(filters) =>
                     itemsFilteredQueryOptions(filters)
                   }
@@ -312,7 +359,7 @@ export function BoxSheet({ box, variant, onSuccess, ...props }: BoxSheetProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => props.onOpenChange?.(false)}
+              onClick={() => closeSheet()}
             >
               Cancel
             </Button>

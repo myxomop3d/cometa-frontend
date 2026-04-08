@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { BoxDto, ItemDto, ThingDto } from "@/types/api";
-import type { DataTableRowAction } from "@/types/data-table";
 import { itemsFilteredQueryOptions } from "@/api/item";
 import { thingsFilteredQueryOptions } from "@/api/thing";
+import type { BoxRowAction } from "./row-action";
 
 const itemColumns: ColumnDef<ItemDto, unknown>[] = [
   { accessorKey: "id", header: "ID" },
@@ -23,10 +23,6 @@ const itemColumns: ColumnDef<ItemDto, unknown>[] = [
   { accessorKey: "status", header: "Status" },
   { accessorKey: "date", header: "Date" },
   { accessorKey: "count", header: "Count" },
-  /*
-  date: string;
-  count: number;
-  */
 ];
 
 const thingColumns: ColumnDef<ThingDto, unknown>[] = [
@@ -38,9 +34,7 @@ const thingColumns: ColumnDef<ThingDto, unknown>[] = [
 ];
 
 interface GetBoxColumnsProps {
-  setRowAction: React.Dispatch<
-    React.SetStateAction<DataTableRowAction<BoxDto> | null>
-  >;
+  setRowAction: React.Dispatch<React.SetStateAction<BoxRowAction | null>>;
 }
 
 export function getBoxColumns({
@@ -53,9 +47,10 @@ export function getBoxColumns({
         <Checkbox
           aria-label="Select all"
           className="translate-y-0.5"
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
+          checked={table.getIsAllPageRowsSelected()}
+          indeterminate={
+            table.getIsSomePageRowsSelected() &&
+            !table.getIsAllPageRowsSelected()
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         />
@@ -318,7 +313,9 @@ export function getBoxColumns({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
-                onClick={() => setRowAction({ row, variant: "update" })}
+                onClick={() =>
+                  setRowAction({ variant: "update", row: row.original })
+                }
               >
                 Edit
               </DropdownMenuItem>
