@@ -1,3 +1,5 @@
+import type { FilterOperator, FilterVariant } from "@/types/data-table";
+
 export type DataTableConfig = typeof dataTableConfig;
 
 export const dataTableConfig = {
@@ -66,4 +68,33 @@ export const dataTableConfig = {
     "isEmpty", "isNotEmpty", "lt", "lte", "gt", "gte", "isBetween",
   ] as const,
   joinOperators: ["and", "or"] as const,
+};
+
+export const operatorsByVariant: Record<FilterVariant, FilterOperator[]> = {
+  text:          ["iLike", "eq", "ne", "isEmpty", "isNotEmpty"],
+  number:        ["eq", "ne", "lt", "lte", "gt", "gte", "isEmpty", "isNotEmpty"],
+  range:         ["isBetween", "eq", "ne", "lt", "lte", "gt", "gte", "isEmpty", "isNotEmpty"],
+  date:          ["eq", "ne", "lt", "lte", "gt", "gte", "isEmpty", "isNotEmpty"],
+  dateRange:     ["isBetween", "eq", "ne", "lt", "lte", "gt", "gte", "isEmpty", "isNotEmpty"],
+  boolean:       ["eq"],
+  select:        ["eq", "ne", "isEmpty", "isNotEmpty"],
+  multiSelect:   ["inArray", "notInArray", "isEmpty", "isNotEmpty"],
+  relation:      ["eq", "ne", "isEmpty", "isNotEmpty"],
+  multiRelation: ["inArray", "notInArray", "isEmpty", "isNotEmpty"],
+};
+
+export const operatorLabels: Record<FilterOperator, string> = {
+  iLike: "contains",
+  notILike: "does not contain",
+  eq: "is",
+  ne: "is not",
+  lt: "<",
+  lte: "≤",
+  gt: ">",
+  gte: "≥",
+  isBetween: "is between",
+  inArray: "is any of",
+  notInArray: "is none of",
+  isEmpty: "is empty",
+  isNotEmpty: "is not empty",
 };
