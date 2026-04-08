@@ -27,7 +27,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"features/box|lib/odata|lib/api|routes/box-dice|api/box\\\\.ts|features[\\\\\\\\\\\\\\\\]box\")",
+      "Bash(npm i:*)",
+      "Bash(npm test:*)",
+      "Bash(ls c:/Users/myxom/react/cometa-frontend/vitest.config* c:/Users/myxom/react/cometa-frontend/vite.config*)"
     ]
   }
 }
