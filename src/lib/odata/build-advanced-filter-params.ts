@@ -65,9 +65,6 @@ function clauseFor(
     case "iLike":
       return `contains_ignoring_case(${field}, ${quoteString(value)})`;
 
-    case "notILike":
-      return `not contains_ignoring_case(${field}, ${quoteString(value)})`;
-
     case "eq":
     case "ne": {
       const op = operator === "eq" ? "eq" : "ne";

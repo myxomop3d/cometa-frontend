@@ -56,6 +56,19 @@ function areFiltersEqual(
   }
 }
 
+/** Filter row with a stable key for React reconciliation. */
+interface DraftRow extends ExtendedColumnFilter {
+  _key: number;
+}
+
+let nextRowKey = 0;
+function toDraftRows(filters: ExtendedColumnFilter[]): DraftRow[] {
+  return filters.map((f) => ({ ...f, _key: nextRowKey++ }));
+}
+function fromDraftRows(rows: DraftRow[]): ExtendedColumnFilter[] {
+  return rows.map(({ _key: _, ...rest }) => rest);
+}
+
 export function DataTableFilterList<TData>({
   table,
   filters,
@@ -63,7 +76,7 @@ export function DataTableFilterList<TData>({
   onChange,
 }: DataTableFilterListProps<TData>) {
   const [open, setOpen] = React.useState(false);
-  const [draft, setDraft] = React.useState<ExtendedColumnFilter[]>(filters);
+  const [draft, setDraft] = React.useState<DraftRow[]>(() => toDraftRows(filters));
   const [draftJoin, setDraftJoin] = React.useState<"and" | "or">(joinOperator);
 
   // Re-sync from props when they change externally.
@@ -75,22 +88,23 @@ export function DataTableFilterList<TData>({
       prev.joinOperator !== joinOperator
     ) {
       propsRef.current = { filters, joinOperator };
-      setDraft(filters);
+      setDraft(toDraftRows(filters));
       setDraftJoin(joinOperator);
     }
   }, [filters, joinOperator]);
 
   // Debounced commit of draft → onChange.
   React.useEffect(() => {
+    const clean = fromDraftRows(draft);
     if (
-      areFiltersEqual(draft, propsRef.current.filters) &&
+      areFiltersEqual(clean, propsRef.current.filters) &&
       draftJoin === propsRef.current.joinOperator
     ) {
       return;
     }
     const t = setTimeout(() => {
-      propsRef.current = { filters: draft, joinOperator: draftJoin };
-      onChange({ filters: draft, joinOperator: draftJoin });
+      propsRef.current = { filters: clean, joinOperator: draftJoin };
+      onChange({ filters: clean, joinOperator: draftJoin });
     }, 300);
     return () => clearTimeout(t);
   }, [draft, draftJoin, onChange]);
@@ -128,11 +142,11 @@ export function DataTableFilterList<TData>({
     const variant = col.columnDef.meta?.variant as FilterVariant | undefined;
     if (!variant) return;
     const op = operatorsByVariant[variant][0];
-    setDraft((prev) => [...prev, { id: columnId, operator: op, value: undefined }]);
+    setDraft((prev) => [...prev, { id: columnId, operator: op, value: undefined, _key: nextRowKey++ }]);
   };
 
   const resetAll = () => {
-    setDraft([]);
+    setDraft([] as DraftRow[]);
     setDraftJoin("and");
   };
 
@@ -154,7 +168,7 @@ export function DataTableFilterList<TData>({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[680px] p-3"
+        className="w-full max-w-170 p-3"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         {draft.length === 0 ? (
@@ -171,7 +185,7 @@ export function DataTableFilterList<TData>({
               const operators = variant ? operatorsByVariant[variant] : [];
 
               return (
-                <div key={index} className="flex items-center gap-2">
+                <div key={row._key} className="flex items-center gap-2">
                   <div className="w-[72px] shrink-0 text-xs text-muted-foreground">
                     {index === 0 ? (
                       "Where"
