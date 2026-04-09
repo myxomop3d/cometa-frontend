@@ -31,7 +31,12 @@
       "Bash(grep -E \"features/box|lib/odata|lib/api|routes/box-dice|api/box\\\\.ts|features[\\\\\\\\\\\\\\\\]box\")",
       "Bash(npm i:*)",
       "Bash(npm test:*)",
-      "Bash(ls c:/Users/myxom/react/cometa-frontend/vitest.config* c:/Users/myxom/react/cometa-frontend/vite.config*)"
+      "Bash(ls c:/Users/myxom/react/cometa-frontend/vitest.config* c:/Users/myxom/react/cometa-frontend/vite.config*)",
+      "Bash(npx tsr:*)",
+      "Bash(npx vite:*)",
+      "Bash(ls tsconfig*.json)",
+      "Bash(cat vitest.config.*)",
+      "Bash(npx vitest:*)"
     ]
   }
 }
