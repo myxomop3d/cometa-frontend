@@ -80,7 +80,8 @@ function clauseFor(
         return `${field} ${op} ${Number(value)}`;
       }
       if (variant === "boolean") {
-        return `${field} ${op} ${Boolean(value)}`;
+        const boolVal = value === true || value === "true";
+        return `${field} ${op} ${boolVal}`;
       }
       if (variant === "date" || variant === "dateRange") {
         return `${field} ${op} ${quoteString(value)}`;
@@ -105,11 +106,16 @@ function clauseFor(
       const [min, max] = Array.isArray(value)
         ? (value as [unknown, unknown])
         : [undefined, undefined];
-      if (isEmptyValue(min) || isEmptyValue(max)) return null;
-      if (variant === "date" || variant === "dateRange") {
-        return `(${field} ge ${quoteString(min)} and ${field} le ${quoteString(max)})`;
+      const hasMin = !isEmptyValue(min);
+      const hasMax = !isEmptyValue(max);
+      if (!hasMin && !hasMax) return null;
+      const isDate = variant === "date" || variant === "dateRange";
+      const fmt = (v: unknown) => (isDate ? quoteString(v) : String(Number(v)));
+      if (hasMin && hasMax) {
+        return `(${field} ge ${fmt(min)} and ${field} le ${fmt(max)})`;
       }
-      return `(${field} ge ${Number(min)} and ${field} le ${Number(max)})`;
+      if (hasMin) return `${field} ge ${fmt(min)}`;
+      return `${field} le ${fmt(max)}`;
     }
 
     case "inArray":

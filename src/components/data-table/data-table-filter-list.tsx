@@ -79,6 +79,10 @@ export function DataTableFilterList<TData>({
   const [draft, setDraft] = React.useState<DraftRow[]>(() => toDraftRows(filters));
   const [draftJoin, setDraftJoin] = React.useState<"and" | "or">(joinOperator);
 
+  // Keep a ref to the latest onChange so the debounce timer never fires a stale callback.
+  const onChangeRef = React.useRef(onChange);
+  onChangeRef.current = onChange;
+
   // Re-sync from props when they change externally.
   const propsRef = React.useRef({ filters, joinOperator });
   React.useEffect(() => {
@@ -104,17 +108,19 @@ export function DataTableFilterList<TData>({
     }
     const t = setTimeout(() => {
       propsRef.current = { filters: clean, joinOperator: draftJoin };
-      onChange({ filters: clean, joinOperator: draftJoin });
+      onChangeRef.current({ filters: clean, joinOperator: draftJoin });
     }, 300);
     return () => clearTimeout(t);
-  }, [draft, draftJoin, onChange]);
+  }, [draft, draftJoin]);
+
+  const allColumns = table.getAllColumns();
+  // Derive a stable key from column IDs so memos don't recompute on every render.
+  const columnIdKey = allColumns.map((c) => c.id).join(",");
 
   const filterableColumns = React.useMemo(
-    () =>
-      table
-        .getAllColumns()
-        .filter((c) => c.columnDef.meta?.variant !== undefined),
-    [table],
+    () => allColumns.filter((c) => c.columnDef.meta?.variant !== undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnIdKey],
   );
 
   const columnById = React.useMemo(() => {

@@ -15,13 +15,14 @@ import { getBoxColumns } from "@/features/box/columns";
 import { BoxSheet } from "@/features/box/components/BoxSheet";
 import type { BoxRowAction } from "@/features/box/row-action";
 import type { ExtendedColumnFilter } from "@/types/data-table";
+import { dataTableConfig } from "@/config/data-table";
 
 const DEFAULT_PAGE_SIZE = calculatePageSize();
 
 const filterSchema = z.array(
   z.object({
     id: z.string(),
-    operator: z.string(),
+    operator: z.enum(dataTableConfig.operators),
     value: z.unknown(),
   }),
 );
@@ -44,7 +45,7 @@ function parseFilters(raw: unknown): ExtendedColumnFilter[] {
     }
   }
   const result = filterSchema.safeParse(parsed);
-  return result.success ? (result.data as ExtendedColumnFilter[]) : [];
+  return result.success ? result.data : [];
 }
 
 function validateSearch(search: Record<string, unknown>): AdvancedSearchParams {
