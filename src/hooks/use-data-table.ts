@@ -35,6 +35,7 @@ interface UseDataTableOptions<TData, TSearch extends Record<string, unknown>> {
   pageSizeKey?: string;
   defaultPageSize?: number;
   initialColumnPinning?: ColumnPinningState;
+  initialColumnVisibility?: VisibilityState;
 }
 
 export function useDataTable<TData, TSearch extends Record<string, unknown>>({
@@ -48,6 +49,7 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
   pageSizeKey = "pageSize",
   defaultPageSize,
   initialColumnPinning,
+  initialColumnVisibility,
 }: UseDataTableOptions<TData, TSearch>) {
   const computedDefaultPageSize = React.useMemo(
     () => defaultPageSize ?? calculatePageSize(),
@@ -107,7 +109,7 @@ export function useDataTable<TData, TSearch extends Record<string, unknown>>({
   }, [urlColumnFilters]);
 
   const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>(initialColumnPinning ?? {});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility ?? {});
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
   const pagination: PaginationState = React.useMemo(
