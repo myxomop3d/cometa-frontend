@@ -761,6 +761,52 @@ meta: {
 
 The `RelationPicker` component opens a modal with a searchable table. Selected values are stored as `{ id, label }` objects in the filter.
 
+### Filtering by related object fields
+
+Filter by a field of a related object (e.g., find boxes where `item.name` contains "foo") without the RelationPicker. Uses a hidden column with a standard variant.
+
+1. In `columns.tsx`, add a hidden column with dot-notation ID and the variant matching the field type:
+
+```tsx
+{
+  id: "item.name",
+  accessorFn: (row) => row.item?.name ?? "—",
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} label="Item → Name" />
+  ),
+  meta: {
+    label: "Item → Name",
+    variant: "text",              // matches the field's type
+    placeholder: "Search item names...",
+  },
+  enableColumnFilter: true,
+  enableSorting: false,
+  enableHiding: true,
+  size: 160,
+}
+```
+
+2. In `advanced-api.ts`, map the dot-notation ID to the OData path:
+
+```ts
+"item.name": { field: "item/name", variant: "text" },
+```
+
+3. In the route page, hide the column by default:
+
+```ts
+initialColumnVisibility: { "item.name": false },
+```
+
+The variant determines behavior — use `"text"` for name fields, `"range"` for numeric fields, `"select"` for enums, `"dateRange"` for dates. Examples:
+
+| Column ID | OData Field | Variant | Filter Behavior |
+|-----------|-------------|---------|-----------------|
+| `item.name` | `item/name` | `text` | contains, is, is not, empty |
+| `item.count` | `item/count` | `range` | between, eq, lt, gt, etc. |
+| `item.status` | `item/status` | `select` | is, is not, empty |
+| `item.date` | `item/date` | `dateRange` | between, before, after, etc. |
+
 ### Adding a multi-select filter
 
 ```ts
@@ -788,5 +834,6 @@ Operators are determined globally by variant in `src/config/data-table.ts` (`ope
 - [ ] Route page: `src/routes/<name>/index.tsx`
 - [ ] Sidebar nav entry in `app-sidebar.tsx`
 - [ ] Each filterable column has correct `meta.variant` matching `fieldByColumnId` entry
+- [ ] Related field filters: hidden column with dot-notation ID + matching `fieldByColumnId` entry + `initialColumnVisibility`
 - [ ] `queryKey` in `advancedDataTableQueryOptions` is unique (e.g., `["widgets", "advanced", ...]`)
 - [ ] Mock handler added if using `VITE_MOCK_API=true`
