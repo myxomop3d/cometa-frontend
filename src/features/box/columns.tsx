@@ -168,6 +168,22 @@ export function getBoxColumns({
       size: 180,
     },
     {
+      id: "item.name",
+      accessorFn: (row) => row.item?.name ?? "—",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} label="Item → Name" />
+      ),
+      meta: {
+        label: "Item → Name",
+        variant: "text",
+        placeholder: "Search item names...",
+      },
+      enableColumnFilter: true,
+      enableSorting: false,
+      enableHiding: true,
+      size: 160,
+    },
+    {
       id: "things",
       accessorKey: "things",
       header: ({ column }) => (
