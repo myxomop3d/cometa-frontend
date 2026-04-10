@@ -124,6 +124,7 @@ function BoxDiceAdvancedPage() {
     search: search as unknown as Record<string, unknown>,
     onNavigate,
     initialColumnPinning: { left: ["select", "id"], right: ["actions"] },
+    initialColumnVisibility: { "item.name": false },
   });
 
   const handleFilterChange = useCallback(
