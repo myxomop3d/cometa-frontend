@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { MicroserviceNodeDto, NodeDto, TopicNodeDto } from "@/types/api";
+import type { NodeDto, NodeEgressDto, NodeMicroserviceDto, NodeTopicDto } from "@/types/api";
 import { nodes } from "../data/nodes";
 import { interfaces } from "../data/interfaces";
 import { apiError, apiResponse } from "../lib/response";
@@ -76,11 +76,11 @@ export const nodeHandlers = [
 
   // CREATE
   http.post("/api/v1/node", async ({ request }) => {
-    const body = (await request.json()) as MicroserviceNodeDto | TopicNodeDto;
+    const body = (await request.json()) as NodeMicroserviceDto | NodeTopicDto | NodeEgressDto | NodeDto;
     const newItem = {
       ...body,
       id: Math.max(...db.map((i) => i.id)) + 1,
-    } as MicroserviceNodeDto | TopicNodeDto;
+    } as NodeMicroserviceDto | NodeTopicDto | NodeEgressDto | NodeDto;
     db.push(newItem);
     return apiResponse(newItem);
   }),
@@ -89,8 +89,8 @@ export const nodeHandlers = [
   http.put("/api/v1/node/:id", async ({ request, params }) => {
     const idx = db.findIndex((n) => n.id === Number(params.id));
     if (idx === -1) return apiError("Запись не найдена", 404);
-    const body = (await request.json()) as MicroserviceNodeDto | TopicNodeDto;
-    db[idx] = { ...body, id: db[idx].id } as MicroserviceNodeDto | TopicNodeDto;
+    const body = (await request.json()) as NodeMicroserviceDto | NodeTopicDto | NodeEgressDto | NodeDto;
+    db[idx] = { ...body, id: db[idx].id } as NodeMicroserviceDto | NodeTopicDto | NodeEgressDto | NodeDto;
     return apiResponse(db[idx]);
   }),
 
@@ -98,8 +98,8 @@ export const nodeHandlers = [
   http.patch("/api/v1/node/:id", async ({ request, params }) => {
     const idx = db.findIndex((n) => n.id === Number(params.id));
     if (idx === -1) return apiError("Запись не найдена", 404);
-    const body = (await request.json()) as Partial<MicroserviceNodeDto | TopicNodeDto>;
-    db[idx] = { ...db[idx], ...body } as MicroserviceNodeDto | TopicNodeDto;
+    const body = (await request.json()) as Partial<NodeMicroserviceDto | NodeTopicDto | NodeEgressDto | NodeDto>;
+    db[idx] = { ...db[idx], ...body } as NodeMicroserviceDto | NodeTopicDto | NodeEgressDto | NodeDto;
     return apiResponse(db[idx]);
   }),
 
