@@ -43,6 +43,7 @@ const navItems = [
   { to: "/box-dice", label: "Boxes (Dice)" },
   { to: "/box-dice-advanced", label: "Boxes (Dice) Advanced" },
   { to: "/flow-graph", label: "Flow Graph" },
+  { to: "/flow-advanced", label: "Flows (Advanced)" },
   { to: "/components", label: "Components" },
 ] as const;
 
