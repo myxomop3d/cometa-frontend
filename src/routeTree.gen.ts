@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
+import { Route as FlowAdvancedIndexRouteImport } from './routes/flow-advanced/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as BoxIndexRouteImport } from './routes/box/index'
 import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const FlowGraphIndexRoute = FlowGraphIndexRouteImport.update({
   id: '/flow-graph/',
   path: '/flow-graph/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlowAdvancedIndexRoute = FlowAdvancedIndexRouteImport.update({
+  id: '/flow-advanced/',
+  path: '/flow-advanced/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/box-dice/': typeof BoxDiceIndexRoute
   '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
+  '/flow-advanced/': typeof FlowAdvancedIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/box-dice': typeof BoxDiceIndexRoute
   '/box': typeof BoxIndexRoute
   '/components': typeof ComponentsIndexRoute
+  '/flow-advanced': typeof FlowAdvancedIndexRoute
   '/flow-graph': typeof FlowGraphIndexRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/box-dice/': typeof BoxDiceIndexRoute
   '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
+  '/flow-advanced/': typeof FlowAdvancedIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/box-dice/'
     | '/box/'
     | '/components/'
+    | '/flow-advanced/'
     | '/flow-graph/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/box-dice'
     | '/box'
     | '/components'
+    | '/flow-advanced'
     | '/flow-graph'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/box-dice/'
     | '/box/'
     | '/components/'
+    | '/flow-advanced/'
     | '/flow-graph/'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   BoxDiceIndexRoute: typeof BoxDiceIndexRoute
   BoxIndexRoute: typeof BoxIndexRoute
   ComponentsIndexRoute: typeof ComponentsIndexRoute
+  FlowAdvancedIndexRoute: typeof FlowAdvancedIndexRoute
   FlowGraphIndexRoute: typeof FlowGraphIndexRoute
 }
 
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/flow-graph'
       fullPath: '/flow-graph/'
       preLoaderRoute: typeof FlowGraphIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flow-advanced/': {
+      id: '/flow-advanced/'
+      path: '/flow-advanced'
+      fullPath: '/flow-advanced/'
+      preLoaderRoute: typeof FlowAdvancedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/components/': {
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   BoxDiceIndexRoute: BoxDiceIndexRoute,
   BoxIndexRoute: BoxIndexRoute,
   ComponentsIndexRoute: ComponentsIndexRoute,
+  FlowAdvancedIndexRoute: FlowAdvancedIndexRoute,
   FlowGraphIndexRoute: FlowGraphIndexRoute,
 }
 export const routeTree = rootRouteImport
