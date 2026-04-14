@@ -212,3 +212,26 @@ export interface FlowGraphDto {
   nodes: NodeDto[];
   links: LinkDto[];
 }
+
+// Flow
+export interface FlowDto {
+  id: number;
+  code: string;
+  caption: string;
+  integrity: "I_1" | "I_2" | "I_3" | "I_4" | null;
+  confidentiality: "K_1" | "K_2" | "K_3" | "K_4" | null;
+  dataClass: string;
+  dataType: string;
+  state: string;
+  descriptionMd: string | null;
+}
+
+export interface FlowFilters extends Partial<PaginationParams> {
+  code?: string;
+  caption?: string;
+  integrity?: string;
+  confidentiality?: string;
+  dataClass?: string;
+  dataType?: string;
+  state?: string;
+}
