@@ -82,7 +82,10 @@ function BoxDiceAdvancedPage() {
 
   const [rowAction, setRowAction] = useState<BoxRowAction | null>(null);
 
-  const columns = useMemo(() => getBoxColumns({ setRowAction }), [setRowAction]);
+  const columns = useMemo(
+    () => getBoxColumns({ setRowAction }),
+    [setRowAction],
+  );
 
   const queryOpts = useMemo(
     () =>

@@ -2,6 +2,17 @@ import type { FlowDto } from "@/types/api";
 
 export const flows: FlowDto[] = [
   {
+    id: 99,
+    code: "me.depo trades",
+    caption: "Поток DEPO.OTC-TCR из Matching Engine",
+    integrity: "I_2",
+    confidentiality: "K_3",
+    dataClass: "Client Data",
+    dataType: "DEPO.OTC-TCR",
+    state: "ACTUAL",
+    descriptionMd: null,
+  },
+  {
     id: 2,
     code: "quikpao.non trade orders",
     caption: "Поток Non Trade Orders из Quik PAO",

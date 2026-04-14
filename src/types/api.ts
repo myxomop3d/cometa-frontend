@@ -208,7 +208,7 @@ export interface LinkDto {
 
 // FlowGraph
 export interface FlowGraphDto {
-  flowId: number;
+  flow: FlowDto;
   nodes: NodeDto[];
   links: LinkDto[];
 }
