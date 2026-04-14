@@ -6,6 +6,7 @@ import { flowGraphHandlers } from "./handlers/flow-graph";
 import { boxHandlers } from "./handlers/box";
 import { itemHandlers } from "./handlers/item";
 import { thingHandlers } from "./handlers/thing";
+import { flowHandlers } from "./handlers/flow";
 
 export const handlers = [
   ...automatedSystemHandlers,
@@ -16,4 +17,5 @@ export const handlers = [
   ...boxHandlers,
   ...itemHandlers,
   ...thingHandlers,
+  ...flowHandlers,
 ];
