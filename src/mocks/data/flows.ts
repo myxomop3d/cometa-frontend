@@ -359,7 +359,7 @@ export const flows: FlowDto[] = [
     caption: "Поток Day Operations из Diasoft Clearing",
     integrity: "I_3",
     confidentiality: "K_3",
-    dataClass: "Technical data",
+    dataClass: "Technical Data",
     dataType: "Day Operations",
     state: "ACTUAL",
     descriptionMd: null,

@@ -27,7 +27,7 @@ export const flowHandlers = [
     const body = (await request.json()) as Partial<FlowDto>;
     const newItem = {
       ...body,
-      id: Math.max(...db.map((i) => i.id)) + 1,
+      id: db.length === 0 ? 1 : Math.max(...db.map((i) => i.id)) + 1,
     } as FlowDto;
     db.push(newItem);
     return apiResponse(newItem);
