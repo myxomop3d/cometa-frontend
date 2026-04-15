@@ -1,14 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
+import { FlowGraphPage } from "@/features/flow-graph/components/flow-graph-page";
+import { flowGraphQueryOptions } from "@/features/flow-graph/api";
 
-export const Route = createFileRoute("/flow-graph/")({
-  component: FlowGraphPage,
+const searchSchema = z.object({
+  flowId: z.coerce.number().int().positive().default(99),
 });
 
-function FlowGraphPage() {
+export const Route = createFileRoute("/flow-graph/")({
+  validateSearch: searchSchema,
+  loaderDeps: ({ search }) => ({ flowId: search.flowId }),
+  loader: ({ context, deps }) =>
+    context.queryClient.ensureQueryData(flowGraphQueryOptions(deps.flowId)),
+  component: RouteComponent,
+});
+
+function RouteComponent() {
+  const { flowId } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold">Flow Graph</h1>
-      <p className="mt-2 text-muted-foreground">Hello, World!</p>
-    </div>
+    <FlowGraphPage
+      flowId={flowId}
+      onFlowChange={(id) => navigate({ search: { flowId: id } })}
+    />
   );
 }
