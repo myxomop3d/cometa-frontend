@@ -10,12 +10,13 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { z } from "zod";
-import { automatedSystemsQueryOptions } from "@/api/queries/automated-system";
+import { automatedSystemsQueryOptions, patchAutomatedSystem } from "@/api/automated-system";
 import type { AutomatedSystemDto, AutomatedSystemFilters } from "@/types/api";
 import { SimpleTable } from "@/components/SimpleTable";
 import { useFilters } from "@/hooks/useFilters";
-import { updateAutomatedSystem } from "@/api/mutations/automated-system";
 import type { EditConfig } from "@/types/table";
+import { FilterBar } from "@/components/filters/FilterBar";
+import { TextFilter } from "@/components/filters/TextFilter";
 
 /**
  * Validates and normalizes raw URL search parameters into a typed `AutomatedSystemFilters` object.
@@ -201,7 +202,7 @@ function AutomatedSystemPage() {
    */
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AutomatedSystemDto> }) =>
-      updateAutomatedSystem(id, data),
+      patchAutomatedSystem(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["automated-systems"] });
     },
@@ -270,9 +271,18 @@ function AutomatedSystemPage() {
         page={page}
         pageCount={pageCount}
         onPageChange={setPage}
-        filterFields={filterFields}
-        filters={filters}
-        onFilterChange={setFilters}
+        filterSlot={
+          <FilterBar>
+            {filterFields.map(({ key, label }) => (
+              <TextFilter
+                key={key}
+                placeholder={label}
+                value={filters[key as keyof typeof filters] as string | undefined}
+                onChange={(value) => setFilters({ [key]: value })}
+              />
+            ))}
+          </FilterBar>
+        }
         editConfig={editConfig}
         pinnedLeftColumnId="name"
       />

@@ -1,27 +1,25 @@
 import { http } from "msw";
 import { nodes } from "../data/nodes";
 import { links } from "../data/links";
+import { flows } from "../data/flows";
 import { interfaces } from "../data/interfaces";
 import { apiResponse } from "../lib/response";
 import type { FlowGraphDto } from "@/types/api";
 
 export const flowGraphHandlers = [
-  // CREATE flow graph for a given flowId
-  http.post("/api/v1/flow-graph/create/:flowId", ({ params }) => {
+  http.get("/api/v1/flow-graph/:flowId", ({ params }) => {
     const flowId = Number(params.flowId);
+    const flow = flows.find((f) => f.id === flowId);
+    if (!flow) return new Response(null, { status: 404 });
+
     const flowLinks = links.filter((l) => l.flowId === flowId);
 
-    // Collect node IDs involved in this flow's links
     const nodeIds = new Set<number>();
     for (const link of flowLinks) {
-      const clientIface = interfaces.find(
-        (i) => i.id === link.clientInterface.id,
-      );
-      const serverIface = interfaces.find(
-        (i) => i.id === link.serverInterface.id,
-      );
-      if (clientIface) nodeIds.add(clientIface.nodeId);
-      if (serverIface) nodeIds.add(serverIface.nodeId);
+      const clientIface = interfaces.find((i) => i.id === link.clientInterface.id);
+      const serverIface = interfaces.find((i) => i.id === link.serverInterface.id);
+      if (clientIface) nodeIds.add(clientIface.nodeId!);
+      if (serverIface) nodeIds.add(serverIface.nodeId!);
     }
 
     const flowNodes = nodes
@@ -32,7 +30,7 @@ export const flowGraphHandlers = [
       }));
 
     const graph: FlowGraphDto = {
-      flowId,
+      flow,
       nodes: flowNodes,
       links: flowLinks,
     };

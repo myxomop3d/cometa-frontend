@@ -25,3 +25,6 @@ dist-ssr
 
 # MCP's
 .playwright-mcp/*
+
+# Terminal Paste Image folder
+/.cp-images

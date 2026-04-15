@@ -11,7 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
+import { Route as FlowAdvancedIndexRouteImport } from './routes/flow-advanced/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
+import { Route as BoxIndexRouteImport } from './routes/box/index'
+import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
+import { Route as BoxDiceAdvancedIndexRouteImport } from './routes/box-dice-advanced/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -24,9 +28,29 @@ const FlowGraphIndexRoute = FlowGraphIndexRouteImport.update({
   path: '/flow-graph/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FlowAdvancedIndexRoute = FlowAdvancedIndexRouteImport.update({
+  id: '/flow-advanced/',
+  path: '/flow-advanced/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
   id: '/components/',
   path: '/components/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoxIndexRoute = BoxIndexRouteImport.update({
+  id: '/box/',
+  path: '/box/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoxDiceIndexRoute = BoxDiceIndexRouteImport.update({
+  id: '/box-dice/',
+  path: '/box-dice/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoxDiceAdvancedIndexRoute = BoxDiceAdvancedIndexRouteImport.update({
+  id: '/box-dice-advanced/',
+  path: '/box-dice-advanced/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AutomatedSystemIndexRoute = AutomatedSystemIndexRouteImport.update({
@@ -38,34 +62,75 @@ const AutomatedSystemIndexRoute = AutomatedSystemIndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
+  '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
+  '/box-dice/': typeof BoxDiceIndexRoute
+  '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
+  '/flow-advanced/': typeof FlowAdvancedIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/automated-system': typeof AutomatedSystemIndexRoute
+  '/box-dice-advanced': typeof BoxDiceAdvancedIndexRoute
+  '/box-dice': typeof BoxDiceIndexRoute
+  '/box': typeof BoxIndexRoute
   '/components': typeof ComponentsIndexRoute
+  '/flow-advanced': typeof FlowAdvancedIndexRoute
   '/flow-graph': typeof FlowGraphIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
+  '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
+  '/box-dice/': typeof BoxDiceIndexRoute
+  '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
+  '/flow-advanced/': typeof FlowAdvancedIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/automated-system/' | '/components/' | '/flow-graph/'
+  fullPaths:
+    | '/'
+    | '/automated-system/'
+    | '/box-dice-advanced/'
+    | '/box-dice/'
+    | '/box/'
+    | '/components/'
+    | '/flow-advanced/'
+    | '/flow-graph/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/automated-system' | '/components' | '/flow-graph'
-  id: '__root__' | '/' | '/automated-system/' | '/components/' | '/flow-graph/'
+  to:
+    | '/'
+    | '/automated-system'
+    | '/box-dice-advanced'
+    | '/box-dice'
+    | '/box'
+    | '/components'
+    | '/flow-advanced'
+    | '/flow-graph'
+  id:
+    | '__root__'
+    | '/'
+    | '/automated-system/'
+    | '/box-dice-advanced/'
+    | '/box-dice/'
+    | '/box/'
+    | '/components/'
+    | '/flow-advanced/'
+    | '/flow-graph/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AutomatedSystemIndexRoute: typeof AutomatedSystemIndexRoute
+  BoxDiceAdvancedIndexRoute: typeof BoxDiceAdvancedIndexRoute
+  BoxDiceIndexRoute: typeof BoxDiceIndexRoute
+  BoxIndexRoute: typeof BoxIndexRoute
   ComponentsIndexRoute: typeof ComponentsIndexRoute
+  FlowAdvancedIndexRoute: typeof FlowAdvancedIndexRoute
   FlowGraphIndexRoute: typeof FlowGraphIndexRoute
 }
 
@@ -85,11 +150,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlowGraphIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/flow-advanced/': {
+      id: '/flow-advanced/'
+      path: '/flow-advanced'
+      fullPath: '/flow-advanced/'
+      preLoaderRoute: typeof FlowAdvancedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/components/': {
       id: '/components/'
       path: '/components'
       fullPath: '/components/'
       preLoaderRoute: typeof ComponentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/box/': {
+      id: '/box/'
+      path: '/box'
+      fullPath: '/box/'
+      preLoaderRoute: typeof BoxIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/box-dice/': {
+      id: '/box-dice/'
+      path: '/box-dice'
+      fullPath: '/box-dice/'
+      preLoaderRoute: typeof BoxDiceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/box-dice-advanced/': {
+      id: '/box-dice-advanced/'
+      path: '/box-dice-advanced'
+      fullPath: '/box-dice-advanced/'
+      preLoaderRoute: typeof BoxDiceAdvancedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/automated-system/': {
@@ -105,7 +198,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AutomatedSystemIndexRoute: AutomatedSystemIndexRoute,
+  BoxDiceAdvancedIndexRoute: BoxDiceAdvancedIndexRoute,
+  BoxDiceIndexRoute: BoxDiceIndexRoute,
+  BoxIndexRoute: BoxIndexRoute,
   ComponentsIndexRoute: ComponentsIndexRoute,
+  FlowAdvancedIndexRoute: FlowAdvancedIndexRoute,
   FlowGraphIndexRoute: FlowGraphIndexRoute,
 }
 export const routeTree = rootRouteImport

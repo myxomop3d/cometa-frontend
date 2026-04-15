@@ -1,5 +1,5 @@
 import { http } from "msw";
-import type { NodeInterfaceFlatDto } from "@/types/api";
+import type { InterfaceFlatDto } from "@/types/api";
 import { interfaces } from "../data/interfaces";
 import { apiError, apiResponse } from "../lib/response";
 import { applyOData, parseOData } from "../lib/odata";
@@ -24,7 +24,7 @@ export const interfaceHandlers = [
 
   // CREATE
   http.post("/api/v1/interface", async ({ request }) => {
-    const body = (await request.json()) as NodeInterfaceFlatDto;
+    const body = (await request.json()) as InterfaceFlatDto;
     const newItem = {
       ...body,
       id: Math.max(...db.map((i) => i.id)) + 1,
@@ -37,7 +37,7 @@ export const interfaceHandlers = [
   http.put("/api/v1/interface/:id", async ({ request, params }) => {
     const idx = db.findIndex((i) => i.id === Number(params.id));
     if (idx === -1) return apiError("Запись не найдена", 404);
-    const body = (await request.json()) as NodeInterfaceFlatDto;
+    const body = (await request.json()) as InterfaceFlatDto;
     db[idx] = { ...body, id: db[idx].id };
     return apiResponse(db[idx]);
   }),
@@ -46,7 +46,7 @@ export const interfaceHandlers = [
   http.patch("/api/v1/interface/:id", async ({ request, params }) => {
     const idx = db.findIndex((i) => i.id === Number(params.id));
     if (idx === -1) return apiError("Запись не найдена", 404);
-    const body = (await request.json()) as Partial<NodeInterfaceFlatDto>;
+    const body = (await request.json()) as Partial<InterfaceFlatDto>;
     db[idx] = { ...db[idx], ...body };
     return apiResponse(db[idx]);
   }),

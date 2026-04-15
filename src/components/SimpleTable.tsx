@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import {
   flexRender,
   type Table as TanStackTable,
@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DebouncedInput } from "@/components/DebouncedInput";
 import type { EditConfig, EditFieldConfig } from "@/types/table";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,28 +31,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-interface FilterField {
-  key: string;
-  label: string;
-}
-
 interface SimpleTableProps<TData> {
   table: TanStackTable<TData>;
-
-  // Pagination (optional)
   page?: number;
   pageCount?: number;
   onPageChange?: (page: number) => void;
-
-  // Filters (optional)
-  filterFields?: FilterField[];
-  filters?: Record<string, unknown>;
-  onFilterChange?: (partial: Record<string, unknown>) => void;
-
-  // Inline editing (optional)
+  filterSlot?: ReactNode;
   editConfig?: EditConfig<TData>;
-
-  // Column pinning (optional)
   pinnedLeftColumnId?: string;
 }
 
@@ -62,18 +46,12 @@ export function SimpleTable<TData>({
   page,
   pageCount,
   onPageChange,
-  filterFields,
-  filters,
-  onFilterChange,
+  filterSlot,
   editConfig,
   pinnedLeftColumnId,
 }: SimpleTableProps<TData>) {
   const hasPagination =
     page !== undefined && pageCount !== undefined && onPageChange !== undefined;
-  const hasFilters =
-    filterFields !== undefined &&
-    filters !== undefined &&
-    onFilterChange !== undefined;
 
   // Editing state
   const [editingRowId, setEditingRowId] = useState<string | number | null>(null);
@@ -299,20 +277,7 @@ export function SimpleTable<TData>({
         </DropdownMenu>
       </div>
 
-      {hasFilters && (
-        <div className="grid grid-cols-4 gap-2 my-4">
-          {filterFields.map(({ key, label }) => (
-            <DebouncedInput
-              key={key}
-              placeholder={label}
-              value={(filters[key] as string) ?? ""}
-              onChange={(value) =>
-                onFilterChange({ [key]: value || undefined })
-              }
-            />
-          ))}
-        </div>
-      )}
+      {filterSlot}
 
       <div className="overflow-x-auto">
       <Table style={{ width: table.getCenterTotalSize() }} className="table-fixed">

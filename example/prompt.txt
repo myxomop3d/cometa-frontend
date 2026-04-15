@@ -1,0 +1,6 @@
+/superpowers:brainstorming lets build flow-graph in @src/routes/flow-graph/index.tsx  use chadcn Resizable component to split page on two rows,      
+  first row for header, second row splits on two columns - left for react-flow graph representation and right for       
+  displaying additional info of selected on grapg item (node, interface or link). Data for this page fethed from    
+  "/api/v1/flow-graph/:flowId" it will returt FlowGraphDto, so we need to update @src/mocks/handlers/flow-graph.ts . 
+  in FlowGraphDto "flow" field - data for header (first row of page), "nodes" and "links" fields for build react-flow graph on left side of page's second row. "nodes" contains "interfaces" - they are for react-flow handlers.
+  on right side we'll show parameters (fields) of selected on graph item. place on headers top right dropdown menu to select flow for fetching flow-graph. use FlowDto.caption for displaying options and search input for backend filtering. limit pagesize with 10  
