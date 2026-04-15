@@ -39,7 +39,14 @@
       "Bash(npx vitest:*)",
       "mcp__playwright__browser_snapshot",
       "Bash(find /c/Users/myxom/react/cometa-frontend/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/mocks/*\" -exec grep -l \"MicroserviceNodeDto\\\\|TopicNodeDto\\\\|NodeInterfaceFlatDto\\\\|KafkaClientInterfaceFlatDto\\\\|KafkaServerInterfaceFlatDto\\\\|RestClientInterfaceFlatDto\\\\|RestServerInterfaceFlatDto\\\\|LinkDto\\\\|FlowGraphDto\" {} \\\\;)",
-      "Bash(find /c/Users/myxom/react/cometa-frontend/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/mocks/*\" ! -path \"*/types/*\" -exec grep -l \"node\\\\|interface\\\\|link\\\\|graph\" {} \\\\;)"
+      "Bash(find /c/Users/myxom/react/cometa-frontend/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/mocks/*\" ! -path \"*/types/*\" -exec grep -l \"node\\\\|interface\\\\|link\\\\|graph\" {} \\\\;)",
+      "Bash(npx shadcn@latest add resizable --yes)",
+      "Bash(tee /tmp/shadcn_output.log)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_close"
     ]
   }
 }
