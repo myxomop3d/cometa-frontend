@@ -32,14 +32,14 @@ function FlowGraphNodeView({ data, selected }: NodeProps<FlowGraphNode>) {
         <div className="text-xs uppercase tracking-wide text-muted-foreground">{node.dtoType}</div>
         <div className="text-sm font-semibold">{node.name}</div>
       </div>
-      <ul className="px-3 py-2 text-xs">
+      {/* <ul className="px-3 py-2 text-xs">
         {handles.map((h) => (
           <li key={h.interfaceId} className="flex justify-between gap-2 py-0.5">
             <span className="truncate">{h.label}</span>
             <span className="text-muted-foreground">{h.dtoType}</span>
           </li>
         ))}
-      </ul>
+      </ul> */}
 
       {leftHandles.map((h, i) => (
         <CustomHandle key={h.interfaceId} descriptor={h} topPercent={spread(leftHandles.length, i)} />

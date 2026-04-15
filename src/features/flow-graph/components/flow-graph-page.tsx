@@ -25,17 +25,17 @@ export function FlowGraphPage({ flowId, onFlowChange }: FlowGraphPageProps) {
   return (
     <div className="h-[calc(100vh-3rem)] w-full">
       <ResizablePanelGroup orientation="vertical">
-        <ResizablePanel defaultSize={12} minSize={8} maxSize={25}>
+        <ResizablePanel defaultSize="12%" minSize="8%" maxSize="25%">
           <FlowGraphHeader flow={data.data.flow} flowId={flowId} onFlowChange={onFlowChange} />
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize={88} minSize={60}>
+        <ResizablePanel defaultSize="88%" minSize="60%">
           <ResizablePanelGroup orientation="horizontal">
-            <ResizablePanel defaultSize={70} minSize={30}>
+            <ResizablePanel defaultSize="70%" minSize="30%">
               <FlowGraphCanvas graph={graph} selection={selection} onSelect={setSelection} />
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel defaultSize={30} minSize={15}>
+            <ResizablePanel defaultSize="30%" minSize="15%">
               <div className="h-full overflow-y-auto">
                 <DetailsPanel selection={selection} graph={graph} />
               </div>
