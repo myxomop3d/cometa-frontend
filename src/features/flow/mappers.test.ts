@@ -5,14 +5,16 @@ import type { FlowFormValues } from "./schema";
 
 const baseDto: FlowDto = {
   id: 2,
+  insertedAt: null,
+  updatedAt: null,
   code: "quikpao.non trade orders",
   caption: "Поток Non Trade Orders из Quik PAO",
   integrity: "I_2",
   confidentiality: "K_3",
+  secretClass: null,
   dataClass: "Client Data",
   dataType: "Non Trade Orders",
-  state: "ACTUAL",
-  descriptionMd: null,
+  description: null,
 };
 
 const baseForm: FlowFormValues = {
@@ -20,10 +22,10 @@ const baseForm: FlowFormValues = {
   caption: "Поток Non Trade Orders из Quik PAO",
   integrity: "I_2",
   confidentiality: "K_3",
+  secretClass: null,
   dataClass: "Client Data",
   dataType: "Non Trade Orders",
-  state: "ACTUAL",
-  descriptionMd: null,
+  description: null,
 };
 
 describe("flowDtoToForm", () => {
@@ -47,10 +49,10 @@ describe("flowFormToCreate", () => {
       caption: "Поток Non Trade Orders из Quik PAO",
       integrity: "I_2",
       confidentiality: "K_3",
+      secretClass: null,
       dataClass: "Client Data",
       dataType: "Non Trade Orders",
-      state: "ACTUAL",
-      descriptionMd: null,
+      description: null,
     });
   });
 });

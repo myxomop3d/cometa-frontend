@@ -36,10 +36,10 @@ const FLOW_FORM_FIELDS: readonly (keyof FlowFormValues)[] = [
   "caption",
   "integrity",
   "confidentiality",
+  "secretClass",
   "dataClass",
   "dataType",
-  "state",
-  "descriptionMd",
+  "description",
 ];
 
 function isFlowField(target: string): target is keyof FlowFormValues {
@@ -73,10 +73,10 @@ export function FlowSheet({
           caption: "",
           integrity: null,
           confidentiality: null,
+          secretClass: null,
           dataClass: "",
           dataType: "",
-          state: "ACTUAL",
-          descriptionMd: null,
+          description: null,
         },
   });
 
@@ -216,6 +216,25 @@ export function FlowSheet({
             />
           </div>
 
+          {/* Secret Class */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="secretClass">Secret Class</Label>
+            <Controller
+              control={form.control}
+              name="secretClass"
+              render={({ field }) => (
+                <Input
+                  id="secretClass"
+                  value={field.value ?? ""}
+                  onChange={(e) =>
+                    field.onChange(e.target.value === "" ? null : e.target.value)
+                  }
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
+          </div>
+
           {/* Data Class */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="dataClass">Data Class</Label>
@@ -238,26 +257,15 @@ export function FlowSheet({
             )}
           </div>
 
-          {/* State */}
+          {/* Description */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="state">State</Label>
-            <Input id="state" {...form.register("state")} />
-            {form.formState.errors.state && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.state.message}
-              </p>
-            )}
-          </div>
-
-          {/* Description (Markdown) */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="descriptionMd">Description</Label>
+            <Label htmlFor="description">Description</Label>
             <Controller
               control={form.control}
-              name="descriptionMd"
+              name="description"
               render={({ field }) => (
                 <Textarea
-                  id="descriptionMd"
+                  id="description"
                   rows={4}
                   value={field.value ?? ""}
                   onChange={(e) =>

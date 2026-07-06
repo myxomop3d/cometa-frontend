@@ -178,20 +178,14 @@ export function getFlowColumns({
       size: 200,
     },
     {
-      id: "state",
-      accessorKey: "state",
+      id: "secretClass",
+      accessorKey: "secretClass",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="State" />
+        <DataTableColumnHeader column={column} label="Secret Class" />
       ),
-      meta: {
-        label: "State",
-        variant: "select",
-        options: [{ label: "ACTUAL", value: "ACTUAL" }],
-        filterKey: "state",
-      },
-      enableColumnFilter: true,
+      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
       enableSorting: true,
-      size: 100,
+      size: 120,
     },
     {
       id: "actions",

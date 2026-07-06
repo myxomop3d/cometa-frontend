@@ -47,6 +47,13 @@
       "mcp__plugin_playwright_playwright__browser_snapshot",
       "mcp__plugin_playwright_playwright__browser_console_messages",
       "mcp__plugin_playwright_playwright__browser_close"
+    ],
+    "additionalDirectories": [
+      "F:\\programming\\cometa"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright",
+    "sequential-thinking"
+  ]
 }

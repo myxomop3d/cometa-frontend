@@ -2,13 +2,7 @@ import dagre from "@dagrejs/dagre";
 import type { FlowGraphNode, FlowGraphEdge } from "./types";
 
 const NODE_WIDTH = 220;
-const HANDLE_ROW_HEIGHT = 22;
-const NODE_MIN_HEIGHT = 80;
-
-function estimateHeight(node: FlowGraphNode): number {
-  const handles = node.data.handles.length;
-  return Math.max(NODE_MIN_HEIGHT, 40 + handles * HANDLE_ROW_HEIGHT);
-}
+const NODE_HEIGHT = 80;
 
 export function layoutGraph(
   nodes: FlowGraphNode[],
@@ -19,7 +13,7 @@ export function layoutGraph(
   g.setGraph({ rankdir: "LR", nodesep: 40, ranksep: 80 });
 
   for (const n of nodes) {
-    g.setNode(n.id, { width: NODE_WIDTH, height: estimateHeight(n) });
+    g.setNode(n.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   }
   for (const e of edges) {
     g.setEdge(e.source, e.target);
@@ -29,10 +23,9 @@ export function layoutGraph(
 
   return nodes.map((n) => {
     const pos = g.node(n.id);
-    const height = estimateHeight(n);
     return {
       ...n,
-      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - height / 2 },
+      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
     };
   });
 }

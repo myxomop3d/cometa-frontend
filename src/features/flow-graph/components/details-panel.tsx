@@ -1,16 +1,12 @@
-import type {
-  NodeDto,
-  InterfaceFlatDto,
-  LinkDto,
-  NodeMicroserviceDto,
-  NodeTopicDto,
-  NodeEgressDto,
-  InterfaceKafkaClientFlatDto,
-  InterfaceRestClientFlatDto,
-  InterfaceRestServerFlatDto,
-} from "@/types/api";
+import { ChevronsUpDown } from "lucide-react";
+import { stringify } from "yaml";
+import type { NodeDto, LinkDto } from "@/types/api";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { FieldRow } from "./field-row";
-import { MarkdownBlock } from "./markdown-block";
 import type { Selection, BuiltGraph } from "../types";
 
 interface DetailsPanelProps {
@@ -22,7 +18,7 @@ export function DetailsPanel({ selection, graph }: DetailsPanelProps) {
   if (!selection) {
     return (
       <div className="p-4 text-sm text-muted-foreground">
-        Select a node, interface, or link to see its details.
+        Select a node or link to see its details.
       </div>
     );
   }
@@ -32,14 +28,9 @@ export function DetailsPanel({ selection, graph }: DetailsPanelProps) {
     if (!node) return <Missing />;
     return <NodeDetails node={node} />;
   }
-  if (selection.kind === "interface") {
-    const iface = graph.interfaceById.get(selection.id);
-    if (!iface) return <Missing />;
-    return <InterfaceDetails iface={iface} />;
-  }
   const link = graph.linkById.get(selection.id);
   if (!link) return <Missing />;
-  return <LinkDetails link={link} />;
+  return <LinkDetails link={link} graph={graph} />;
 }
 
 function Missing() {
@@ -60,168 +51,74 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function NodeDetails({ node }: { node: NodeDto }) {
   return (
     <div>
-      <Section title={`${node.dtoType} node`}>
+      <Section title={`${node.nodeType} node`}>
         <FieldRow label="ID">{node.id}</FieldRow>
         <FieldRow label="Name">{node.name}</FieldRow>
-        <FieldRow label="Type">{node.dtoType}</FieldRow>
+        <FieldRow label="Type">{node.nodeType}</FieldRow>
+        <FieldRow label="Environment">{node.environment}</FieldRow>
+        <FieldRow label="Inserted at">{node.insertedAt ?? "—"}</FieldRow>
+        <FieldRow label="Updated at">{node.updatedAt ?? "—"}</FieldRow>
       </Section>
-      <Section title="Type-specific">{renderNodeTypeFields(node)}</Section>
-      <Section title="Description">
-        <MarkdownBlock value={node.descriptionMd} />
-      </Section>
+      {node.automatedSystem && (
+        <Section title="Automated system">
+          <FieldRow label="Name">{node.automatedSystem.name}</FieldRow>
+          <FieldRow label="Object code">{node.automatedSystem.objectCode ?? "—"}</FieldRow>
+          <FieldRow label="CI">{node.automatedSystem.ci}</FieldRow>
+          <FieldRow label="Block">{node.automatedSystem.block}</FieldRow>
+          <FieldRow label="Tribe">{node.automatedSystem.tribe}</FieldRow>
+          <FieldRow label="Cluster">{node.automatedSystem.cluster}</FieldRow>
+          <FieldRow label="Leader">{node.automatedSystem.leader}</FieldRow>
+        </Section>
+      )}
+      <DataSection data={node.data} />
     </div>
   );
 }
 
-function renderNodeTypeFields(node: NodeDto) {
-  if (node.dtoType === "microservice") {
-    const n = node as NodeMicroserviceDto;
-    return (
-      <>
-        <FieldRow label="Artifact">{n.artifact}</FieldRow>
-        <FieldRow label="Artifact version">{n.artifactVersion}</FieldRow>
-        <FieldRow label="Image version">{n.imageVersion ?? "—"}</FieldRow>
-        <FieldRow label="GMSB gen">{n.gmsbGen ?? "—"}</FieldRow>
-        <FieldRow label="Source URL">{n.sourceUrl ?? "—"}</FieldRow>
-        <FieldRow label="Config URL">{n.configUrl ?? "—"}</FieldRow>
-        <FieldRow label="Pelican URL">{n.pelicanUrl ?? "—"}</FieldRow>
-        <FieldRow label="Fault tolerance">{n.faultTolerance ?? "—"}</FieldRow>
-        <FieldRow label="Scalability">{n.scalability ?? "—"}</FieldRow>
-        <FieldRow label="Load balancing">{n.loadBalancing ?? "—"}</FieldRow>
-        <FieldRow label="Resource profile">{n.resourceProfile ?? "—"}</FieldRow>
-      </>
-    );
+function DataSection({ data }: { data: unknown }) {
+  if (data == null || (typeof data === "object" && Object.keys(data).length === 0)) {
+    return null;
   }
-  if (node.dtoType === "topic") {
-    const n = node as NodeTopicDto;
-    return (
-      <>
-        <FieldRow label="Partitions">{n.partitions}</FieldRow>
-        <FieldRow label="Replication">{n.replicationFactor}</FieldRow>
-        <FieldRow label="Compression">{n.compressionType}</FieldRow>
-        <FieldRow label="Max message bytes">{n.maxMessageBytes}</FieldRow>
-        <FieldRow label="Retention bytes">{n.retentionBytes}</FieldRow>
-        <FieldRow label="Retention ms">{n.retentionMs}</FieldRow>
-      </>
-    );
-  }
-  if (node.dtoType === "egress") {
-    const n = node as NodeEgressDto;
-    return (
-      <>
-        <FieldRow label="Real hosts">{n.realHosts}</FieldRow>
-        <FieldRow label="Real port">{n.realPort}</FieldRow>
-        <FieldRow label="TLS">{n.tls}</FieldRow>
-        <FieldRow label="Virtual host">{n.virtualHost}</FieldRow>
-      </>
-    );
-  }
-  return <FieldRow label="Info">No type-specific fields.</FieldRow>;
-}
-
-function InterfaceDetails({ iface }: { iface: InterfaceFlatDto }) {
   return (
-    <div>
-      <Section title={`${iface.dtoType} interface`}>
-        <FieldRow label="ID">{iface.id}</FieldRow>
-        <FieldRow label="Name">{iface.name}</FieldRow>
-        <FieldRow label="Type">{iface.dtoType}</FieldRow>
-        <FieldRow label="Protocol">{iface.protocol}</FieldRow>
-        <FieldRow label="Segment">{iface.segment}</FieldRow>
-        <FieldRow label="Node ID">{iface.nodeId ?? "—"}</FieldRow>
-      </Section>
-      <Section title="Type-specific">{renderInterfaceTypeFields(iface)}</Section>
-      <Section title="Whitelist headers">
-        <MarkdownBlock value={iface.localWhiteListHeaders} />
-      </Section>
-      <Section title="Description">
-        <MarkdownBlock value={iface.descriptionMd} />
-      </Section>
-    </div>
+    <section className="border-b px-4 py-3">
+      <Collapsible>
+        <CollapsibleTrigger className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground">
+          Data
+          <ChevronsUpDown className="size-3.5" />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-3 text-xs leading-relaxed">
+            {stringify(data)}
+          </pre>
+        </CollapsibleContent>
+      </Collapsible>
+    </section>
   );
 }
 
-function renderInterfaceTypeFields(iface: InterfaceFlatDto) {
-  if (iface.dtoType === "kafkaClient") {
-    const i = iface as InterfaceKafkaClientFlatDto;
-    return (
-      <>
-        <FieldRow label="Partition key">{i.partitionKey ?? "—"}</FieldRow>
-        <FieldRow label="Message format">{i.messageFormat}</FieldRow>
-        <FieldRow label="Message encoding">{i.messageEncoding}</FieldRow>
-        <FieldRow label="Consumer group">{i.consumerGroup ?? "—"}</FieldRow>
-        <FieldRow label="Message headers">
-          <MarkdownBlock value={i.messageHeaders} />
-        </FieldRow>
-      </>
-    );
-  }
-  if (iface.dtoType === "restClient") {
-    const i = iface as InterfaceRestClientFlatDto;
-    return (
-      <>
-        <FieldRow label="Endpoint">{i.endpoint}</FieldRow>
-        <FieldRow label="HTTP method">{i.httpMethod}</FieldRow>
-        <FieldRow label="Request format">{i.requestFormat}</FieldRow>
-        <FieldRow label="Response format">{i.responseFormat}</FieldRow>
-        <FieldRow label="Socket connect (ms)">{i.socketConnectionTimeout}</FieldRow>
-        <FieldRow label="Socket read (ms)">{i.socketReadTimeout}</FieldRow>
-        <FieldRow label="Authentication">{i.authentication}</FieldRow>
-        <FieldRow label="Encryption">{i.encryption}</FieldRow>
-        <FieldRow label="TLS version">{i.tlsVersion}</FieldRow>
-        <FieldRow label="XSD">
-          <MarkdownBlock value={i.xsdSchema} />
-        </FieldRow>
-        <FieldRow label="Errors">
-          <MarkdownBlock value={i.errorsMd} />
-        </FieldRow>
-      </>
-    );
-  }
-  if (iface.dtoType === "restServer") {
-    const i = iface as InterfaceRestServerFlatDto;
-    return (
-      <>
-        <FieldRow label="Endpoint">{i.endpoint}</FieldRow>
-        <FieldRow label="HTTP method">{i.httpMethod}</FieldRow>
-        <FieldRow label="Request format">{i.requestFormat}</FieldRow>
-        <FieldRow label="Response format">{i.responseFormat}</FieldRow>
-        <FieldRow label="Authentication">{i.authentication}</FieldRow>
-        <FieldRow label="Encryption">{i.encryption}</FieldRow>
-        <FieldRow label="TLS version">{i.tlsVersion}</FieldRow>
-        <FieldRow label="Envoy filter">{i.envoyFilter ?? "—"}</FieldRow>
-        <FieldRow label="Server hosts">
-          <MarkdownBlock value={i.serverHostsMd} />
-        </FieldRow>
-        <FieldRow label="XSD">
-          <MarkdownBlock value={i.xsdSchema} />
-        </FieldRow>
-        <FieldRow label="Errors">
-          <MarkdownBlock value={i.errorsMd} />
-        </FieldRow>
-      </>
-    );
-  }
-  return <FieldRow label="Info">No type-specific fields.</FieldRow>;
-}
-
-function LinkDetails({ link }: { link: LinkDto }) {
+function LinkDetails({ link, graph }: { link: LinkDto; graph: BuiltGraph }) {
+  const client = graph.nodeById.get(link.clientNodeId);
+  const server = graph.nodeById.get(link.serverNodeId);
   return (
     <div>
       <Section title="Link">
         <FieldRow label="ID">{link.id}</FieldRow>
         <FieldRow label="Flow ID">{link.flowId}</FieldRow>
-        <FieldRow label="Direction">{link.dataFlowDirection}</FieldRow>
+        <FieldRow label="Protocol">{link.protocol}</FieldRow>
+        <FieldRow label="Direction">{link.dataFlowDirection ?? "—"}</FieldRow>
+        <FieldRow label="Principal ID">{link.principalId ?? "—"}</FieldRow>
+        <FieldRow label="Inserted at">{link.insertedAt ?? "—"}</FieldRow>
+        <FieldRow label="Updated at">{link.updatedAt ?? "—"}</FieldRow>
       </Section>
-      <Section title="Client interface">
-        <FieldRow label="ID">{link.clientInterface.id}</FieldRow>
-        <FieldRow label="Name">{link.clientInterface.name}</FieldRow>
-        <FieldRow label="Type">{link.clientInterface.dtoType}</FieldRow>
+      <Section title="Client node">
+        <FieldRow label="ID">{link.clientNodeId}</FieldRow>
+        <FieldRow label="Name">{client?.name ?? "—"}</FieldRow>
+        <FieldRow label="Type">{client?.nodeType ?? "—"}</FieldRow>
       </Section>
-      <Section title="Server interface">
-        <FieldRow label="ID">{link.serverInterface.id}</FieldRow>
-        <FieldRow label="Name">{link.serverInterface.name}</FieldRow>
-        <FieldRow label="Type">{link.serverInterface.dtoType}</FieldRow>
+      <Section title="Server node">
+        <FieldRow label="ID">{link.serverNodeId}</FieldRow>
+        <FieldRow label="Name">{server?.name ?? "—"}</FieldRow>
+        <FieldRow label="Type">{server?.nodeType ?? "—"}</FieldRow>
       </Section>
     </div>
   );

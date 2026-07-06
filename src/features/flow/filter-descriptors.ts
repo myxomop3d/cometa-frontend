@@ -11,7 +11,6 @@ export const flowFilterDescriptors: readonly FlowFilterDescriptor[] = [
   { id: "confidentiality", variant: "select", filterKey: "confidentiality" },
   { id: "dataClass", variant: "select", filterKey: "dataClass" },
   { id: "dataType", variant: "text", filterKey: "dataType" },
-  { id: "state", variant: "select", filterKey: "state" },
 ] as const;
 
 export function deriveColumnFiltersFromSearch(

@@ -48,18 +48,8 @@ export function FlowGraphCanvas({ graph, selection, onSelect }: FlowGraphCanvasP
   };
   const onPaneClick = () => onSelect(null);
 
-  const handleInterfaceClick = (event: React.MouseEvent) => {
-    const target = event.target as HTMLElement;
-    const handleEl = target.closest<HTMLElement>(".react-flow__handle");
-    if (!handleEl) return;
-    const id = handleEl.dataset.handleid;
-    if (!id) return;
-    event.stopPropagation();
-    onSelect({ kind: "interface", id: Number(id) });
-  };
-
   return (
-    <div className="h-full w-full" onClickCapture={handleInterfaceClick}>
+    <div className="h-full w-full">
       <ReactFlow
         nodes={nodes.map((n) => ({ ...n, selected: selection?.kind === "node" && selection.id === Number(n.id) }))}
         edges={edges.map((e) => ({ ...e, selected: selection?.kind === "link" && selection.id === Number(e.id) }))}

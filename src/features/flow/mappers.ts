@@ -7,10 +7,10 @@ export function flowDtoToForm(dto: FlowDto): FlowFormValues {
     caption: dto.caption,
     integrity: dto.integrity,
     confidentiality: dto.confidentiality,
+    secretClass: dto.secretClass,
     dataClass: dto.dataClass,
     dataType: dto.dataType,
-    state: dto.state,
-    descriptionMd: dto.descriptionMd,
+    description: dto.description,
   };
 }
 
@@ -20,10 +20,10 @@ export function flowFormToCreate(v: FlowFormValues): FlowWritePayload {
     caption: v.caption,
     integrity: v.integrity,
     confidentiality: v.confidentiality,
+    secretClass: v.secretClass,
     dataClass: v.dataClass,
     dataType: v.dataType,
-    state: v.state,
-    descriptionMd: v.descriptionMd,
+    description: v.description,
   };
 }
 
@@ -44,9 +44,9 @@ export function flowFormToPatch(
   if (isDirty(dirty.caption)) out.caption = v.caption;
   if (isDirty(dirty.integrity)) out.integrity = v.integrity;
   if (isDirty(dirty.confidentiality)) out.confidentiality = v.confidentiality;
+  if (isDirty(dirty.secretClass)) out.secretClass = v.secretClass;
   if (isDirty(dirty.dataClass)) out.dataClass = v.dataClass;
   if (isDirty(dirty.dataType)) out.dataType = v.dataType;
-  if (isDirty(dirty.state)) out.state = v.state;
-  if (isDirty(dirty.descriptionMd)) out.descriptionMd = v.descriptionMd;
+  if (isDirty(dirty.description)) out.description = v.description;
   return out;
 }

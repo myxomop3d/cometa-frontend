@@ -101,114 +101,40 @@ export interface BoxFilters extends Partial<PaginationParams> {
   oldThingIds?: number[];
 }
 
-// Node hierarchy
+// Node
+export type EnvironmentCode = "DEV" | "IFT" | "UAT" | "PROD";
+export type NodeType = "NODE" | "MICROSERVICE" | "TOPIC" | "EGRESS" | "INGRESS";
+
 export interface NodeDto {
   id: number;
-  dtoType: string;
+  insertedAt: string | null;
+  updatedAt: string | null;
+  nodeType: NodeType;
   name: string;
-  descriptionMd: string | null;
-  interfaces?: InterfaceFlatDto[];
-}
-
-export interface NodeMicroserviceDto extends NodeDto {
-  dtoType: "microservice";
-  artifact: string;
-  artifactVersion: string;
-  imageVersion: string | null;
-  gmsbGen: string | null;
-  sourceUrl: string | null;
-  configUrl: string | null;
-  pelicanUrl: string | null;
-  faultTolerance: string | null;
-  scalability: string | null;
-  loadBalancing: string | null;
-  globalWhiteListHeaders: string | null;
-  resourceProfile: string | null;
-}
-
-export interface NodeTopicDto extends NodeDto {
-  dtoType: "topic";
-  partitions: number;
-  replicationFactor: number;
-  compressionType: string;
-  maxMessageBytes: number;
-  retentionBytes: number;
-  retentionMs: number;
-}
-
-export interface NodeEgressDto extends NodeDto {
-  dtoType: "egress";
-  realHosts: string;
-  realPort: number;
-  tls: string;
-  virtualHost: string;
-}
-
-// Interface hierarchy
-export interface InterfaceFlatDto {
-  id: number;
-  dtoType: string;
-  name: string;
-  protocol: string;
-  segment: string;
-  localWhiteListHeaders: string | null;
-  descriptionMd: string | null;
-  nodeId: number | null;
-  linksInIds: number[] | null;
-  linksOutIds: number[] | null;
-}
-
-export interface InterfaceKafkaClientFlatDto extends InterfaceFlatDto {
-  dtoType: "kafkaClient";
-  partitionKey: string | null;
-  messageFormat: string;
-  messageEncoding: string;
-  messageHeaders: string | null;
-  consumerGroup: string | null;
-}
-
-export interface InterfaceRestClientFlatDto extends InterfaceFlatDto {
-  dtoType: "restClient";
-  endpoint: string;
-  httpMethod: string;
-  requestFormat: string;
-  responseFormat: string;
-  xsdSchema: string | null;
-  socketConnectionTimeout: number;
-  socketReadTimeout: number;
-  authentication: string;
-  encryption: string;
-  tlsVersion: string;
-  errorsMd: string | null;
-}
-
-export interface InterfaceRestServerFlatDto extends InterfaceFlatDto {
-  dtoType: "restServer";
-  endpoint: string;
-  httpMethod: string;
-  requestFormat: string;
-  responseFormat: string;
-  xsdSchema: string | null;
-  authentication: string;
-  encryption: string;
-  tlsVersion: string;
-  envoyFilter: string | null;
-  serverHostsMd: string | null;
-  errorsMd: string | null;
+  environment: EnvironmentCode;
+  automatedSystem: AutomatedSystemDto | null;
+  data?: unknown; // JSONB config (application.yml etc.) — rendered as YAML, not typed
 }
 
 // Link
+export type LinkProtocol = "DB" | "KAFKA" | "REST" | "SOAP" | "TFS" | "LDAP" | "common";
+
 export interface LinkDto {
   id: number;
+  insertedAt: string | null;
+  updatedAt: string | null;
   flowId: number;
-  clientInterface: InterfaceFlatDto;
-  serverInterface: InterfaceFlatDto;
-  dataFlowDirection: string;
+  clientNodeId: number;
+  serverNodeId: number;
+  protocol: LinkProtocol;
+  dataFlowDirection: string | null;
+  principalId: number | null;
 }
 
 // FlowGraph
 export interface FlowGraphDto {
-  flow: FlowDto;
+  flowId: number;
+  env: EnvironmentCode;
   nodes: NodeDto[];
   links: LinkDto[];
 }
@@ -216,14 +142,16 @@ export interface FlowGraphDto {
 // Flow
 export interface FlowDto {
   id: number;
+  insertedAt: string | null;
+  updatedAt: string | null;
   code: string;
   caption: string;
-  integrity: "I_1" | "I_2" | "I_3" | "I_4" | null;
-  confidentiality: "K_1" | "K_2" | "K_3" | "K_4" | null;
+  integrity: string | null;
+  confidentiality: string | null;
+  secretClass: string | null;
   dataClass: string;
   dataType: string;
-  state: string;
-  descriptionMd: string | null;
+  description: string | null;
 }
 
 export interface FlowFilters extends Partial<PaginationParams> {
@@ -233,5 +161,4 @@ export interface FlowFilters extends Partial<PaginationParams> {
   confidentiality?: string;
   dataClass?: string;
   dataType?: string;
-  state?: string;
 }

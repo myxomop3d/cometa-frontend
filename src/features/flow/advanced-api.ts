@@ -14,7 +14,6 @@ export const flowFieldByColumnId: Record<string, FieldEntry> = {
   confidentiality: { field: "confidentiality", variant: "select" },
   dataClass:       { field: "dataClass",       variant: "select" },
   dataType:        { field: "dataType",        variant: "text" },
-  state:           { field: "state",           variant: "select" },
 };
 
 export interface AdvancedDataTableQueryParams {

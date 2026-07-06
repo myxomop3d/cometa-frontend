@@ -1,24 +1,18 @@
 import { memo } from "react";
-import type { NodeProps } from "@xyflow/react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { cn } from "@/lib/utils";
-import { CustomHandle } from "./custom-handle";
 import type { FlowGraphNode } from "../types";
 
 const NODE_TONE: Record<string, string> = {
-  microservice: "border-blue-500 bg-blue-50 dark:bg-blue-950/30",
-  topic: "border-amber-500 bg-amber-50 dark:bg-amber-950/30",
-  egress: "border-fuchsia-500 bg-fuchsia-50 dark:bg-fuchsia-950/30",
+  MICROSERVICE: "border-blue-500 bg-blue-50 dark:bg-blue-950/30",
+  TOPIC: "border-amber-500 bg-amber-50 dark:bg-amber-950/30",
+  EGRESS: "border-fuchsia-500 bg-fuchsia-50 dark:bg-fuchsia-950/30",
+  INGRESS: "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30",
 };
 
 function FlowGraphNodeView({ data, selected }: NodeProps<FlowGraphNode>) {
-  const { node, handles } = data;
-  const tone = NODE_TONE[node.dtoType] ?? "border-slate-400 bg-slate-50 dark:bg-slate-900/30";
-
-  const leftHandles = handles.filter((h) => h.side === "left");
-  const rightHandles = handles.filter((h) => h.side === "right");
-
-  const spread = (count: number, index: number) =>
-    count === 0 ? 50 : ((index + 1) / (count + 1)) * 100;
+  const { node } = data;
+  const tone = NODE_TONE[node.nodeType] ?? "border-slate-400 bg-slate-50 dark:bg-slate-900/30";
 
   return (
     <div
@@ -28,25 +22,15 @@ function FlowGraphNodeView({ data, selected }: NodeProps<FlowGraphNode>) {
         selected && "ring-2 ring-primary",
       )}
     >
-      <div className="border-b px-3 py-2">
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">{node.dtoType}</div>
+      <div className="px-3 py-2">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{node.nodeType}</div>
         <div className="text-sm font-semibold">{node.name}</div>
+        {node.automatedSystem && (
+          <div className="truncate text-xs text-muted-foreground">{node.automatedSystem.name}</div>
+        )}
       </div>
-      {/* <ul className="px-3 py-2 text-xs">
-        {handles.map((h) => (
-          <li key={h.interfaceId} className="flex justify-between gap-2 py-0.5">
-            <span className="truncate">{h.label}</span>
-            <span className="text-muted-foreground">{h.dtoType}</span>
-          </li>
-        ))}
-      </ul> */}
-
-      {leftHandles.map((h, i) => (
-        <CustomHandle key={h.interfaceId} descriptor={h} topPercent={spread(leftHandles.length, i)} />
-      ))}
-      {rightHandles.map((h, i) => (
-        <CustomHandle key={h.interfaceId} descriptor={h} topPercent={spread(rightHandles.length, i)} />
-      ))}
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
     </div>
   );
 }

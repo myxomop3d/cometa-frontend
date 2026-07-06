@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -7,39 +7,34 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { flowApi } from "@/features/flow/api";
 
 interface FlowComboboxProps {
-  value: number;
+  value?: number;
   onChange: (flowId: number) => void;
-}
-
-const PAGE_SIZE = 10;
-
-function useDebounced<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), ms);
-    return () => clearTimeout(t);
-  }, [value, ms]);
-  return debounced;
 }
 
 export function FlowCombobox({ value, onChange }: FlowComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounced(search, 250);
 
-  const listQuery = useQuery(
-    flowApi.listQueryOptions({
-      caption: debouncedSearch || undefined,
-      page: 1,
-      pageSize: PAGE_SIZE,
-    }),
-  );
-  const selectedQuery = useQuery(flowApi.detailQueryOptions(value));
+  // Bare GET /api/v1/flow returns the complete list; filtering happens
+  // client-side because the backend has no filter params. The selected
+  // flow's label is derived from the same list — no per-flow request.
+  const listQuery = useQuery(flowApi.listQueryOptions());
 
-  const flows = listQuery.data?.data ?? [];
-  const selected = selectedQuery.data?.data;
+  const allFlows = listQuery.data?.data;
+  const flows = useMemo(() => {
+    if (!allFlows) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return allFlows;
+    return allFlows.filter(
+      (f) =>
+        f.caption.toLowerCase().includes(q) || f.code.toLowerCase().includes(q),
+    );
+  }, [allFlows, search]);
+
+  const selected =
+    value !== undefined ? allFlows?.find((f) => f.id === value) : undefined;
   const displayText = selected
-    ? `${selected.caption}`
+    ? selected.caption
     : listQuery.isLoading
       ? "Loading…"
       : "Select a flow";
@@ -61,7 +56,7 @@ export function FlowCombobox({ value, onChange }: FlowComboboxProps) {
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by caption…"
+              placeholder="Search by caption or code…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 border-0 p-0 focus-visible:ring-0"

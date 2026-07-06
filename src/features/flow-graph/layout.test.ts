@@ -4,7 +4,12 @@ import type { FlowGraphNode, FlowGraphEdge } from "./types";
 
 const mkNode = (id: string): FlowGraphNode => ({
   id, type: "flowGraphNode", position: { x: 0, y: 0 },
-  data: { node: { id: Number(id), dtoType: "microservice", name: id, descriptionMd: null, interfaces: [] }, handles: [] },
+  data: {
+    node: {
+      id: Number(id), insertedAt: null, updatedAt: null,
+      nodeType: "MICROSERVICE", name: id, environment: "PROD", automatedSystem: null,
+    },
+  },
 });
 
 describe("layoutGraph", () => {
