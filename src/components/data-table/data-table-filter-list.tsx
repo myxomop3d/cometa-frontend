@@ -161,21 +161,21 @@ export function DataTableFilterList<TData>({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="border-dashed">
-          <Filter />
-          Filter
-          {count > 0 && (
-            <span className="ml-1 rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
-              {count}
-            </span>
-          )}
-        </Button>
+      <PopoverTrigger
+        render={<Button variant="outline" size="sm" className="border-dashed" />}
+      >
+        <Filter />
+        Filter
+        {count > 0 && (
+          <span className="ml-1 rounded bg-secondary px-1.5 py-0.5 text-xs font-medium">
+            {count}
+          </span>
+        )}
       </PopoverTrigger>
       <PopoverContent
         align="start"
         className="w-full max-w-170 p-3"
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        initialFocus={false}
       >
         {draft.length === 0 ? (
           <div className="px-1 py-2 text-sm text-muted-foreground">
@@ -308,14 +308,16 @@ function FieldPicker<TData>({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 w-[160px] shrink-0 justify-start font-normal"
-        >
-          <span className="truncate">{label}</span>
-        </Button>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-[160px] shrink-0 justify-start font-normal"
+          />
+        }
+      >
+        <span className="truncate">{label}</span>
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-0" align="start">
         <Command>
@@ -352,11 +354,9 @@ function AddFilterButton<TData>({ columns, onPick }: AddFilterButtonProps<TData>
   const [open, setOpen] = React.useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Plus />
-          Add filter
-        </Button>
+      <PopoverTrigger render={<Button variant="ghost" size="sm" />}>
+        <Plus />
+        Add filter
       </PopoverTrigger>
       <PopoverContent className="w-[220px] p-0" align="start">
         <Command>

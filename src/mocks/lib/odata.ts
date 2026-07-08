@@ -121,7 +121,12 @@ function tokenize(input: string): Tok[] {
 
 // ---------- Parser ----------
 class Parser {
-  constructor(private toks: Tok[], private pos = 0) {}
+  private toks: Tok[];
+  private pos: number;
+  constructor(toks: Tok[], pos = 0) {
+    this.toks = toks;
+    this.pos = pos;
+  }
   peek(): Tok | undefined { return this.toks[this.pos]; }
   next(): Tok | undefined { return this.toks[this.pos++]; }
   eat(k: string, v?: string): boolean {

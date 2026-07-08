@@ -25,7 +25,11 @@ export type RelationQueryOptionsFn<TRelated> = (
 ) => UseQueryOptions<
   ApiResponse<TRelated[]>,
   Error,
-  ApiResponse<TRelated[]>
+  ApiResponse<TRelated[]>,
+  // queryOptions() infers a mutable queryKey tuple; widen to avoid
+  // contravariant `enabled` mismatch against the default readonly key.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any
 >;
 
 export interface RelationConfig<TRelated> {
