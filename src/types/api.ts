@@ -162,3 +162,21 @@ export interface FlowFilters extends Partial<PaginationParams> {
   dataClass?: string;
   dataType?: string;
 }
+
+// ────────────────────────────────────────────────────────────
+// Auth
+// ────────────────────────────────────────────────────────────
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+}
+
+export interface UserProfile {
+  email: string;
+  authorities: string[];
+}

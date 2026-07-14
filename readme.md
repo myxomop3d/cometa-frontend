@@ -70,6 +70,7 @@ src/
 
 - Path alias: `@/` maps to `src/`
 - API proxy: `/api` proxied to `http://localhost:8080` (Vite config)
+- **HTTPS backend (dev-cluster):** add `secure: false` in `vite.config.ts` `server.proxy` to avoid **502 Bad Gateway** — Vite's `http-proxy` cannot verify self-signed cluster certificates
 - `src/routeTree.gen.ts` is auto-generated — never edit manually
 - Add shadcn components: `npx shadcn@latest add <component>`
 - `.npmrc` has `legacy-peer-deps=true`

@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 import { createLink, useMatchRoute } from "@tanstack/react-router";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth/auth-context";
 
 // Create a type-safe router link from SidebarMenuButton
 const SidebarMenuButtonLink = createLink(
@@ -64,6 +65,8 @@ export function AppSidebar() {
     localStorage.setItem("theme", next ? "dark" : "light");
   };
 
+  const { user, logout } = useAuth();
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4 font-semibold text-lg border-b border-sidebar-border">
@@ -89,6 +92,11 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
+        {user && (
+          <div className="px-3 py-1.5 text-xs text-muted-foreground" title={user.email}>
+            {user.email}
+          </div>
+        )}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={toggleTheme}>
@@ -100,6 +108,14 @@ export function AppSidebar() {
               <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {user && (
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={logout}>
+                <LogOut className="size-4" />
+                <span>Sign out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />

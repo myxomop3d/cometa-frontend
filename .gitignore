@@ -29,3 +29,5 @@ dist-ssr
 # Terminal Paste Image folder
 /.cp-images
 cometa.code-workspace
+/.gigacode/
+/.gigaide/

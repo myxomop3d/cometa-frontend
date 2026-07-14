@@ -14,8 +14,10 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        //target: "http://localhost:8080",
+        target: "https://cometa-dev.tls.apps.a3klq48m.k8s.delta.sbrf.ru",
         changeOrigin: true,
+        secure: false
       },
     },
   },

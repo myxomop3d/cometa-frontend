@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForbiddenRouteImport } from './routes/forbidden'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
 import { Route as FlowAdvancedIndexRouteImport } from './routes/flow-advanced/index'
@@ -18,6 +20,16 @@ import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
 import { Route as BoxDiceAdvancedIndexRouteImport } from './routes/box-dice-advanced/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForbiddenRoute = ForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -61,6 +73,8 @@ const AutomatedSystemIndexRoute = AutomatedSystemIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forbidden': typeof ForbiddenRoute
+  '/login': typeof LoginRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
@@ -71,6 +85,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forbidden': typeof ForbiddenRoute
+  '/login': typeof LoginRoute
   '/automated-system': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced': typeof BoxDiceAdvancedIndexRoute
   '/box-dice': typeof BoxDiceIndexRoute
@@ -82,6 +98,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/forbidden': typeof ForbiddenRoute
+  '/login': typeof LoginRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
@@ -94,6 +112,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forbidden'
+    | '/login'
     | '/automated-system/'
     | '/box-dice-advanced/'
     | '/box-dice/'
@@ -104,6 +124,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forbidden'
+    | '/login'
     | '/automated-system'
     | '/box-dice-advanced'
     | '/box-dice'
@@ -114,6 +136,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/forbidden'
+    | '/login'
     | '/automated-system/'
     | '/box-dice-advanced/'
     | '/box-dice/'
@@ -125,6 +149,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForbiddenRoute: typeof ForbiddenRoute
+  LoginRoute: typeof LoginRoute
   AutomatedSystemIndexRoute: typeof AutomatedSystemIndexRoute
   BoxDiceAdvancedIndexRoute: typeof BoxDiceAdvancedIndexRoute
   BoxDiceIndexRoute: typeof BoxDiceIndexRoute
@@ -136,6 +162,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forbidden': {
+      id: '/forbidden'
+      path: '/forbidden'
+      fullPath: '/forbidden'
+      preLoaderRoute: typeof ForbiddenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -197,6 +237,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForbiddenRoute: ForbiddenRoute,
+  LoginRoute: LoginRoute,
   AutomatedSystemIndexRoute: AutomatedSystemIndexRoute,
   BoxDiceAdvancedIndexRoute: BoxDiceAdvancedIndexRoute,
   BoxDiceIndexRoute: BoxDiceIndexRoute,

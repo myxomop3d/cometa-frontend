@@ -22,6 +22,24 @@ declare module "@tanstack/react-router" {
   }
 }
 
+// Intercept all fetch() calls to attach Authorization header and handle errors
+const __origFetch = window.fetch.bind(window);
+window.fetch = async (input, init) => {
+  const token = localStorage.getItem("cometa-auth-token");
+  if (token) {
+    const headers = new Headers(init?.headers);
+    if (!headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    init = { ...init, headers };
+  }
+  const res = await __origFetch(input, init);
+  if (res.status === 403 && !window.location.pathname.startsWith("/forbidden")) {
+    window.location.href = "/forbidden";
+  }
+  return res;
+};
+
 async function bootstrap() {
   if (import.meta.env.VITE_MOCK_API === "true") {
     const { worker } = await import("./mocks/browser");
