@@ -1,4 +1,4 @@
-// Страница входа: форма email + password, валидация, вызов AuthContext.login()
+// Страница входа: форма sigmaLogin + password, валидация, вызов AuthContext.login()
 import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { LogIn, KeyRound } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  sigmaLogin: z.string().min(8, "SIGMA login is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -67,18 +67,18 @@ function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
+              <label htmlFor="sigmaLogin" className="text-sm font-medium">
+                SIGMA login
               </label>
               <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                autoComplete="email"
-                {...register("email")}
+                id="sigmaLogin"
+                type="text"
+                placeholder="12345678"
+                autoComplete="username"
+                {...register("sigmaLogin")}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
+              {errors.sigmaLogin && (
+                <p className="text-sm text-destructive">{errors.sigmaLogin.message}</p>
               )}
             </div>
             <div className="space-y-2">

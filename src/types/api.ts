@@ -168,7 +168,7 @@ export interface FlowFilters extends Partial<PaginationParams> {
 // ────────────────────────────────────────────────────────────
 
 export interface LoginRequest {
-  email: string;
+  sigmaLogin: string;
   password: string;
 }
 
@@ -177,6 +177,6 @@ export interface LoginResponse {
 }
 
 export interface UserProfile {
-  email: string;
+  sigmaLogin: string;
   authorities: string[];
 }

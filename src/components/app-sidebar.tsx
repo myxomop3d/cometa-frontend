@@ -93,8 +93,8 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         {user && (
-          <div className="px-3 py-1.5 text-xs text-muted-foreground" title={user.email}>
-            {user.email}
+          <div className="px-3 py-1.5 text-xs text-muted-foreground" title={user.sigmaLogin}>
+            {user.sigmaLogin}
           </div>
         )}
         <SidebarMenu>
