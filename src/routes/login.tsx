@@ -13,6 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/auth-context";
+import { ApiError } from "@/lib/api/create-crud-api";
 import { LogIn, KeyRound } from "lucide-react";
 
 const loginSchema = z.object({
@@ -42,7 +43,11 @@ function LoginPage() {
       await login(data);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Login failed. Check your credentials.";
+        err instanceof ApiError && (err.status === 401 || err.status === 403)
+          ? "Invalid login or password."
+          : err instanceof Error
+            ? err.message
+            : "Login failed. Check your credentials.";
       setError("root", { message });
     }
   };

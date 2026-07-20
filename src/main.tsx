@@ -41,6 +41,22 @@ function isApiRequest(input: RequestInfo | URL): boolean {
   }
 }
 
+// The login endpoint (password + certificate). Its 401/403s are credential
+// failures the login form should display — not global auth-redirect triggers.
+function isAuthLoginRequest(input: RequestInfo | URL): boolean {
+  try {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof Request
+          ? input.url
+          : String(input);
+    return new URL(url, window.location.origin).pathname.endsWith("/auth/login");
+  } catch {
+    return false;
+  }
+}
+
 window.fetch = async (input, init) => {
   if (isApiRequest(input)) {
     const token = localStorage.getItem("cometa-auth-token");
@@ -55,12 +71,19 @@ window.fetch = async (input, init) => {
   const res = await __origFetch(input, init);
   const path = window.location.pathname;
   // Expired/invalid token on an API call → clear session and re-login.
-  // Skip when already on /login so login-form 401s (bad credentials) surface as errors.
-  if (res.status === 401 && isApiRequest(input) && !path.startsWith("/login")) {
+  // Skip login-endpoint 401s (bad credentials) so they surface on the form.
+  if (
+    res.status === 401 &&
+    isApiRequest(input) &&
+    !isAuthLoginRequest(input) &&
+    !path.startsWith("/login")
+  ) {
     localStorage.removeItem("cometa-auth-token");
     window.location.href = "/login";
   }
-  if (res.status === 403 && !path.startsWith("/forbidden")) {
+  // Access denied → /forbidden, except login-endpoint 403s (invalid credentials /
+  // certificate), which the login form should display as an inline error.
+  if (res.status === 403 && !isAuthLoginRequest(input) && !path.startsWith("/forbidden")) {
     window.location.href = "/forbidden";
   }
   return res;
