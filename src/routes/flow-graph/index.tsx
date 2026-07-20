@@ -14,8 +14,13 @@ export const Route = createFileRoute("/flow-graph/")({
   loaderDeps: ({ search }) => ({ flowId: search.flowId, env: search.env }),
   loader: ({ context, deps }) =>
     Promise.all([
-      // One list request feeds both the combobox and the header metadata.
-      context.queryClient.ensureQueryData(flowApi.listQueryOptions()),
+      // Prefetch the selected flow's metadata for the header; the combobox
+      // fetches its own ($top=20 + $filter) options when opened.
+      deps.flowId === undefined
+        ? undefined
+        : context.queryClient.ensureQueryData(
+            flowApi.detailQueryOptions(deps.flowId),
+          ),
       deps.flowId === undefined
         ? undefined
         : context.queryClient.ensureQueryData(

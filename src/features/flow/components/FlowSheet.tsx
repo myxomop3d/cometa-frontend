@@ -32,7 +32,7 @@ import { flowDtoToForm, flowFormToCreate, flowFormToPatch } from "../mappers";
 import { ApiError } from "@/lib/api/create-crud-api";
 
 const FLOW_FORM_FIELDS: readonly (keyof FlowFormValues)[] = [
-  "code",
+  "key",
   "caption",
   "integrity",
   "confidentiality",
@@ -69,7 +69,7 @@ export function FlowSheet({
     defaultValues: flow
       ? flowDtoToForm(flow)
       : {
-          code: "",
+          key: "",
           caption: "",
           integrity: null,
           confidentiality: null,
@@ -144,13 +144,13 @@ export function FlowSheet({
           onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
           className="flex flex-col gap-4"
         >
-          {/* Code */}
+          {/* Key */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="code">Code</Label>
-            <Input id="code" {...form.register("code")} />
-            {form.formState.errors.code && (
+            <Label htmlFor="key">Key</Label>
+            <Input id="key" {...form.register("key")} />
+            {form.formState.errors.key && (
               <p className="text-sm text-destructive">
-                {form.formState.errors.code.message}
+                {form.formState.errors.key.message}
               </p>
             )}
           </div>

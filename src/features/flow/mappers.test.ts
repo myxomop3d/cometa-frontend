@@ -7,7 +7,7 @@ const baseDto: FlowDto = {
   id: 2,
   insertedAt: null,
   updatedAt: null,
-  code: "quikpao.non trade orders",
+  key: "quikpao.non trade orders",
   caption: "Поток Non Trade Orders из Quik PAO",
   integrity: "I_2",
   confidentiality: "K_3",
@@ -18,7 +18,7 @@ const baseDto: FlowDto = {
 };
 
 const baseForm: FlowFormValues = {
-  code: "quikpao.non trade orders",
+  key: "quikpao.non trade orders",
   caption: "Поток Non Trade Orders из Quik PAO",
   integrity: "I_2",
   confidentiality: "K_3",
@@ -45,7 +45,7 @@ describe("flowFormToCreate", () => {
   it("produces a write payload matching all form fields", () => {
     const payload = flowFormToCreate(baseForm);
     expect(payload).toEqual({
-      code: "quikpao.non trade orders",
+      key: "quikpao.non trade orders",
       caption: "Поток Non Trade Orders из Quik PAO",
       integrity: "I_2",
       confidentiality: "K_3",
@@ -63,8 +63,8 @@ describe("flowFormToPatch", () => {
   });
 
   it("emits only the dirty scalar field", () => {
-    const patch = flowFormToPatch(baseForm, { code: true });
-    expect(patch).toEqual({ code: "quikpao.non trade orders" });
+    const patch = flowFormToPatch(baseForm, { key: true });
+    expect(patch).toEqual({ key: "quikpao.non trade orders" });
   });
 
   it("combines multiple dirty fields", () => {

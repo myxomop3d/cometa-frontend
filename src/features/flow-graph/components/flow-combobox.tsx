@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { DebouncedInput } from "@/components/DebouncedInput";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { flowApi } from "@/features/flow/api";
@@ -15,27 +15,21 @@ export function FlowCombobox({ value, onChange }: FlowComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Bare GET /api/v1/flow returns the complete list; filtering happens
-  // client-side because the backend has no filter params. The selected
-  // flow's label is derived from the same list — no per-flow request.
-  const listQuery = useQuery(flowApi.listQueryOptions());
+  // Server-side search: GET /api/v1/flow?$top=20&$filter=contains_ignoring_case(...).
+  const listQuery = useQuery(flowApi.comboboxQueryOptions(search));
+  const flows = listQuery.data?.data ?? [];
 
-  const allFlows = listQuery.data?.data;
-  const flows = useMemo(() => {
-    if (!allFlows) return [];
-    const q = search.trim().toLowerCase();
-    if (!q) return allFlows;
-    return allFlows.filter(
-      (f) =>
-        f.caption.toLowerCase().includes(q) || f.code.toLowerCase().includes(q),
-    );
-  }, [allFlows, search]);
+  // The selected flow may fall outside the top-20 result set, so fetch its
+  // label directly by id.
+  const detailQuery = useQuery({
+    ...flowApi.detailQueryOptions(value as number),
+    enabled: value !== undefined,
+  });
+  const selected = detailQuery.data?.data;
 
-  const selected =
-    value !== undefined ? allFlows?.find((f) => f.id === value) : undefined;
   const displayText = selected
     ? selected.caption
-    : listQuery.isLoading
+    : value !== undefined && detailQuery.isLoading
       ? "Loading…"
       : "Select a flow";
 
@@ -55,10 +49,10 @@ export function FlowCombobox({ value, onChange }: FlowComboboxProps) {
         <div className="border-b p-2">
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by caption or code…"
+            <DebouncedInput
+              placeholder="Search by caption or key…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={setSearch}
               className="h-8 border-0 p-0 focus-visible:ring-0"
             />
           </div>
@@ -66,7 +60,7 @@ export function FlowCombobox({ value, onChange }: FlowComboboxProps) {
         <ul className="max-h-72 overflow-y-auto">
           {flows.length === 0 && (
             <li className="px-3 py-4 text-center text-sm text-muted-foreground">
-              {listQuery.isLoading ? "Loading…" : "No results"}
+              {listQuery.isFetching ? "Loading…" : "No results"}
             </li>
           )}
           {flows.map((flow) => {
@@ -83,7 +77,7 @@ export function FlowCombobox({ value, onChange }: FlowComboboxProps) {
                 }`}
               >
                 <div className="truncate font-medium">{flow.caption}</div>
-                <div className="truncate text-xs text-muted-foreground">{flow.code}</div>
+                <div className="truncate text-xs text-muted-foreground">{flow.key}</div>
               </li>
             );
           })}

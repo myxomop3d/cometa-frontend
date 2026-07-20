@@ -52,8 +52,8 @@ function LoadedFlowGraphPage({
   onEnvChange,
 }: FlowGraphPageProps & { flowId: number }) {
   const { data } = useSuspenseQuery(flowGraphQueryOptions(flowId, env));
-  const { data: flowsRes } = useSuspenseQuery(flowApi.listQueryOptions());
-  const flow = flowsRes.data.find((f) => f.id === flowId);
+  const { data: flowRes } = useSuspenseQuery(flowApi.detailQueryOptions(flowId));
+  const flow = flowRes.data;
   const graph = useMemo(() => buildGraph(data.data), [data]);
   const [selection, setSelection] = useState<Selection>(null);
 

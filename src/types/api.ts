@@ -144,7 +144,7 @@ export interface FlowDto {
   id: number;
   insertedAt: string | null;
   updatedAt: string | null;
-  code: string;
+  key: string;
   caption: string;
   integrity: string | null;
   confidentiality: string | null;
@@ -155,7 +155,7 @@ export interface FlowDto {
 }
 
 export interface FlowFilters extends Partial<PaginationParams> {
-  code?: string;
+  key?: string;
   caption?: string;
   integrity?: string;
   confidentiality?: string;

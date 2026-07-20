@@ -31,7 +31,7 @@ export function FlowGraphHeader({
         {flow ? (
           <>
             <h1 className="truncate text-lg font-semibold">{flow.caption}</h1>
-            <Meta label="Code" value={flow.code} />
+            <Meta label="Key" value={flow.key} />
             <Meta label="Integrity" value={flow.integrity ?? "—"} />
             <Meta label="Confidentiality" value={flow.confidentiality ?? "—"} />
             <Meta label="Secret class" value={flow.secretClass ?? "—"} />

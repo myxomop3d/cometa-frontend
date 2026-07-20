@@ -60,16 +60,16 @@ export function getFlowColumns({
       size: 60,
     },
     {
-      id: "code",
-      accessorKey: "code",
+      id: "key",
+      accessorKey: "key",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} label="Code" />
+        <DataTableColumnHeader column={column} label="Key" />
       ),
       meta: {
-        label: "Code",
-        placeholder: "Search codes...",
+        label: "Key",
+        placeholder: "Search keys...",
         variant: "text",
-        filterKey: "code",
+        filterKey: "key",
       },
       enableColumnFilter: true,
       enableSorting: true,

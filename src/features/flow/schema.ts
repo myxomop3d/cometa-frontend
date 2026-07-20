@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const flowFormSchema = z.object({
-  code: z.string().min(1, "Code is required"),
+  key: z.string().min(1, "Key is required"),
   caption: z.string().min(1, "Caption is required"),
   integrity: z
     .string()
@@ -26,7 +26,7 @@ export const flowFormSchema = z.object({
 export type FlowFormValues = z.infer<typeof flowFormSchema>;
 
 export interface FlowWritePayload {
-  code: string;
+  key: string;
   caption: string;
   integrity: string | null;
   confidentiality: string | null;

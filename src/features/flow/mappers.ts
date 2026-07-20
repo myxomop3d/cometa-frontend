@@ -3,7 +3,7 @@ import type { FlowFormValues, FlowWritePayload } from "./schema";
 
 export function flowDtoToForm(dto: FlowDto): FlowFormValues {
   return {
-    code: dto.code,
+    key: dto.key,
     caption: dto.caption,
     integrity: dto.integrity,
     confidentiality: dto.confidentiality,
@@ -16,7 +16,7 @@ export function flowDtoToForm(dto: FlowDto): FlowFormValues {
 
 export function flowFormToCreate(v: FlowFormValues): FlowWritePayload {
   return {
-    code: v.code,
+    key: v.key,
     caption: v.caption,
     integrity: v.integrity,
     confidentiality: v.confidentiality,
@@ -40,7 +40,7 @@ export function flowFormToPatch(
   dirty: FlowDirtyFields,
 ): Partial<FlowWritePayload> {
   const out: Partial<FlowWritePayload> = {};
-  if (isDirty(dirty.code)) out.code = v.code;
+  if (isDirty(dirty.key)) out.key = v.key;
   if (isDirty(dirty.caption)) out.caption = v.caption;
   if (isDirty(dirty.integrity)) out.integrity = v.integrity;
   if (isDirty(dirty.confidentiality)) out.confidentiality = v.confidentiality;

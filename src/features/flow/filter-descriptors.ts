@@ -5,7 +5,7 @@ export interface FlowFilterDescriptor extends FilterDescriptor {
 }
 
 export const flowFilterDescriptors: readonly FlowFilterDescriptor[] = [
-  { id: "code", variant: "text", filterKey: "code" },
+  { id: "key", variant: "text", filterKey: "key" },
   { id: "caption", variant: "text", filterKey: "caption" },
   { id: "integrity", variant: "select", filterKey: "integrity" },
   { id: "confidentiality", variant: "select", filterKey: "confidentiality" },

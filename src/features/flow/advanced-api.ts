@@ -8,7 +8,7 @@ import {
 } from "@/lib/odata/build-advanced-filter-params";
 
 export const flowFieldByColumnId: Record<string, FieldEntry> = {
-  code:            { field: "code",            variant: "text" },
+  key:            { field: "key",            variant: "text" },
   caption:         { field: "caption",         variant: "text" },
   integrity:       { field: "integrity",       variant: "select" },
   confidentiality: { field: "confidentiality", variant: "select" },
