@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForbiddenRouteImport } from './routes/forbidden'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
 import { Route as BoxDiceAdvancedIndexRouteImport } from './routes/box-dice-advanced/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forbidden': typeof ForbiddenRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forbidden': typeof ForbiddenRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/automated-system': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced': typeof BoxDiceAdvancedIndexRoute
   '/box-dice': typeof BoxDiceIndexRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/forbidden': typeof ForbiddenRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/forbidden'
     | '/login'
+    | '/register'
     | '/automated-system/'
     | '/box-dice-advanced/'
     | '/box-dice/'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/forbidden'
     | '/login'
+    | '/register'
     | '/automated-system'
     | '/box-dice-advanced'
     | '/box-dice'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/forbidden'
     | '/login'
+    | '/register'
     | '/automated-system/'
     | '/box-dice-advanced/'
     | '/box-dice/'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ForbiddenRoute: typeof ForbiddenRoute
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
   AutomatedSystemIndexRoute: typeof AutomatedSystemIndexRoute
   BoxDiceAdvancedIndexRoute: typeof BoxDiceAdvancedIndexRoute
   BoxDiceIndexRoute: typeof BoxDiceIndexRoute
@@ -162,6 +175,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ForbiddenRoute: ForbiddenRoute,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
   AutomatedSystemIndexRoute: AutomatedSystemIndexRoute,
   BoxDiceAdvancedIndexRoute: BoxDiceAdvancedIndexRoute,
   BoxDiceIndexRoute: BoxDiceIndexRoute,
