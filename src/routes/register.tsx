@@ -64,6 +64,8 @@ function RegisterPage() {
       const { exists } = await checkSigmaLogin(value);
       if (exists) {
         setError("sigmaLogin", { message: "Already exists, please login" });
+      } else {
+        clearErrors("sigmaLogin");
       }
     } catch {
       // network/lookup failure is non-blocking; submit still re-validates server-side
@@ -78,6 +80,7 @@ function RegisterPage() {
         setError("email", { message: "This person already has an account, please login" });
         return;
       }
+      clearErrors("email");
       if (person) {
         const fills = namesToFill(
           {
@@ -108,8 +111,9 @@ function RegisterPage() {
           setError(field, { message });
         }
       } else {
+        console.error(err);
         setError("root", {
-          message: err instanceof Error ? err.message : "Registration failed.",
+          message: "Registration failed. Please try again.",
         });
       }
     }
