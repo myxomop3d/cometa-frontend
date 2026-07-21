@@ -157,7 +157,7 @@ function BoxDiceSwitchablePage() {
 
   const sheetOpen = rowAction !== null;
   const sheetKey =
-    rowAction?.variant === "update" ? "update-${rowAction.row.id}" : "create";
+    rowAction?.variant === "update" ? `update-${rowAction.row.id}` : "create";
   const sheetBox = rowAction?.variant === "update" ? rowAction.row : null;
   const sheetVariant: "update" | "create" =
     rowAction?.variant === "update" ? "update" : "create";
