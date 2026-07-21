@@ -119,6 +119,14 @@ export interface NodeDto {
 // Link
 export type LinkProtocol = "DB" | "KAFKA" | "REST" | "SOAP" | "TFS" | "LDAP" | "common";
 
+/**
+ * Direction of data flow relative to the client/server roles.
+ * - CODIRECTIONAL: client → server
+ * - COUNTERDIRECTIONAL: server → client
+ * - BIDIRECTIONAL: client → server, then back server → client
+ */
+export type DataFlowDirection = "CODIRECTIONAL" | "COUNTERDIRECTIONAL" | "BIDIRECTIONAL";
+
 export interface LinkDto {
   id: number;
   insertedAt: string | null;
@@ -127,7 +135,7 @@ export interface LinkDto {
   clientNodeId: number;
   serverNodeId: number;
   protocol: LinkProtocol;
-  dataFlowDirection: string | null;
+  dataFlowDirection: DataFlowDirection | null;
   principalId: number | null;
 }
 

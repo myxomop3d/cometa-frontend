@@ -13,7 +13,7 @@ const nodeB: NodeDto = {
 const link: LinkDto = {
   id: 100, insertedAt: null, updatedAt: null,
   flowId: 1, clientNodeId: 1, serverNodeId: 2,
-  protocol: "KAFKA", dataFlowDirection: "ltr", principalId: null,
+  protocol: "KAFKA", dataFlowDirection: "CODIRECTIONAL", principalId: null,
 };
 
 const dto: FlowGraphDto = { flowId: 1, env: "PROD", nodes: [nodeA, nodeB], links: [link] };

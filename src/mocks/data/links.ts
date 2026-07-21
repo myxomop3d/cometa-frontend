@@ -10,7 +10,7 @@ export const links: LinkDto[] = [
     clientNodeId: 1,
     serverNodeId: 2,
     protocol: "REST",
-    dataFlowDirection: "REQUEST",
+    dataFlowDirection: "CODIRECTIONAL",
     principalId: null,
   },
   {
@@ -21,7 +21,7 @@ export const links: LinkDto[] = [
     clientNodeId: 2,
     serverNodeId: 3,
     protocol: "KAFKA",
-    dataFlowDirection: "PRODUCE",
+    dataFlowDirection: "CODIRECTIONAL",
     principalId: 501,
   },
   {
@@ -32,7 +32,7 @@ export const links: LinkDto[] = [
     clientNodeId: 4,
     serverNodeId: 3,
     protocol: "KAFKA",
-    dataFlowDirection: "CONSUME",
+    dataFlowDirection: "COUNTERDIRECTIONAL",
     principalId: 502,
   },
   {
@@ -43,7 +43,7 @@ export const links: LinkDto[] = [
     clientNodeId: 4,
     serverNodeId: 5,
     protocol: "REST",
-    dataFlowDirection: "REQUEST",
+    dataFlowDirection: "BIDIRECTIONAL",
     principalId: null,
   },
 
@@ -56,7 +56,7 @@ export const links: LinkDto[] = [
     clientNodeId: 11,
     serverNodeId: 12,
     protocol: "KAFKA",
-    dataFlowDirection: "PRODUCE",
+    dataFlowDirection: "CODIRECTIONAL",
     principalId: null,
   },
   {
@@ -67,7 +67,7 @@ export const links: LinkDto[] = [
     clientNodeId: 13,
     serverNodeId: 12,
     protocol: "KAFKA",
-    dataFlowDirection: "CONSUME",
+    dataFlowDirection: "COUNTERDIRECTIONAL",
     principalId: null,
   },
 
@@ -80,7 +80,7 @@ export const links: LinkDto[] = [
     clientNodeId: 21,
     serverNodeId: 22,
     protocol: "KAFKA",
-    dataFlowDirection: "PRODUCE",
+    dataFlowDirection: "CODIRECTIONAL",
     principalId: null,
   },
 ];
