@@ -21,7 +21,7 @@ export interface BoxDiceSwitchableSearch {
   thingIds: number[] | undefined;
   oldItemId: number | undefined;
   oldThingIds: number[] | undefined;
-  // advanced-mode filter params (mirrors /box-dice-advanced)
+  // advanced-mode filter params (used when the "Advanced filters" toggle is on)
   filters: ExtendedColumnFilter[];
   joinOperator: "and" | "or";
 }

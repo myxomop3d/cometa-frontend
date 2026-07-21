@@ -31,3 +31,6 @@ dist-ssr
 cometa.code-workspace
 /.gigacode/
 /.gigaide/
+
+# TanStack Router plugin cache
+/.tanstack/
