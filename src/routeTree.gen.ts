@@ -18,6 +18,7 @@ import { Route as FlowAdvancedIndexRouteImport } from './routes/flow-advanced/in
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as BoxIndexRouteImport } from './routes/box/index'
 import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
+import { Route as BoxDiceSwitchableIndexRouteImport } from './routes/box-dice-switchable/index'
 import { Route as BoxDiceAdvancedIndexRouteImport } from './routes/box-dice-advanced/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
 
@@ -66,6 +67,11 @@ const BoxDiceIndexRoute = BoxDiceIndexRouteImport.update({
   path: '/box-dice/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BoxDiceSwitchableIndexRoute = BoxDiceSwitchableIndexRouteImport.update({
+  id: '/box-dice-switchable/',
+  path: '/box-dice-switchable/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BoxDiceAdvancedIndexRoute = BoxDiceAdvancedIndexRouteImport.update({
   id: '/box-dice-advanced/',
   path: '/box-dice-advanced/',
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
+  '/box-dice-switchable/': typeof BoxDiceSwitchableIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
   '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/automated-system': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced': typeof BoxDiceAdvancedIndexRoute
+  '/box-dice-switchable': typeof BoxDiceSwitchableIndexRoute
   '/box-dice': typeof BoxDiceIndexRoute
   '/box': typeof BoxIndexRoute
   '/components': typeof ComponentsIndexRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/box-dice-advanced/': typeof BoxDiceAdvancedIndexRoute
+  '/box-dice-switchable/': typeof BoxDiceSwitchableIndexRoute
   '/box-dice/': typeof BoxDiceIndexRoute
   '/box/': typeof BoxIndexRoute
   '/components/': typeof ComponentsIndexRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/automated-system/'
     | '/box-dice-advanced/'
+    | '/box-dice-switchable/'
     | '/box-dice/'
     | '/box/'
     | '/components/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/automated-system'
     | '/box-dice-advanced'
+    | '/box-dice-switchable'
     | '/box-dice'
     | '/box'
     | '/components'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/automated-system/'
     | '/box-dice-advanced/'
+    | '/box-dice-switchable/'
     | '/box-dice/'
     | '/box/'
     | '/components/'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   AutomatedSystemIndexRoute: typeof AutomatedSystemIndexRoute
   BoxDiceAdvancedIndexRoute: typeof BoxDiceAdvancedIndexRoute
+  BoxDiceSwitchableIndexRoute: typeof BoxDiceSwitchableIndexRoute
   BoxDiceIndexRoute: typeof BoxDiceIndexRoute
   BoxIndexRoute: typeof BoxIndexRoute
   ComponentsIndexRoute: typeof ComponentsIndexRoute
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoxDiceIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/box-dice-switchable/': {
+      id: '/box-dice-switchable/'
+      path: '/box-dice-switchable'
+      fullPath: '/box-dice-switchable/'
+      preLoaderRoute: typeof BoxDiceSwitchableIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/box-dice-advanced/': {
       id: '/box-dice-advanced/'
       path: '/box-dice-advanced'
@@ -262,6 +282,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   AutomatedSystemIndexRoute: AutomatedSystemIndexRoute,
   BoxDiceAdvancedIndexRoute: BoxDiceAdvancedIndexRoute,
+  BoxDiceSwitchableIndexRoute: BoxDiceSwitchableIndexRoute,
   BoxDiceIndexRoute: BoxDiceIndexRoute,
   BoxIndexRoute: BoxIndexRoute,
   ComponentsIndexRoute: ComponentsIndexRoute,
