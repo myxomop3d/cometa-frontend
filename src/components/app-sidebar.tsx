@@ -42,7 +42,7 @@ const navItems = [
   { to: "/automated-system", label: "Automated Systems" },
   { to: "/box-dice", label: "Boxes (Dice)" },
   { to: "/flow-graph", label: "Flow Graph" },
-  { to: "/flow-advanced", label: "Flows (Advanced)" },
+  { to: "/flow", label: "Flows" },
   { to: "/components", label: "Components" },
 ] as const;
 
