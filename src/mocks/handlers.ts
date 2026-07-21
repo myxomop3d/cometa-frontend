@@ -1,3 +1,4 @@
+import { authHandlers } from "./handlers/auth";
 import { automatedSystemHandlers } from "./handlers/automated-system";
 import { nodeHandlers } from "./handlers/node";
 import { linkHandlers } from "./handlers/link";
@@ -8,6 +9,7 @@ import { thingHandlers } from "./handlers/thing";
 import { flowHandlers } from "./handlers/flow";
 
 export const handlers = [
+  ...authHandlers,
   ...automatedSystemHandlers,
   ...nodeHandlers,
   ...linkHandlers,
