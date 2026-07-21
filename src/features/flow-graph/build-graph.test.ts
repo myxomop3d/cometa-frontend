@@ -47,6 +47,7 @@ describe("buildGraph edge orientation", () => {
     expect(e.source).toBe("1");
     expect(e.target).toBe("2");
     expect(e.markerEnd).toBeDefined();
+    expect(e.markerEnd).toMatchObject({ width: 22, height: 22 });
     expect(e.markerStart).toBeUndefined();
     expect(e.label).toBe("KAFKA");
     expect(e.data?.direction).toBe("CODIRECTIONAL");
@@ -58,6 +59,7 @@ describe("buildGraph edge orientation", () => {
     expect(e.source).toBe("2");
     expect(e.target).toBe("1");
     expect(e.markerStart).toBeDefined();
+    expect(e.markerStart).toMatchObject({ width: 22, height: 22 });
     expect(e.markerEnd).toBeUndefined();
     expect(e.data?.direction).toBe("COUNTERDIRECTIONAL");
     expect(e.data?.roundTrip).toBe(false);
