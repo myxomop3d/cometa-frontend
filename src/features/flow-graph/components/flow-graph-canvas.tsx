@@ -14,10 +14,12 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useState, useEffect } from "react";
 import { CustomNode } from "./custom-node";
+import { DataFlowEdge } from "./data-flow-edge";
 import { layoutGraph } from "../layout";
 import type { BuiltGraph, Selection, FlowGraphNode, FlowGraphEdge } from "../types";
 
 const nodeTypes = { flowGraphNode: CustomNode };
+const edgeTypes = { dataFlow: DataFlowEdge };
 
 interface FlowGraphCanvasProps {
   graph: BuiltGraph;
@@ -54,6 +56,7 @@ export function FlowGraphCanvas({ graph, selection, onSelect }: FlowGraphCanvasP
         nodes={nodes.map((n) => ({ ...n, selected: selection?.kind === "node" && selection.id === Number(n.id) }))}
         edges={edges.map((e) => ({ ...e, selected: selection?.kind === "link" && selection.id === Number(e.id) }))}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}

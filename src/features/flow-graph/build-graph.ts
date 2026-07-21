@@ -50,6 +50,7 @@ export function buildGraph(dto: FlowGraphDto): BuiltGraph {
 
     return {
       id: String(l.id),
+      type: "dataFlow",
       source: String(source),
       target: String(target),
       label: l.protocol,

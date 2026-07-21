@@ -80,4 +80,9 @@ describe("buildGraph edge orientation", () => {
     expect(e.markerEnd).toBeDefined();
     expect(e.data?.direction).toBe("CODIRECTIONAL");
   });
+
+  it("stamps the custom dataFlow edge type", () => {
+    const e = buildGraph(withDir("CODIRECTIONAL")).edges[0];
+    expect(e.type).toBe("dataFlow");
+  });
 });

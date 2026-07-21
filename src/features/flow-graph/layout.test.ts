@@ -16,7 +16,12 @@ describe("layoutGraph", () => {
   it("assigns non-zero positions to connected nodes (LR)", () => {
     const nodes: FlowGraphNode[] = [mkNode("1"), mkNode("2")];
     const edges: FlowGraphEdge[] = [
-      { id: "e1", source: "1", target: "2", data: { link: {} as never } },
+      {
+        id: "e1",
+        source: "1",
+        target: "2",
+        data: { link: {} as never, direction: "CODIRECTIONAL", roundTrip: false },
+      },
     ];
     const out = layoutGraph(nodes, edges);
     const a = out.find((n) => n.id === "1")!;
