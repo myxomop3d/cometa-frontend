@@ -180,3 +180,47 @@ export interface UserProfile {
   sigmaLogin: string;
   authorities: string[];
 }
+
+// ────────────────────────────────────────────────────────────
+// Registration
+// ────────────────────────────────────────────────────────────
+
+export interface PersonDto {
+  id: number;
+  insertedAt: string | null;
+  updatedAt: string | null;
+  email: string;
+  lastName: string;
+  firstName: string;
+  middleName: string;
+}
+
+export interface TeamDto {
+  id: number;
+  insertedAt: string | null;
+  updatedAt: string | null;
+  name: string | null;
+  code: number | null;
+  type: string | null;
+  leaderRole: string | null;
+  structure: string | null;
+}
+
+export interface RegisterRequest {
+  sigmaLogin: string;
+  email: string;
+  lastName: string;
+  firstName: string;
+  middleName: string;
+  password: string;
+  teamId: number | null;
+}
+
+export interface CheckSigmaLoginResponse {
+  exists: boolean;
+}
+
+export interface PersonByEmailResponse {
+  person: PersonDto | null;
+  hasAccount: boolean;
+}
