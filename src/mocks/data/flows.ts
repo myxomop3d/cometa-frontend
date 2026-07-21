@@ -3,7 +3,7 @@ import type { FlowDto } from "@/types/api";
 export const flows: FlowDto[] = [
   {
     id: 99,
-    code: "me.depo trades",
+    key: "me.depo trades",
     caption: "Поток DEPO.OTC-TCR из Matching Engine",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -16,7 +16,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 2,
-    code: "quikpao.non trade orders",
+    key: "quikpao.non trade orders",
     caption: "Поток Non Trade Orders из Quik PAO",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -29,7 +29,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 3,
-    code: "dias-clearing.fatca categories",
+    key: "dias-clearing.fatca categories",
     caption: "Поток FATCA Categories из Diasoft Clearing",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -42,7 +42,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 4,
-    code: "mc.moex.forts-refdata-multileg-dict",
+    key: "mc.moex.forts-refdata-multileg-dict",
     caption: "Поток MOEX.FORTS-REFDATA-MULTILEG-DICT из Market Connectivity",
     integrity: "I_3",
     confidentiality: "K_4",
@@ -55,7 +55,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 6,
-    code: "fitp.equitybasket",
+    key: "fitp.equitybasket",
     caption: "Поток EQUITYBASKET из FITP",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -68,7 +68,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 7,
-    code: "dias-clearing.licenses",
+    key: "dias-clearing.licenses",
     caption: "Поток LICENSES из Diasoft Clearing",
     integrity: "I_2",
     confidentiality: "K_2",
@@ -81,7 +81,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 8,
-    code: "mc.spimex.der-participants",
+    key: "mc.spimex.der-participants",
     caption: "Поток SPIMEX.DER-PARTICIPANTS из Market Connectivity",
     integrity: "I_3",
     confidentiality: "K_4",
@@ -94,7 +94,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 9,
-    code: "merida.vendorsdatareq",
+    key: "merida.vendorsdatareq",
     caption: "Поток Vendorsdatareq из ОФР.Merida",
     integrity: "I_3",
     confidentiality: "K_4",
@@ -107,7 +107,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 10,
-    code: "dias-portfolio.сorp аction",
+    key: "dias-portfolio.сorp аction",
     caption: "Поток Сorp Аction из Diasoft Portfolio",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -120,7 +120,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 11,
-    code: "dias-clearing.clients kyc",
+    key: "dias-clearing.clients kyc",
     caption: "Поток Clients KYC из Diasoft Clearing",
     integrity: "I_2",
     confidentiality: "K_2",
@@ -133,7 +133,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 12,
-    code: "fe-inst.moex.dealing-all.fix",
+    key: "fe-inst.moex.dealing-all.fix",
     caption: "Поток MOEX.DEALING-ALL.FIX из FixEdge CIB: Instances",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -146,7 +146,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 13,
-    code: "dias-clearing.authorities",
+    key: "dias-clearing.authorities",
     caption: "Поток AUTHORITIES из Diasoft Clearing",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -159,7 +159,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 14,
-    code: "dias-clearing.institutions",
+    key: "dias-clearing.institutions",
     caption: "Поток INSTITUTIONS из Diasoft Clearing",
     integrity: "I_2",
     confidentiality: "K_2",
@@ -172,7 +172,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 15,
-    code: "dias-portfolio.eq forward trades",
+    key: "dias-portfolio.eq forward trades",
     caption: "Поток EQ Forward Trades из Diasoft Portfolio",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -185,7 +185,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 16,
-    code: "fitp.index",
+    key: "fitp.index",
     caption: "Поток INDEX из FI Trading Platform (FITP)",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -198,7 +198,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 17,
-    code: "murex.basis",
+    key: "murex.basis",
     caption: "Поток Basis из Murex",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -211,7 +211,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 18,
-    code: "dias-clearing.nontradeorders",
+    key: "dias-clearing.nontradeorders",
     caption: "Поток Nontradeorders из Diasoft Clearing",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -224,7 +224,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 19,
-    code: "fitp-flow.ao bond trades",
+    key: "fitp-flow.ao bond trades",
     caption: "Поток AO Bond Trades из FITP",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -237,7 +237,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 20,
-    code: "quikoms.block resources",
+    key: "quikoms.block resources",
     caption: "Поток Block Resources из Quik OMS",
     integrity: "I_2",
     confidentiality: "K_2",
@@ -250,7 +250,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 21,
-    code: "dias-portfolio.audit",
+    key: "dias-portfolio.audit",
     caption: "Поток AUDIT из Diasoft Portfolio",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -263,7 +263,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 22,
-    code: "mces.spvb mm trd trades enrch",
+    key: "mces.spvb mm trd trades enrch",
     caption: "Поток SPVB.MM-TRD-TRADES.ENRCH из MCES",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -276,7 +276,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 23,
-    code: "dias-clearing.trs trades",
+    key: "dias-clearing.trs trades",
     caption: "Поток TRS Trades из Diasoft Clearing",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -289,7 +289,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 24,
-    code: "pega-bpmpo.processinfo",
+    key: "pega-bpmpo.processinfo",
     caption: "Поток Processinfo из Pega",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -302,7 +302,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 25,
-    code: "mc.moex.eqt-trd-auctstats",
+    key: "mc.moex.eqt-trd-auctstats",
     caption: "Поток MOEX.EQT-TRD-AUCTSTATS из Market Connectivity",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -315,7 +315,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 26,
-    code: "regrepcore.moex",
+    key: "regrepcore.moex",
     caption: "Поток Moex из ППРБ РегуМ Reporting Core",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -328,7 +328,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 28,
-    code: "gm dfa.trades",
+    key: "gm dfa.trades",
     caption: "Поток TRADES из GM DFA",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -341,7 +341,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 29,
-    code: "murex.сounterparty",
+    key: "murex.сounterparty",
     caption: "Поток Сounterparty из Murex",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -354,7 +354,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 30,
-    code: "dias-clearing.tran ksu trades",
+    key: "dias-clearing.tran ksu trades",
     caption: "Поток Tran KSU Trades из Diasoft Clearing",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -367,7 +367,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 31,
-    code: "quikcib.usermapping",
+    key: "quikcib.usermapping",
     caption: "Поток USERMAPPING из Market Connectivity CIB (MCES)",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -380,7 +380,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 32,
-    code: "fitp-flow.trade register",
+    key: "fitp-flow.trade register",
     caption: "Поток Trade Register из FITP",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -393,7 +393,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 33,
-    code: "lims.trades",
+    key: "lims.trades",
     caption: "Поток TRADES из LIMS",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -406,7 +406,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 35,
-    code: "murex.signed.trades",
+    key: "murex.signed.trades",
     caption: "Поток SIGNED.TRADES из Murex",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -419,7 +419,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 36,
-    code: "dias-clearing.day operations",
+    key: "dias-clearing.day operations",
     caption: "Поток Day Operations из Diasoft Clearing",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -432,7 +432,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 37,
-    code: "dias-clearing.otc repo trades",
+    key: "dias-clearing.otc repo trades",
     caption: "Поток Otc Ird Trades из Diasoft Clearing",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -445,7 +445,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 38,
-    code: "fe.moex.spfi-tcr.fix",
+    key: "fe.moex.spfi-tcr.fix",
     caption: "Поток MOEX.SPFI-TCR.FIX из FixEdge",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -458,7 +458,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 39,
-    code: "payments.pw",
+    key: "payments.pw",
     caption: "Поток PAYMENTS.PW в Payment Wizard",
     integrity: "I_2",
     confidentiality: "K_2",
@@ -471,7 +471,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 40,
-    code: "dias-portfolio.spot positions",
+    key: "dias-portfolio.spot positions",
     caption: "Поток Spot Positions из Diasoft Portfolio",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -484,7 +484,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 41,
-    code: "mc.moex.forts-refdata-investor",
+    key: "mc.moex.forts-refdata-investor",
     caption: "Поток MOEX.FORTS-REFDATA-INVESTOR из Market Connectivity",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -497,7 +497,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 43,
-    code: "quikpao.bond-tcr.fix",
+    key: "quikpao.bond-tcr.fix",
     caption: "Поток BOND-TCR.FIX из Quik PAO",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -510,7 +510,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 44,
-    code: "fitp-flow.trades",
+    key: "fitp-flow.trades",
     caption: "Поток TRADES из FITP",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -523,7 +523,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 45,
-    code: "mc.moex.forts-trade-orders-log",
+    key: "mc.moex.forts-trade-orders-log",
     caption: "Поток MOEX.FORTS-TRADE-ORDERS-LOG из Market Connectivity",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -536,7 +536,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 46,
-    code: "lims.corp-actions-req",
+    key: "lims.corp-actions-req",
     caption: "Поток corp-actions-req из LIMS",
     integrity: "I_3",
     confidentiality: "K_4",
@@ -549,7 +549,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 47,
-    code: "gm dfa.blockchain-transaction-data",
+    key: "gm dfa.blockchain-transaction-data",
     caption: "Поток BLOCKCHAIN-TRANSACTION-DATA из GM DFA",
     integrity: "I_2",
     confidentiality: "K_3",
@@ -562,7 +562,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 49,
-    code: "gmoms.trades",
+    key: "gmoms.trades",
     caption: "Поток TRADES из GM OMS",
     integrity: "I_3",
     confidentiality: "K_3",
@@ -575,7 +575,7 @@ export const flows: FlowDto[] = [
   },
   {
     id: 50,
-    code: "mc.moex.forts-clr-fut-pos",
+    key: "mc.moex.forts-clr-fut-pos",
     caption: "Поток MOEX.FORTS-CLR-FUT-POS из Market Connectivity",
     integrity: "I_2",
     confidentiality: "K_3",
