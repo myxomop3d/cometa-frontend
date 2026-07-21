@@ -1,5 +1,5 @@
 import type { Node as RFNode, Edge as RFEdge } from "@xyflow/react";
-import type { NodeDto, LinkDto } from "@/types/api";
+import type { NodeDto, LinkDto, DataFlowDirection } from "@/types/api";
 
 export type Selection =
   | { kind: "node"; id: number }
@@ -12,6 +12,8 @@ export interface FlowGraphNodeData extends Record<string, unknown> {
 
 export interface FlowGraphEdgeData extends Record<string, unknown> {
   link: LinkDto;
+  direction: DataFlowDirection;
+  roundTrip: boolean;
 }
 
 export type FlowGraphNode = RFNode<FlowGraphNodeData>;
