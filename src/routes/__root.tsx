@@ -26,6 +26,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     if (
       !token &&
       location.pathname !== "/login" &&
+      location.pathname !== "/register" &&
       location.pathname !== "/forbidden"
     ) {
       throw redirect({ to: "/login" });
@@ -56,6 +57,7 @@ function RootLayout() {
 
   const isAuthPage =
     router.state.location.pathname === "/login" ||
+    router.state.location.pathname === "/register" ||
     router.state.location.pathname === "/forbidden";
 
   return (

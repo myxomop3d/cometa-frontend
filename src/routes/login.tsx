@@ -1,5 +1,5 @@
 // Страница входа: форма sigmaLogin + password, валидация, вызов AuthContext.login()
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/create-crud-api";
-import { LogIn, KeyRound } from "lucide-react";
+import { LogIn, KeyRound, UserPlus } from "lucide-react";
 
 const loginSchema = z.object({
   sigmaLogin: z.string().min(8, "SIGMA login is required"),
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const { login, handleCertLogin } = useAuth();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -119,6 +120,16 @@ function LoginPage() {
             >
               <KeyRound className="mr-2 size-4" />
               Sign in by certificate
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => navigate({ to: "/register" })}
+              disabled={isSubmitting}
+            >
+              <UserPlus className="mr-2 size-4" />
+              Register
             </Button>
           </form>
         </CardContent>
