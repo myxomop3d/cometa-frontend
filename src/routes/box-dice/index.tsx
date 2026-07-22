@@ -42,7 +42,7 @@ function BoxDicePage() {
   });
 
   const handleSheetSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ["boxes"] });
+    queryClient.invalidateQueries({ queryKey: boxSwitchableConfig.queryKey });
     setRowAction(null);
   };
 
