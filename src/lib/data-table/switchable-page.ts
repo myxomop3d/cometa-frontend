@@ -9,7 +9,7 @@ import type { ExtendedColumnFilter } from "@/types/data-table";
 import { calculatePageSize } from "@/lib/data-table";
 import type { SwitchableSearchBase } from "./switchable-search";
 
-const DEFAULT_PAGE_SIZE = calculatePageSize();
+export const DEFAULT_PAGE_SIZE = calculatePageSize();
 
 export type TableQueryOptions<TDto> = UseSuspenseQueryOptions<
   ApiResponse<TDto[]>,

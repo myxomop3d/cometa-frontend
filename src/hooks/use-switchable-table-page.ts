@@ -1,16 +1,11 @@
 import * as React from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import type { ApiResponse } from "@/types/api";
 import type { ExtendedColumnFilter } from "@/types/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
-import { calculatePageSize } from "@/lib/data-table";
 import { buildModeToggleUpdates } from "@/lib/data-table/switchable-search";
-import type {
-  SwitchableSearchBase,
-  } from "@/lib/data-table/switchable-search";
+import type { SwitchableSearchBase } from "@/lib/data-table/switchable-search";
+import { DEFAULT_PAGE_SIZE } from "@/lib/data-table/switchable-page";
 import type { SwitchableTableConfig } from "@/lib/data-table/switchable-page";
-
-const DEFAULT_PAGE_SIZE = calculatePageSize();
 
 export function useSwitchableTablePage<TDto, TRowAction>({
   config,
@@ -50,9 +45,7 @@ export function useSwitchableTablePage<TDto, TRowAction>({
     });
   }, [config, search, advanced]);
 
-  const { data } = useSuspenseQuery(queryOpts) as {
-    data: ApiResponse<TDto[]>;
-  };
+  const { data } = useSuspenseQuery(queryOpts);
 
   const pageSize = search.pageSize ?? DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(data.count / pageSize);
