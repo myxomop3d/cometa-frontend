@@ -9,6 +9,7 @@ import { AdvancedFilterToggle } from "@/components/data-table/advanced-filter-to
 import { Button } from "@/components/ui/button";
 
 import { makeSwitchableSearch } from "@/lib/data-table/switchable-search";
+import type { SwitchableSearchBase } from "@/lib/data-table/switchable-search";
 import { makeSwitchableLoader } from "@/lib/data-table/switchable-page";
 import { useSwitchableTablePage } from "@/hooks/use-switchable-table-page";
 import { flowSwitchableConfig } from "@/features/flow/switchable-config";
@@ -23,7 +24,11 @@ export const Route = createFileRoute("/flow/")({
 });
 
 function FlowPage() {
-  const search = Route.useSearch();
+  // Making `loaderDeps`/`loader` type-check forces TanStack to widen this
+  // route's inferred search schema to `{}`; the runtime value is the validated
+  // search, so assert it back to the shared switchable-search shape. Type-only.
+  const search = Route.useSearch() as SwitchableSearchBase &
+    Record<string, unknown>;
   const navigate = useNavigate({ from: "/flow/" });
   const queryClient = useQueryClient();
 

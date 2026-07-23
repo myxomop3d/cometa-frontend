@@ -14,9 +14,12 @@ export function useSwitchableTablePage<TDto, TRowAction>({
 }: {
   config: SwitchableTableConfig<TDto, TRowAction>;
   search: SwitchableSearchBase & Record<string, unknown>;
-  navigate: (opts: {
-    search: (prev: Record<string, unknown>) => Record<string, unknown>;
-  }) => void;
+  // Loosely typed to accept TanStack Router's heavily-overloaded
+  // `UseNavigateResult`. The hook only ever calls it with a `search` updater;
+  // the `prev`/return `any` on that updater is what lets the real navigate be
+  // assignable here without pulling in the full overloaded signature.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  navigate: (opts: { search: (prev: any) => any }) => unknown;
 }) {
   const advanced = search.advanced;
   const [rowAction, setRowAction] = React.useState<TRowAction | null>(null);

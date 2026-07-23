@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import type { QueryClient, UseSuspenseQueryOptions } from "@tanstack/react-query";
 import type {
   ColumnDef,
@@ -15,7 +16,12 @@ export type TableQueryOptions<TDto> = UseSuspenseQueryOptions<
   ApiResponse<TDto[]>,
   Error,
   ApiResponse<TDto[]>,
-  readonly unknown[]
+  // TQueryKey is left as `any` so concrete tuple query keys (e.g. the
+  // ["boxes", "advanced", ...] shapes returned by the resource query-option
+  // factories) remain assignable despite QueryFunction being contravariant in
+  // its queryKey parameter. The config never inspects the key's shape.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any
 >;
 
 export interface SimpleQueryParams {
@@ -42,7 +48,7 @@ export interface SwitchableTableConfig<TDto, TRowAction> {
   ) => { id: string; value: unknown }[];
   simpleFilterKeys: readonly string[];
   getColumns: (opts: {
-    setRowAction: (a: TRowAction | null) => void;
+    setRowAction: Dispatch<SetStateAction<TRowAction | null>>;
   }) => ColumnDef<TDto, any>[];
   initialColumnPinning?: ColumnPinningState;
   initialColumnVisibility?: VisibilityState;
@@ -52,23 +58,31 @@ export interface SwitchableTableConfig<TDto, TRowAction> {
 export function makeSwitchableLoader<TDto, TRowAction>(
   config: SwitchableTableConfig<TDto, TRowAction>,
 ) {
-  return ({
+  // `TDeps` is an *unconstrained* generic so this externally-typed loader
+  // behaves like an inline one: TanStack infers the route's loaderDeps return
+  // (which type-checks as the root `{}` placeholder during option validation)
+  // without back-propagating a constraint onto the route's search schema — that
+  // is what keeps `Route.useSearch()` correctly typed at the call sites. At
+  // runtime `deps` is the fully-validated search (guaranteed by the route's
+  // `validateSearch`), so we assert it to the concrete shape the reads need.
+  return <TDeps,>({
     context,
     deps,
   }: {
     context: { queryClient: QueryClient };
-    deps: SwitchableSearchBase & Record<string, unknown>;
+    deps: TDeps;
   }) => {
-    const page = deps.page ?? 1;
-    const pageSize = deps.pageSize ?? DEFAULT_PAGE_SIZE;
-    if (deps.advanced) {
+    const search = deps as SwitchableSearchBase & Record<string, unknown>;
+    const page = search.page ?? 1;
+    const pageSize = search.pageSize ?? DEFAULT_PAGE_SIZE;
+    if (search.advanced) {
       return context.queryClient.ensureQueryData(
         config.advancedQueryOptions({
           page,
           pageSize,
-          sort: deps.sort,
-          filters: deps.filters,
-          joinOperator: deps.joinOperator,
+          sort: search.sort,
+          filters: search.filters,
+          joinOperator: search.joinOperator,
         }),
       );
     }
@@ -76,8 +90,8 @@ export function makeSwitchableLoader<TDto, TRowAction>(
       config.simpleQueryOptions({
         page,
         pageSize,
-        sort: deps.sort,
-        columnFilters: config.deriveColumnFilters(deps),
+        sort: search.sort,
+        columnFilters: config.deriveColumnFilters(search),
       }),
     );
   };
