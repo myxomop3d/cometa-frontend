@@ -18,6 +18,7 @@ import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
+import { Route as AuthCertCallbackRouteImport } from './routes/auth.cert.callback'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -64,6 +65,11 @@ const AutomatedSystemIndexRoute = AutomatedSystemIndexRouteImport.update({
   path: '/automated-system/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCertCallbackRoute = AuthCertCallbackRouteImport.update({
+  id: '/auth/cert/callback',
+  path: '/auth/cert/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/components/': typeof ComponentsIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
+  '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/components': typeof ComponentsIndexRoute
   '/flow-graph': typeof FlowGraphIndexRoute
   '/flow': typeof FlowIndexRoute
+  '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/components/': typeof ComponentsIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
+  '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/components/'
     | '/flow-graph/'
     | '/flow/'
+    | '/auth/cert/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/flow-graph'
     | '/flow'
+    | '/auth/cert/callback'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/components/'
     | '/flow-graph/'
     | '/flow/'
+    | '/auth/cert/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   ComponentsIndexRoute: typeof ComponentsIndexRoute
   FlowGraphIndexRoute: typeof FlowGraphIndexRoute
   FlowIndexRoute: typeof FlowIndexRoute
+  AuthCertCallbackRoute: typeof AuthCertCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AutomatedSystemIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/cert/callback': {
+      id: '/auth/cert/callback'
+      path: '/auth/cert/callback'
+      fullPath: '/auth/cert/callback'
+      preLoaderRoute: typeof AuthCertCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComponentsIndexRoute: ComponentsIndexRoute,
   FlowGraphIndexRoute: FlowGraphIndexRoute,
   FlowIndexRoute: FlowIndexRoute,
+  AuthCertCallbackRoute: AuthCertCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -27,7 +27,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       !token &&
       location.pathname !== "/login" &&
       location.pathname !== "/register" &&
-      location.pathname !== "/forbidden"
+      location.pathname !== "/forbidden" &&
+      location.pathname !== "/auth/cert/callback"
     ) {
       throw redirect({ to: "/login" });
     }
@@ -58,7 +59,8 @@ function RootLayout() {
   const isAuthPage =
     router.state.location.pathname === "/login" ||
     router.state.location.pathname === "/register" ||
-    router.state.location.pathname === "/forbidden";
+    router.state.location.pathname === "/forbidden" ||
+    router.state.location.pathname === "/auth/cert/callback";
 
   return (
     <SidebarProvider>

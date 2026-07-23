@@ -76,7 +76,8 @@ window.fetch = async (input, init) => {
     res.status === 401 &&
     isApiRequest(input) &&
     !isAuthLoginRequest(input) &&
-    !path.startsWith("/login")
+    !path.startsWith("/login") &&
+    !path.startsWith("/auth/cert/callback")
   ) {
     localStorage.removeItem("cometa-auth-token");
     window.location.href = "/login";
