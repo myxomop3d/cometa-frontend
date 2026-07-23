@@ -53,14 +53,8 @@ function LoginPage() {
     }
   };
 
-  const onCertLogin = async () => {
-    try {
-      await handleCertLogin();
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Certificate login failed. Make sure the client certificate is installed in your browser.";
-      setError("root", { message });
-    }
+  const onCertLogin = () => {
+    handleCertLogin(); // navigates away (or short-circuits in mock mode)
   };
 
   return (
