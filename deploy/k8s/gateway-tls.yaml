@@ -1,0 +1,21 @@
+# Public gateway: server-side TLS only (password auth path).
+# Browser is NOT asked for a client certificate here, so password users
+# never see a cert picker.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: cometa-gateway-tls
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https-tls
+        protocol: HTTPS
+      hosts:
+        - cometa-dev.tls.apps.a3klq48m.k8s.delta.sbrf.ru
+      tls:
+        mode: SIMPLE                     # server cert only
+        credentialName: cometa-tls-cert  # secret: tls.crt + tls.key

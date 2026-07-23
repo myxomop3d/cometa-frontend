@@ -1,0 +1,34 @@
+# Routing for the certificate host. Minimal surface: ONLY the cert-start
+# endpoint reaches the backend. The backend reads the client cert from the XFCC
+# header, validates it, mints a short-lived one-time code, and 302-redirects to
+#   https://<tls-host>/auth/cert/callback?code=...
+# Anything else that lands here is bounced to the public host — the SPA is never
+# served from the mTLS origin.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: cometa-frontend-mtls
+spec:
+  hosts:
+    - cometa-dev.mtls.apps.a3klq48m.k8s.delta.sbrf.ru
+  gateways:
+    - istio-system/cometa-gateway-mtls
+  http:
+    # The only path allowed through to the backend on this host.
+    - name: cert-start
+      match:
+        - uri:
+            prefix: /api/v1/auth/cert/start
+      route:
+        - destination:
+            host: cometa-backend.default.svc.cluster.local
+            port:
+              number: 8080
+    # Stray traffic → send it to the public host instead of exposing anything.
+    - name: bounce
+      match:
+        - uri:
+            prefix: /
+      redirect:
+        authority: cometa-dev.tls.apps.a3klq48m.k8s.delta.sbrf.ru
+        redirectCode: 302

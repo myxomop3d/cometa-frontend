@@ -1,0 +1,46 @@
+# Routing for the public (password) host. Serves the SPA and the full API.
+# Cert login returns the JWT via a URL fragment to /auth/cert/callback (a
+# client-side SPA route under the /* rule) — there is no server exchange call.
+# /api/v1/auth/cert/start is deliberately NOT served here: it trusts the XFCC
+# header, which the tls gateway does not sanitize, so it is redirected to the
+# mtls host (where the cert handshake actually happens) instead of reaching the
+# backend. This closes the forged-XFCC impersonation vector on the tls host.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: cometa-frontend-tls
+spec:
+  hosts:
+    - cometa-dev.tls.apps.a3klq48m.k8s.delta.sbrf.ru
+  gateways:
+    - istio-system/cometa-gateway-tls
+  http:
+    # cert-start FIRST — must be matched before the /api rule, or /api swallows
+    # it and forwards the (possibly forged) XFCC header to the backend.
+    - name: block-cert-start
+      match:
+        - uri:
+            prefix: /api/v1/auth/cert/start
+      redirect:
+        authority: cometa-dev.mtls.apps.a3klq48m.k8s.delta.sbrf.ru
+        redirectCode: 302
+    # /api next — the /* catch-all below would otherwise swallow it.
+    - name: api
+      match:
+        - uri:
+            prefix: /api
+      route:
+        - destination:
+            host: cometa-backend.default.svc.cluster.local
+            port:
+              number: 8080
+    # Everything else → the SPA (includes the client-side /auth/cert/callback route).
+    - name: frontend
+      match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: cometa-frontend.default.svc.cluster.local
+            port:
+              number: 8080

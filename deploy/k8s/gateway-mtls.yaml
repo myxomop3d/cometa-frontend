@@ -1,0 +1,56 @@
+# Certificate gateway: mutual TLS. The browser MUST present a client cert to
+# complete the handshake here. Envoy terminates mTLS and forwards the client
+# cert to the backend in the X-Forwarded-Client-Cert (XFCC) header.
+#
+# This host exposes ONLY the cert-start endpoint (see virtualservice-mtls.yaml)
+# — it does not serve the SPA. Users touch it exactly once per login.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: cometa-gateway-mtls
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https-mtls
+        protocol: HTTPS
+      hosts:
+        - cometa-dev.mtls.apps.a3klq48m.k8s.delta.sbrf.ru
+      tls:
+        mode: MUTUAL                      # requires + verifies client cert
+        credentialName: cometa-mtls-cert  # secret: tls.crt + tls.key + ca.crt
+---
+# Ensure the ingressgateway forwards the full client cert to the backend as XFCC.
+# (Skip this if your gateway already sets forward_client_cert_details.)
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: cometa-forward-client-cert
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+            forward_client_cert_details: SANITIZE_SET
+            set_current_client_cert_details:
+              subject: true
+              cert: true      # full leaf cert (URL-encoded PEM) in XFCC
+              chain: true
+              dns: true
+              uri: true

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cometa-frontend
+  labels:
+    app: cometa-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: cometa-frontend
+  ports:
+    - name: http              # named 'http' — Istio infers appProtocol=http
+      port: 8080
+      targetPort: http
+      protocol: TCP
