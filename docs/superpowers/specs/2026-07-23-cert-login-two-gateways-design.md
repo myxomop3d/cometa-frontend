@@ -124,10 +124,14 @@ On failure (no cert / unknown CN) step ③ redirects to
   other interceptor change.
 - **F5. `src/routes/login.tsx`** — `onCertLogin` drops the try/catch (it navigates
   away). Optionally disable the button while redirecting.
-- **F6. `src/mocks/handlers/auth.ts`** — mock `GET /api/v1/auth/cert/start` to
-  redirect (or, since MSW can't cross origins, resolve the flow in-app) to the
-  callback with a fake token, so cert login is exercisable under
-  `VITE_MOCK_API=true`.
+- **F6. Mock mode support.** `startCertLogin` uses a full-page navigation, which
+  MSW cannot intercept (MSW only sees `fetch`/XHR, not `window.location`
+  navigations) and which targets a different origin. So under
+  `VITE_MOCK_API=true`, `startCertLogin` must **short-circuit**: navigate directly
+  to `/auth/cert/callback#token=<mock-jwt>` on the current origin instead of the
+  `mtls` host. The `/me` call the callback then makes is a normal `fetch` that the
+  existing MSW auth handlers already cover. No new MSW handler for
+  `/auth/cert/start` is needed.
 
 ### Infra (`cometa-frontend/deploy/k8s`)
 
