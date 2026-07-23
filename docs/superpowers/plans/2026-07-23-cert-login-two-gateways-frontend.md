@@ -513,7 +513,7 @@ git commit -m "refactor(auth): simplify login cert button for redirect flow"
 - Modify: `deploy/k8s/virtualservice-tls.yaml`
 
 **Interfaces:**
-- No code interface. Ensures the mtls host exposes only `/api/v1/auth/cert/start` and the tls comment no longer references a (nonexistent) exchange endpoint.
+- No code interface. Ensures the mtls host exposes only `/api/v1/auth/cert/start`, the tls host blocks that same path (forged-XFCC bypass fix, per the backend final review), and the stale exchange-endpoint comment is removed.
 
 - [ ] **Step 1: Tighten the mtls VirtualService to the exact start path**
 
@@ -533,17 +533,56 @@ In `deploy/k8s/virtualservice-mtls.yaml`, change the `cert-start` match prefix f
 
 Leave the `bounce` rule (redirect everything else to the tls host) unchanged.
 
-- [ ] **Step 2: Remove the stale exchange reference from the tls VirtualService**
+- [ ] **Step 2: Block the cert-start path on the tls host (XFCC bypass fix) and fix the stale comment**
 
-In `deploy/k8s/virtualservice-tls.yaml`, the header comment mentions a cert-exchange endpoint that does not exist in the fragment flow. Replace the comment block above `apiVersion` with:
+**Why:** the backend trusts the `x-forwarded-client-cert` (XFCC) header on `/api/v1/auth/cert/start` (the gateway is supposed to verify the cert). The tls gateway does NOT strip inbound XFCC, and the `api` rule below routes all `/api/*` — including `/api/v1/auth/cert/start` — to the backend. So without this rule, an attacker could forge `x-forwarded-client-cert: CN=<victim>` against the tls host and mint a valid JWT impersonating that user. The cert-start path is only valid on the mtls host; on the tls host it must never reach the backend.
+
+Rewrite `deploy/k8s/virtualservice-tls.yaml` so the header comment is accurate AND a `block-cert-start` rule sits **first** (before the `/api` rule), redirecting cert-start to the mtls host so the forged request never reaches the backend. The file's `http:` list becomes (hosts/gateways/apiVersion/kind/metadata unchanged):
 
 ```yaml
 # Routing for the public (password) host. Serves the SPA and the full API.
 # Cert login returns the JWT via a URL fragment to /auth/cert/callback (a
 # client-side SPA route under the /* rule) — there is no server exchange call.
+# /api/v1/auth/cert/start is deliberately NOT served here: it trusts the XFCC
+# header, which the tls gateway does not sanitize, so it is redirected to the
+# mtls host (where the cert handshake actually happens) instead of reaching the
+# backend. This closes the forged-XFCC impersonation vector on the tls host.
 ```
 
-The `http` routing rules (`/api` → backend, `/` → frontend) are unchanged.
+```yaml
+  http:
+    # cert-start FIRST — must be matched before the /api rule, or /api swallows
+    # it and forwards the (possibly forged) XFCC header to the backend.
+    - name: block-cert-start
+      match:
+        - uri:
+            prefix: /api/v1/auth/cert/start
+      redirect:
+        authority: cometa-dev.mtls.apps.a3klq48m.k8s.delta.sbrf.ru
+        redirectCode: 302
+    # /api next — the /* catch-all below would otherwise swallow it.
+    - name: api
+      match:
+        - uri:
+            prefix: /api
+      route:
+        - destination:
+            host: cometa-backend.default.svc.cluster.local
+            port:
+              number: 8080
+    # Everything else → the SPA (includes the client-side /auth/cert/callback route).
+    - name: frontend
+      match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: cometa-frontend.default.svc.cluster.local
+            port:
+              number: 8080
+```
+
+Note ordering: Istio evaluates `http` rules top-to-bottom and uses the first match, so `block-cert-start` MUST precede `api`. Legitimate cert login is unaffected — the SPA's `startCertLogin` navigates straight to the mtls host, never to `/api/v1/auth/cert/start` on the tls origin.
 
 - [ ] **Step 3: Validate the YAML**
 
@@ -554,7 +593,7 @@ Expected: both objects report `configured (dry run)` / `created (dry run)` with 
 
 ```bash
 git add deploy/k8s/virtualservice-mtls.yaml deploy/k8s/virtualservice-tls.yaml
-git commit -m "chore(deploy): align Istio VirtualServices with cert-login fragment flow"
+git commit -m "chore(deploy): align Istio VirtualServices with cert-login flow; block cert-start on tls host"
 ```
 
 ---
