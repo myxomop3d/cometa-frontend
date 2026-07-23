@@ -34,3 +34,9 @@ cometa.code-workspace
 
 # TanStack Router plugin cache
 /.tanstack/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/blob-report/
