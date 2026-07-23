@@ -5,6 +5,7 @@ dist
 .vscode
 .idea
 deploy
+!deploy/nginx.conf
 *.log
 npm-debug.log*
 .env

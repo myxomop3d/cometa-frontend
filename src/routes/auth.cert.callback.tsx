@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { parseCertCallbackHash } from "@/lib/auth/cert-callback";
+import { runCertCallback } from "@/lib/auth/cert-callback";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/auth/cert/callback")({
@@ -17,22 +17,20 @@ function CertCallbackPage() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
-
-    const result = parseCertCallbackHash(window.location.hash);
-    // Strip the token/error from the URL immediately (history + reload safety).
-    window.history.replaceState(null, "", window.location.pathname);
-
-    if ("token" in result) {
-      completeCertLogin(result.token).catch(() =>
-        setError("Certificate sign-in failed. Please try again."),
-      );
-    } else {
-      setError(
-        result.error === "cert_invalid"
-          ? "Certificate sign-in failed. Make sure your client certificate is installed in your browser."
-          : "Certificate sign-in failed. Please try again.",
-      );
-    }
+    runCertCallback({
+      hash: window.location.hash,
+      stripFragment: () =>
+        window.history.replaceState(null, "", window.location.pathname),
+      completeCertLogin,
+    }).then((outcome) => {
+      if (!outcome.ok) {
+        setError(
+          outcome.error === "cert_invalid"
+            ? "Certificate sign-in failed. Make sure your client certificate is installed in your browser."
+            : "Certificate sign-in failed. Please try again.",
+        );
+      }
+    });
   }, [completeCertLogin]);
 
   return (

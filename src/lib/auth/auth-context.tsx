@@ -99,8 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (newToken: string) => {
       storeToken(newToken);
       setToken(newToken);
-      const profile = await getMe();
-      setUser(profile);
+      try {
+        const profile = await getMe();
+        setUser(profile);
+      } catch (e) {
+        storeToken(null);
+        setToken(null);
+        setUser(null);
+        throw e;
+      }
       navigate({ to: "/automated-system", replace: true });
     },
     [navigate],
