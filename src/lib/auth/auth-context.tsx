@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { login as loginApi, getMe, certLogin, type UserProfile, type LoginRequest } from "@/api/auth";
+import { login as loginApi, getMe, startCertLogin, type UserProfile, type LoginRequest } from "@/api/auth";
 
 export interface AuthState {
   user: UserProfile | null;
@@ -22,6 +22,7 @@ export interface AuthContextValue extends AuthState {
   login: (data: LoginRequest) => Promise<void>;
   logout: () => void;
   handleCertLogin: () => Promise<void>;
+  completeCertLogin: (token: string) => Promise<void>;
 }
 
 const TOKEN_KEY = "cometa-auth-token";
@@ -89,14 +90,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate({ to: "/login", replace: true });
   }, []);
 
-  const handleCertLogin = useCallback(async () => {
-    const { token: newToken } = await certLogin();
-    storeToken(newToken);
-    setToken(newToken);
-    const profile = await getMe();
-    setUser(profile);
-    navigate({ to: "/automated-system", replace: true });
+  const handleCertLogin = useCallback(() => {
+    // Уходим со страницы на mTLS-шлюз; токен придёт на /auth/cert/callback.
+    startCertLogin();
   }, []);
+
+  const completeCertLogin = useCallback(
+    async (newToken: string) => {
+      storeToken(newToken);
+      setToken(newToken);
+      const profile = await getMe();
+      setUser(profile);
+      navigate({ to: "/automated-system", replace: true });
+    },
+    [navigate],
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -107,8 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       handleCertLogin,
+      completeCertLogin,
     }),
-    [user, token, isLoading, login, logout, handleCertLogin],
+    [user, token, isLoading, login, logout, handleCertLogin, completeCertLogin],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

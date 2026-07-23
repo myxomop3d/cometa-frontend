@@ -1,5 +1,6 @@
 // API-вызовы для аутентификации: логин и получение профиля
 import { apiFetch } from "@/lib/api/create-crud-api";
+import { deriveMtlsOrigin } from "@/lib/auth/mtls-origin";
 import type {
   LoginRequest,
   LoginResponse,
@@ -21,15 +22,25 @@ export async function getMe(): Promise<UserProfile> {
   return apiFetch<UserProfile>("/api/v1/auth/me");
 }
 
-/** Вход по клиентскому TLS-сертификату (mTLS). Тело запроса пустое, сертификат
- *  передаётся на уровне TLS-соединения. Заголовок x-forwarded-client-cert
- *  формируется nginx-прокси. */
-export async function certLogin(): Promise<LoginResponse> {
-  return apiFetch<LoginResponse>("/api/v1/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
+/**
+ * Начать вход по сертификату: полная навигация браузера на mTLS-шлюз. Браузер
+ * запросит клиентский сертификат, бэкенд проверит его и вернёт 302 на
+ * /auth/cert/callback с токеном во фрагменте URL. В mock-режиме сразу переходим
+ * на callback (MSW не перехватывает навигации между origin-ами).
+ */
+export function startCertLogin(): void {
+  if (import.meta.env.VITE_MOCK_API === "true") {
+    window.location.href = "/auth/cert/callback#token=mock-jwt-token";
+    return;
+  }
+  const override = (window as unknown as { __ENV__?: { MTLS_ORIGIN?: string } })
+    .__ENV__?.MTLS_ORIGIN;
+  const origin = deriveMtlsOrigin(
+    window.location.protocol,
+    window.location.host,
+    override,
+  );
+  window.location.href = `${origin}/api/v1/auth/cert/start`;
 }
 
 /** Саморегистрация: создаёт учётку + person (+ связь с командой), редирект на логин. */
