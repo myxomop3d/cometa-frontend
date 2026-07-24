@@ -40,3 +40,4 @@ cometa.code-workspace
 /playwright-report/
 /playwright/.cache/
 /blob-report/
+.claude/skills/
