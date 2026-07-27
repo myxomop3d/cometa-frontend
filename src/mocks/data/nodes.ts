@@ -75,6 +75,15 @@ export const nodes: NodeDto[] = [
       tls: "TLSv1.3",
     },
   },
+  {
+    id: 6,
+    insertedAt: "2025-11-03T10:16:00",
+    updatedAt: "2025-11-03T10:16:00",
+    nodeType: "MICROSERVICE",
+    name: "quote-publisher",
+    environment: "PROD",
+    automatedSystem: as(1451),
+  },
 
   // ── Flow 99, DEV ─────────────────────────────────────────────────
   {

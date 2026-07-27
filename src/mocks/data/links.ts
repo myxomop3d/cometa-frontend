@@ -50,6 +50,30 @@ export const links: LinkDto[] = [
     principalId: null,
     crossGuid: "aaaaaaa1-0000-4000-8000-000000000104",
   },
+  {
+    id: 105,
+    insertedAt: "2025-11-03T10:22:00",
+    updatedAt: "2025-11-03T10:22:00",
+    flowId: 99,
+    clientNodeId: 6,
+    serverNodeId: 2,
+    protocol: "KAFKA",
+    dataFlowDirection: "CODIRECTIONAL",
+    principalId: null,
+    crossGuid: "dddddddd-0000-4000-8000-0000000000dd",
+  },
+  {
+    id: 106,
+    insertedAt: "2025-11-03T10:22:00",
+    updatedAt: "2025-11-03T10:22:00",
+    flowId: 99,
+    clientNodeId: 2,
+    serverNodeId: 3,
+    protocol: "KAFKA",
+    dataFlowDirection: "CODIRECTIONAL",
+    principalId: null,
+    crossGuid: "dddddddd-0000-4000-8000-0000000000dd",
+  },
 
   // ── Flow 99, DEV chain: adapter → topic ← writer
   {
