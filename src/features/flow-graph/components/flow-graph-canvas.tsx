@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { CustomNode } from "./custom-node";
 import { DataFlowEdge } from "./data-flow-edge";
 import { layoutGraph } from "../layout";
+import { isHighlighted } from "../highlight";
 import type { BuiltGraph, Selection, FlowGraphNode, FlowGraphEdge } from "../types";
 
 const nodeTypes = { flowGraphNode: CustomNode };
@@ -31,6 +32,7 @@ export function FlowGraphCanvas({ graph, selection, onSelect }: FlowGraphCanvasP
   const laidOut = useMemo(() => layoutGraph(graph.nodes, graph.edges), [graph]);
   const [nodes, setNodes] = useState<FlowGraphNode[]>(laidOut);
   const [edges, setEdges] = useState<FlowGraphEdge[]>(graph.edges);
+  const [hoveredCrossGuid, setHoveredCrossGuid] = useState<string | null>(null);
 
   useEffect(() => {
     setNodes(laidOut);
@@ -48,19 +50,32 @@ export function FlowGraphCanvas({ graph, selection, onSelect }: FlowGraphCanvasP
   const onEdgeClick: EdgeMouseHandler<FlowGraphEdge> = (_, edge) => {
     onSelect({ kind: "link", id: Number(edge.id) });
   };
+  const onEdgeMouseEnter: EdgeMouseHandler<FlowGraphEdge> = (_, edge) =>
+    setHoveredCrossGuid(edge.data?.crossGuid ?? null);
+  const onEdgeMouseLeave: EdgeMouseHandler<FlowGraphEdge> = () =>
+    setHoveredCrossGuid(null);
   const onPaneClick = () => onSelect(null);
 
   return (
     <div className="h-full w-full">
       <ReactFlow
         nodes={nodes.map((n) => ({ ...n, selected: selection?.kind === "node" && selection.id === Number(n.id) }))}
-        edges={edges.map((e) => ({ ...e, selected: selection?.kind === "link" && selection.id === Number(e.id) }))}
+        edges={edges.map((e) => ({
+          ...e,
+          selected: selection?.kind === "link" && selection.id === Number(e.id),
+          data: e.data && {
+            ...e.data,
+            highlighted: isHighlighted(e.data.crossGuid, hoveredCrossGuid),
+          },
+        }))}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
+        onEdgeMouseEnter={onEdgeMouseEnter}
+        onEdgeMouseLeave={onEdgeMouseLeave}
         onPaneClick={onPaneClick}
         fitView
         proOptions={{ hideAttribution: true }}

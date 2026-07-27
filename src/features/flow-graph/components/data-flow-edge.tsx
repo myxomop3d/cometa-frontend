@@ -30,6 +30,8 @@ function DataFlowEdgeView({
   });
 
   const roundTrip = data?.roundTrip ?? false;
+  const highlighted = data?.highlighted ?? false;
+  const strokeWidth = highlighted ? 3 : selected ? 2.5 : 1.5;
 
   return (
     <>
@@ -37,11 +39,15 @@ function DataFlowEdgeView({
         path={edgePath}
         markerStart={markerStart}
         markerEnd={markerEnd}
-        style={{ strokeWidth: selected ? 2.5 : 1.5 }}
+        style={{ strokeWidth, ...(highlighted ? { stroke: "#f59e0b" } : {}) }}
       />
       {/* Running circle animates source → target = the data-flow direction.
           Bidirectional links do a 0→1→0 round trip (request out, response back). */}
-      <circle r={4} className="fill-primary">
+      <circle
+        r={highlighted ? 5 : 4}
+        className="fill-primary"
+        style={highlighted ? { fill: "#f59e0b" } : undefined}
+      >
         <animateMotion
           dur="2s"
           repeatCount="indefinite"
