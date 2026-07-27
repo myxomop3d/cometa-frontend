@@ -55,7 +55,12 @@ export function buildGraph(dto: FlowGraphDto): BuiltGraph {
       target: String(target),
       label: l.protocol,
       ...(serverIsTarget ? { markerEnd: marker } : { markerStart: marker }),
-      data: { link: l, direction, roundTrip: direction === "BIDIRECTIONAL" },
+      data: {
+        link: l,
+        direction,
+        roundTrip: direction === "BIDIRECTIONAL",
+        crossGuid: l.crossGuid,
+      },
     };
   });
 

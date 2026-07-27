@@ -20,7 +20,7 @@ describe("layoutGraph", () => {
         id: "e1",
         source: "1",
         target: "2",
-        data: { link: {} as never, direction: "CODIRECTIONAL", roundTrip: false },
+        data: { link: {} as never, direction: "CODIRECTIONAL", roundTrip: false, crossGuid: "" },
       },
     ];
     const out = layoutGraph(nodes, edges);

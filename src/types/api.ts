@@ -137,6 +137,7 @@ export interface LinkDto {
   protocol: LinkProtocol;
   dataFlowDirection: DataFlowDirection | null;
   principalId: number | null;
+  crossGuid: string;
 }
 
 // FlowGraph

@@ -12,6 +12,7 @@ export const links: LinkDto[] = [
     protocol: "REST",
     dataFlowDirection: "CODIRECTIONAL",
     principalId: null,
+    crossGuid: "cccccccc-0000-4000-8000-0000000000cc",
   },
   {
     id: 102,
@@ -23,6 +24,7 @@ export const links: LinkDto[] = [
     protocol: "KAFKA",
     dataFlowDirection: "CODIRECTIONAL",
     principalId: 501,
+    crossGuid: "cccccccc-0000-4000-8000-0000000000cc",
   },
   {
     id: 103,
@@ -34,6 +36,7 @@ export const links: LinkDto[] = [
     protocol: "KAFKA",
     dataFlowDirection: "COUNTERDIRECTIONAL",
     principalId: 502,
+    crossGuid: "aaaaaaa1-0000-4000-8000-000000000103",
   },
   {
     id: 104,
@@ -45,6 +48,7 @@ export const links: LinkDto[] = [
     protocol: "REST",
     dataFlowDirection: "BIDIRECTIONAL",
     principalId: null,
+    crossGuid: "aaaaaaa1-0000-4000-8000-000000000104",
   },
 
   // ── Flow 99, DEV chain: adapter → topic ← writer
@@ -58,6 +62,7 @@ export const links: LinkDto[] = [
     protocol: "KAFKA",
     dataFlowDirection: "CODIRECTIONAL",
     principalId: null,
+    crossGuid: "aaaaaaa1-0000-4000-8000-000000000111",
   },
   {
     id: 112,
@@ -69,6 +74,7 @@ export const links: LinkDto[] = [
     protocol: "KAFKA",
     dataFlowDirection: "COUNTERDIRECTIONAL",
     principalId: null,
+    crossGuid: "aaaaaaa1-0000-4000-8000-000000000112",
   },
 
   // ── Flow 2, PROD
@@ -82,5 +88,6 @@ export const links: LinkDto[] = [
     protocol: "KAFKA",
     dataFlowDirection: "CODIRECTIONAL",
     principalId: null,
+    crossGuid: "aaaaaaa1-0000-4000-8000-000000000201",
   },
 ];

@@ -14,6 +14,7 @@ export interface FlowGraphEdgeData extends Record<string, unknown> {
   link: LinkDto;
   direction: DataFlowDirection;
   roundTrip: boolean;
+  crossGuid: string;
 }
 
 export type FlowGraphNode = RFNode<FlowGraphNodeData>;
