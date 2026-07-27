@@ -107,6 +107,7 @@ function LinkDetails({ link, graph }: { link: LinkDto; graph: BuiltGraph }) {
         <FieldRow label="Protocol">{link.protocol}</FieldRow>
         <FieldRow label="Direction">{link.dataFlowDirection ?? "—"}</FieldRow>
         <FieldRow label="Principal ID">{link.principalId ?? "—"}</FieldRow>
+        <FieldRow label="Cross GUID">{link.crossGuid}</FieldRow>
         <FieldRow label="Inserted at">{link.insertedAt ?? "—"}</FieldRow>
         <FieldRow label="Updated at">{link.updatedAt ?? "—"}</FieldRow>
       </Section>
