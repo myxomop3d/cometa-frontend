@@ -7,6 +7,8 @@ import {
 } from "@xyflow/react";
 import type { FlowGraphEdge } from "../types";
 
+const LABEL_LIFT = 14;
+
 function DataFlowEdgeView({
   sourceX,
   sourceY,
@@ -20,11 +22,22 @@ function DataFlowEdgeView({
   label,
   data,
 }: EdgeProps<FlowGraphEdge>) {
+  // Shift both endpoints along the perpendicular of the source->target vector so
+  // parallel links between the same pair fan into distinct lanes. getBezierPath
+  // regenerates horizontal-tangent control points from the shifted endpoints, so
+  // the whole curve (and its arrowheads) rides the lane. Offset 0 == unchanged.
+  const laneOffset = data?.laneOffset ?? 0;
+  const dx = targetX - sourceX;
+  const dy = targetY - sourceY;
+  const len = Math.hypot(dx, dy);
+  const ox = len === 0 ? 0 : (-dy / len) * laneOffset;
+  const oy = len === 0 ? 0 : (dx / len) * laneOffset;
+
   const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
+    sourceX: sourceX + ox,
+    sourceY: sourceY + oy,
+    targetX: targetX + ox,
+    targetY: targetY + oy,
     sourcePosition,
     targetPosition,
   });
@@ -67,7 +80,7 @@ function DataFlowEdgeView({
           <div
             className="nodrag nopan pointer-events-none absolute rounded bg-background/80 px-1 text-[10px] text-muted-foreground"
             style={{
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - LABEL_LIFT}px)`,
             }}
           >
             {label}

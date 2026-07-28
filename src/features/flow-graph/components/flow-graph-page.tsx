@@ -11,6 +11,7 @@ import { flowGraphQueryOptions } from "../api";
 import { buildGraph } from "../build-graph";
 import { analyzePairs } from "../pairs";
 import { collapseGraph } from "../collapse";
+import { assignParallelOffsets } from "../parallel";
 import { collapseAll, expandAll, showNode, hideNode } from "../expand-state";
 import type { Selection } from "../types";
 import { FlowGraphHeader } from "./flow-graph-header";
@@ -61,10 +62,10 @@ function LoadedFlowGraphPage({
   const pairIndex = useMemo(() => analyzePairs(graph), [graph]);
   const [selection, setSelection] = useState<Selection>(null);
   const [expandedGuids, setExpandedGuids] = useState<Set<string>>(new Set());
-  const collapsed = useMemo(
-    () => collapseGraph(graph, pairIndex, expandedGuids),
-    [graph, pairIndex, expandedGuids],
-  );
+  const collapsed = useMemo(() => {
+    const c = collapseGraph(graph, pairIndex, expandedGuids);
+    return { nodes: c.nodes, edges: assignParallelOffsets(c.edges) };
+  }, [graph, pairIndex, expandedGuids]);
 
   useEffect(() => {
     setSelection(null);
