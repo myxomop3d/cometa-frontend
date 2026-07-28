@@ -22,22 +22,20 @@ function DataFlowEdgeView({
   label,
   data,
 }: EdgeProps<FlowGraphEdge>) {
-  // Shift both endpoints along the perpendicular of the source->target vector so
-  // parallel links between the same pair fan into distinct lanes. getBezierPath
-  // regenerates horizontal-tangent control points from the shifted endpoints, so
-  // the whole curve (and its arrowheads) rides the lane. Offset 0 == unchanged.
+  // Shift both endpoints vertically so parallel links between the same pair fan
+  // into distinct lanes. The nodes' Left/Right handles sit on vertical borders,
+  // so a vertical shift keeps each connection point ON the border regardless of
+  // node alignment (a full-perpendicular shift slides diagonal edges' endpoints
+  // off the border into empty space). getBezierPath regenerates horizontal-tangent
+  // control points from the shifted endpoints, so the whole curve (and its
+  // arrowheads) rides the lane. Offset 0 == unchanged.
   const laneOffset = data?.laneOffset ?? 0;
-  const dx = targetX - sourceX;
-  const dy = targetY - sourceY;
-  const len = Math.hypot(dx, dy);
-  const ox = len === 0 ? 0 : (-dy / len) * laneOffset;
-  const oy = len === 0 ? 0 : (dx / len) * laneOffset;
 
   const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX: sourceX + ox,
-    sourceY: sourceY + oy,
-    targetX: targetX + ox,
-    targetY: targetY + oy,
+    sourceX,
+    sourceY: sourceY + laneOffset,
+    targetX,
+    targetY: targetY + laneOffset,
     sourcePosition,
     targetPosition,
   });
