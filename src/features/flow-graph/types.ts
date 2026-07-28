@@ -17,6 +17,8 @@ export interface FlowGraphEdgeData extends Record<string, unknown> {
   roundTrip: boolean;
   crossGuid: string;
   highlighted?: boolean;
+  /** perpendicular fan offset (px) so parallel links between a pair separate */
+  laneOffset?: number;
   merged?: {
     crossGuid: string;
     proxyNodeId: number;

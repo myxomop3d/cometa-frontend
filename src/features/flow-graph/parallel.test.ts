@@ -18,7 +18,7 @@ const edge = (id: string, source: string, target: string): FlowGraphEdge => ({
 
 const offsets = (edges: FlowGraphEdge[]): Record<string, number> =>
   Object.fromEntries(
-    assignParallelOffsets(edges).map((e) => [e.id, e.data!.laneOffset]),
+    assignParallelOffsets(edges).map((e) => [e.id, e.data!.laneOffset!]),
   );
 
 describe("assignParallelOffsets", () => {
@@ -70,8 +70,8 @@ describe("assignParallelOffsets", () => {
     expect(o["3"]).toBe(0);
   });
 
-  it("is deterministic across calls", () => {
+  it("is deterministic regardless of input order", () => {
     const edges = [edge("2", "a", "b"), edge("1", "a", "b")];
-    expect(offsets(edges)).toEqual(offsets(edges));
+    expect(offsets(edges)).toEqual(offsets([...edges].reverse()));
   });
 });
