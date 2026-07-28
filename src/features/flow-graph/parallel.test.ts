@@ -26,12 +26,19 @@ describe("assignParallelOffsets", () => {
     expect(offsets([edge("1", "a", "b")])).toEqual({ "1": 0 });
   });
 
-  it("groups A->B and B->A into the same corridor", () => {
-    const o = offsets([edge("1", "a", "b"), edge("2", "b", "a")]);
+  it("fans same-direction siblings A->B", () => {
+    const o = offsets([edge("1", "a", "b"), edge("2", "a", "b")]);
     // count 2 -> gap 22 -> [-11, +11], sorted by id
     expect(o["1"]).toBeCloseTo(-GAP / 2);
     expect(o["2"]).toBeCloseTo(GAP / 2);
     expect(o["1"] + o["2"]).toBeCloseTo(0);
+  });
+
+  it("does NOT fan opposite-direction links A->B and B->A", () => {
+    // They leave from different handle sides, so their paths already differ.
+    const o = offsets([edge("1", "a", "b"), edge("2", "b", "a")]);
+    expect(o["1"]).toBe(0);
+    expect(o["2"]).toBe(0);
   });
 
   it("produces symmetric, evenly spaced offsets for a group of 3", () => {

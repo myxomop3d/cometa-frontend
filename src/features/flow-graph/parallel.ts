@@ -3,24 +3,27 @@ import type { FlowGraphEdge } from "./types";
 export const GAP = 22;
 export const MAX_SPREAD = 60;
 
-/** Unordered pair key so A->B and B->A share a corridor. */
+/**
+ * Ordered source->target key. Only edges sharing the same exit (Right) and
+ * entry (Left) handles actually overlap. Opposite-direction links (A->B vs
+ * B->A) leave from different sides — A.right->B.left vs B.right->A.left — so
+ * they already draw distinct paths and must NOT be grouped/fanned.
+ */
 function corridorKey(edge: FlowGraphEdge): string {
-  return edge.source < edge.target
-    ? `${edge.source}|${edge.target}`
-    : `${edge.target}|${edge.source}`;
+  return `${edge.source}->${edge.target}`;
 }
 
 /**
- * Stamp each edge with data.laneOffset so parallel links between the same pair
- * of nodes fan into distinct lanes. A lone link gets 0 (renders unchanged).
- * Offsets are symmetric about 0 and evenly spaced, capped at MAX_SPREAD total.
+ * Stamp each edge with data.laneOffset so parallel links in the same direction
+ * between the same pair of nodes fan into distinct lanes. A link with no
+ * same-direction sibling gets 0 (renders unchanged). Offsets are symmetric about
+ * 0 and evenly spaced, capped at MAX_SPREAD total.
  * Returns new edge objects; inputs are not mutated.
  *
  * The renderer applies laneOffset as a vertical shift of both endpoints. The
  * nodes' fixed Left-target / Right-source handles sit on vertical borders, so a
  * vertical shift keeps each connection point on the border for any node
- * alignment, and the offset is direction-independent so same- and
- * reverse-direction siblings in a corridor mirror correctly.
+ * alignment.
  */
 export function assignParallelOffsets(edges: FlowGraphEdge[]): FlowGraphEdge[] {
   const groups = new Map<string, FlowGraphEdge[]>();
