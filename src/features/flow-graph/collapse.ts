@@ -1,9 +1,7 @@
 import { MarkerType } from "@xyflow/react";
-import { normalizeDirection } from "./build-graph";
+import { normalizeDirection, ARROW_SIZE } from "./build-graph";
 import type { BuiltGraph, FlowGraphNode, FlowGraphEdge } from "./types";
 import type { Pair, PairIndex } from "./pairs";
-
-const ARROW_SIZE = 22;
 
 function mergedEdge(pair: Pair): FlowGraphEdge {
   const proto =
@@ -16,6 +14,9 @@ function mergedEdge(pair: Pair): FlowGraphEdge {
     source: String(pair.outerSourceId),
     target: String(pair.outerTargetId),
     label: `${proto} (proxy)`,
+    // Deliberate simplification: a merged edge is always rendered single-direction
+    // (roundTrip: false, arrow on the target end), regardless of the underlying
+    // links' actual directions — intentional, plan-accepted, not an oversight.
     markerEnd: { type: MarkerType.ArrowClosed, width: ARROW_SIZE, height: ARROW_SIZE },
     data: {
       link: pair.linkOut,

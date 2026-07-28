@@ -7,7 +7,7 @@ import type {
 } from "@/types/api";
 import type { BuiltGraph, FlowGraphNode, FlowGraphEdge } from "./types";
 
-const ARROW_SIZE = 22;
+export const ARROW_SIZE = 22;
 
 /** null / unknown falls back to CODIRECTIONAL (client → server). */
 export function normalizeDirection(

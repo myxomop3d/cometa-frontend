@@ -103,8 +103,17 @@ function LoadedFlowGraphPage({
               selection={selection}
               graph={graph}
               pairIndex={pairIndex}
-              onShowNode={(guid) => setExpandedGuids((s) => showNode(s, guid))}
-              onHideNode={(nodeId) => setExpandedGuids((s) => hideNode(s, pairIndex, nodeId))}
+              onShowNode={(guid) => {
+                setExpandedGuids((s) => showNode(s, guid));
+                const proxyNodeId = pairIndex.pairs.get(guid)?.proxyNodeId;
+                if (proxyNodeId !== undefined) {
+                  setSelection({ kind: "node", id: proxyNodeId });
+                }
+              }}
+              onHideNode={(nodeId) => {
+                setExpandedGuids((s) => hideNode(s, pairIndex, nodeId));
+                setSelection(null);
+              }}
             />
           </div>
         </ResizablePanel>
