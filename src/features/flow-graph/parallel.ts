@@ -15,6 +15,14 @@ function corridorKey(edge: FlowGraphEdge): string {
  * of nodes fan into distinct lanes. A lone link gets 0 (renders unchanged).
  * Offsets are symmetric about 0 and evenly spaced, capped at MAX_SPREAD total.
  * Returns new edge objects; inputs are not mutated.
+ *
+ * The even fan-out holds per direction: the renderer derives its perpendicular
+ * from each edge's own source->target vector, so a same-direction bundle spreads
+ * symmetrically. A reverse-direction sibling in the same corridor is negated on
+ * both offset and perpendicular, translating by the same vector rather than
+ * mirroring — harmless today because the fixed Left-target / Right-source handles
+ * already give opposite-direction edges distinct arcs. Revisit if node handles
+ * ever become floating.
  */
 export function assignParallelOffsets(edges: FlowGraphEdge[]): FlowGraphEdge[] {
   const groups = new Map<string, FlowGraphEdge[]>();
