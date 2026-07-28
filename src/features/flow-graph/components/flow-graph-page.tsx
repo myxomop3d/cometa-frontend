@@ -9,6 +9,9 @@ import type { EnvironmentCode } from "@/types/api";
 import { flowApi } from "@/features/flow/api";
 import { flowGraphQueryOptions } from "../api";
 import { buildGraph } from "../build-graph";
+import { analyzePairs } from "../pairs";
+import { collapseGraph } from "../collapse";
+import { collapseAll, expandAll } from "../expand-state";
 import type { Selection } from "../types";
 import { FlowGraphHeader } from "./flow-graph-header";
 import { FlowGraphCanvas } from "./flow-graph-canvas";
@@ -55,9 +58,22 @@ function LoadedFlowGraphPage({
   const { data: flowRes } = useSuspenseQuery(flowApi.detailQueryOptions(flowId));
   const flow = flowRes.data;
   const graph = useMemo(() => buildGraph(data.data), [data]);
+  const pairIndex = useMemo(() => analyzePairs(graph), [graph]);
   const [selection, setSelection] = useState<Selection>(null);
+  const [expandedGuids, setExpandedGuids] = useState<Set<string>>(new Set());
+  const collapsed = useMemo(
+    () => collapseGraph(graph, pairIndex, expandedGuids),
+    [graph, pairIndex, expandedGuids],
+  );
 
-  useEffect(() => setSelection(null), [flowId, env]);
+  useEffect(() => {
+    setSelection(null);
+    setExpandedGuids(new Set());
+  }, [flowId, env]);
+
+  const hasPairs = pairIndex.pairs.size > 0;
+  const allCollapsed = expandedGuids.size === 0;
+  const allExpanded = hasPairs && expandedGuids.size === pairIndex.pairs.size;
 
   return (
     <PageLayout
@@ -68,12 +84,17 @@ function LoadedFlowGraphPage({
           env={env}
           onFlowChange={onFlowChange}
           onEnvChange={onEnvChange}
+          hasPairs={hasPairs}
+          allCollapsed={allCollapsed}
+          allExpanded={allExpanded}
+          onCollapseAll={() => setExpandedGuids(collapseAll())}
+          onExpandAll={() => setExpandedGuids(expandAll(pairIndex))}
         />
       }
     >
       <ResizablePanelGroup orientation="horizontal">
         <ResizablePanel defaultSize="70%" minSize="30%">
-          <FlowGraphCanvas graph={graph} selection={selection} onSelect={setSelection} />
+          <FlowGraphCanvas graph={collapsed} selection={selection} onSelect={setSelection} />
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel defaultSize="30%" minSize="15%">

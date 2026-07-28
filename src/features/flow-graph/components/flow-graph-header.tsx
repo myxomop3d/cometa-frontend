@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { FlowCombobox } from "./flow-combobox";
 
 const ENVIRONMENTS: EnvironmentCode[] = ["DEV", "IFT", "UAT", "PROD"];
@@ -16,6 +17,11 @@ interface FlowGraphHeaderProps {
   env: EnvironmentCode;
   onFlowChange: (id: number) => void;
   onEnvChange: (env: EnvironmentCode) => void;
+  hasPairs?: boolean;
+  allCollapsed?: boolean;
+  allExpanded?: boolean;
+  onCollapseAll?: () => void;
+  onExpandAll?: () => void;
 }
 
 export function FlowGraphHeader({
@@ -24,6 +30,11 @@ export function FlowGraphHeader({
   env,
   onFlowChange,
   onEnvChange,
+  hasPairs,
+  allCollapsed,
+  allExpanded,
+  onCollapseAll,
+  onExpandAll,
 }: FlowGraphHeaderProps) {
   return (
     <div className="flex h-full items-center justify-between gap-4 border-b px-4">
@@ -45,6 +56,24 @@ export function FlowGraphHeader({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        {hasPairs && (
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant={allCollapsed ? "default" : "outline"}
+              onClick={onCollapseAll}
+            >
+              Collapse proxies
+            </Button>
+            <Button
+              size="sm"
+              variant={allExpanded ? "default" : "outline"}
+              onClick={onExpandAll}
+            >
+              Expand proxies
+            </Button>
+          </div>
+        )}
         <Select value={env} onValueChange={(v) => onEnvChange(v as EnvironmentCode)}>
           <SelectTrigger className="w-[110px]">
             <SelectValue />

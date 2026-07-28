@@ -17,13 +17,13 @@ import { CustomNode } from "./custom-node";
 import { DataFlowEdge } from "./data-flow-edge";
 import { layoutGraph } from "../layout";
 import { isHighlighted } from "../highlight";
-import type { BuiltGraph, Selection, FlowGraphNode, FlowGraphEdge } from "../types";
+import type { Selection, FlowGraphNode, FlowGraphEdge } from "../types";
 
 const nodeTypes = { flowGraphNode: CustomNode };
 const edgeTypes = { dataFlow: DataFlowEdge };
 
 interface FlowGraphCanvasProps {
-  graph: BuiltGraph;
+  graph: { nodes: FlowGraphNode[]; edges: FlowGraphEdge[] };
   selection: Selection;
   onSelect: (sel: Selection) => void;
 }
