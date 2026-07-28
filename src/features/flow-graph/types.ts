@@ -4,6 +4,7 @@ import type { NodeDto, LinkDto, DataFlowDirection } from "@/types/api";
 export type Selection =
   | { kind: "node"; id: number }
   | { kind: "link"; id: number }
+  | { kind: "mergedLink"; crossGuid: string }
   | null;
 
 export interface FlowGraphNodeData extends Record<string, unknown> {

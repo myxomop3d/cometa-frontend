@@ -11,7 +11,7 @@ import { flowGraphQueryOptions } from "../api";
 import { buildGraph } from "../build-graph";
 import { analyzePairs } from "../pairs";
 import { collapseGraph } from "../collapse";
-import { collapseAll, expandAll } from "../expand-state";
+import { collapseAll, expandAll, showNode, hideNode } from "../expand-state";
 import type { Selection } from "../types";
 import { FlowGraphHeader } from "./flow-graph-header";
 import { FlowGraphCanvas } from "./flow-graph-canvas";
@@ -99,7 +99,13 @@ function LoadedFlowGraphPage({
         <ResizableHandle />
         <ResizablePanel defaultSize="30%" minSize="15%">
           <div className="h-full overflow-y-auto">
-            <DetailsPanel selection={selection} graph={graph} />
+            <DetailsPanel
+              selection={selection}
+              graph={graph}
+              pairIndex={pairIndex}
+              onShowNode={(guid) => setExpandedGuids((s) => showNode(s, guid))}
+              onHideNode={(nodeId) => setExpandedGuids((s) => hideNode(s, pairIndex, nodeId))}
+            />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

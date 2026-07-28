@@ -6,15 +6,26 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import { FieldRow } from "./field-row";
 import type { Selection, BuiltGraph } from "../types";
+import type { PairIndex, Pair } from "../pairs";
 
 interface DetailsPanelProps {
   selection: Selection;
   graph: BuiltGraph;
+  pairIndex: PairIndex;
+  onShowNode: (crossGuid: string) => void;
+  onHideNode: (nodeId: number) => void;
 }
 
-export function DetailsPanel({ selection, graph }: DetailsPanelProps) {
+export function DetailsPanel({
+  selection,
+  graph,
+  pairIndex,
+  onShowNode,
+  onHideNode,
+}: DetailsPanelProps) {
   if (!selection) {
     return (
       <div className="p-4 text-sm text-muted-foreground">
@@ -23,10 +34,22 @@ export function DetailsPanel({ selection, graph }: DetailsPanelProps) {
     );
   }
 
+  if (selection.kind === "mergedLink") {
+    const pair = pairIndex.pairs.get(selection.crossGuid);
+    if (!pair) return <Missing />;
+    return <MergedLinkDetails pair={pair} graph={graph} onShowNode={onShowNode} />;
+  }
+
   if (selection.kind === "node") {
     const node = graph.nodeById.get(selection.id);
     if (!node) return <Missing />;
-    return <NodeDetails node={node} />;
+    return (
+      <NodeDetails
+        node={node}
+        hideable={pairIndex.hideableNodes.has(node.id)}
+        onHideNode={onHideNode}
+      />
+    );
   }
   const link = graph.linkById.get(selection.id);
   if (!link) return <Missing />;
@@ -48,9 +71,24 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function NodeDetails({ node }: { node: NodeDto }) {
+function NodeDetails({
+  node,
+  hideable,
+  onHideNode,
+}: {
+  node: NodeDto;
+  hideable: boolean;
+  onHideNode: (nodeId: number) => void;
+}) {
   return (
     <div>
+      {hideable && (
+        <div className="border-b px-4 py-3">
+          <Button size="sm" variant="outline" onClick={() => onHideNode(node.id)}>
+            Hide node
+          </Button>
+        </div>
+      )}
       <Section title={`${node.nodeType} node`}>
         <FieldRow label="ID">{node.id}</FieldRow>
         <FieldRow label="Name">{node.name}</FieldRow>
@@ -122,5 +160,65 @@ function LinkDetails({ link, graph }: { link: LinkDto; graph: BuiltGraph }) {
         <FieldRow label="Type">{server?.nodeType ?? "—"}</FieldRow>
       </Section>
     </div>
+  );
+}
+
+function MergedLinkDetails({
+  pair,
+  graph,
+  onShowNode,
+}: {
+  pair: Pair;
+  graph: BuiltGraph;
+  onShowNode: (crossGuid: string) => void;
+}) {
+  const proxy = graph.nodeById.get(pair.proxyNodeId);
+  const outerSource = graph.nodeById.get(pair.outerSourceId);
+  const outerTarget = graph.nodeById.get(pair.outerTargetId);
+  return (
+    <div>
+      <div className="border-b px-4 py-3">
+        <Button size="sm" onClick={() => onShowNode(pair.crossGuid)}>
+          Show node
+        </Button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Proxy link — collapses {outerSource?.name ?? pair.outerSourceId} →{" "}
+          {proxy?.name ?? pair.proxyNodeId} → {outerTarget?.name ?? pair.outerTargetId}.
+        </p>
+      </div>
+      <LinkSubSection title="Link into proxy" link={pair.linkIn} />
+      <LinkSubSection title="Link out of proxy" link={pair.linkOut} />
+      <section className="border-b px-4 py-3">
+        <Collapsible>
+          <CollapsibleTrigger className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground">
+            Proxy node
+            <ChevronsUpDown className="size-3.5" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {proxy ? (
+              <dl className="mt-2">
+                <FieldRow label="ID">{proxy.id}</FieldRow>
+                <FieldRow label="Name">{proxy.name}</FieldRow>
+                <FieldRow label="Type">{proxy.nodeType}</FieldRow>
+                <FieldRow label="Environment">{proxy.environment}</FieldRow>
+              </dl>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">Proxy node not found.</p>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      </section>
+    </div>
+  );
+}
+
+function LinkSubSection({ title, link }: { title: string; link: LinkDto }) {
+  return (
+    <Section title={title}>
+      <FieldRow label="ID">{link.id}</FieldRow>
+      <FieldRow label="Protocol">{link.protocol}</FieldRow>
+      <FieldRow label="Direction">{link.dataFlowDirection ?? "—"}</FieldRow>
+      <FieldRow label="Cross GUID">{link.crossGuid}</FieldRow>
+    </Section>
   );
 }

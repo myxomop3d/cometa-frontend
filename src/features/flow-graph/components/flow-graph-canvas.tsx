@@ -48,7 +48,9 @@ export function FlowGraphCanvas({ graph, selection, onSelect }: FlowGraphCanvasP
     onSelect({ kind: "node", id: Number(node.id) });
   };
   const onEdgeClick: EdgeMouseHandler<FlowGraphEdge> = (_, edge) => {
-    onSelect({ kind: "link", id: Number(edge.id) });
+    const merged = edge.data?.merged;
+    if (merged) onSelect({ kind: "mergedLink", crossGuid: merged.crossGuid });
+    else onSelect({ kind: "link", id: Number(edge.id) });
   };
   const onEdgeMouseEnter: EdgeMouseHandler<FlowGraphEdge> = (_, edge) =>
     setHoveredCrossGuid(edge.data?.crossGuid ?? null);
@@ -62,7 +64,10 @@ export function FlowGraphCanvas({ graph, selection, onSelect }: FlowGraphCanvasP
         nodes={nodes.map((n) => ({ ...n, selected: selection?.kind === "node" && selection.id === Number(n.id) }))}
         edges={edges.map((e) => ({
           ...e,
-          selected: selection?.kind === "link" && selection.id === Number(e.id),
+          selected:
+            (selection?.kind === "link" && selection.id === Number(e.id)) ||
+            (selection?.kind === "mergedLink" &&
+              selection.crossGuid === e.data?.merged?.crossGuid),
           data: e.data && {
             ...e.data,
             highlighted: isHighlighted(e.data.crossGuid, hoveredCrossGuid),
