@@ -41,3 +41,4 @@ cometa.code-workspace
 /playwright/.cache/
 /blob-report/
 .claude/skills/
+.claude/settings.local.json
