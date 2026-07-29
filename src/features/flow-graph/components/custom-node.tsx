@@ -17,14 +17,16 @@ function FlowGraphNodeView({ data, selected }: NodeProps<FlowGraphNode>) {
   return (
     <div
       className={cn(
-        "min-w-[220px] rounded-md border-2 shadow-sm",
+        // Content-sized: grows with the name up to a cap, past which it truncates.
+        // React Flow measures this real width and layout.ts lays out from it.
+        "min-w-[220px] max-w-[480px] rounded-md border-2 shadow-sm",
         tone,
         selected && "ring-2 ring-primary",
       )}
     >
       <div className="px-3 py-2">
         <div className="text-xs uppercase tracking-wide text-muted-foreground">{node.nodeType}</div>
-        <div className="text-sm font-semibold">{node.name}</div>
+        <div className="truncate text-sm font-semibold" title={node.name}>{node.name}</div>
         {node.automatedSystem && (
           <div className="truncate text-xs text-muted-foreground">{node.automatedSystem.name}</div>
         )}
