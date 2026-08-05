@@ -11,7 +11,7 @@ export const teamFieldByColumnId: Record<string, FieldEntry> = {
   name:       { field: "name",       variant: "text" },
   code:       { field: "code",       variant: "range" },
   type:       { field: "type",       variant: "select" },
-  leader:     { field: "leaderId",   sortField: "leader.lastName", variant: "relation" },
+  leader:     { field: "leaderId",   variant: "relation" },
   leaderRole: { field: "leaderRole", variant: "text" },
   structure:  { field: "structure",  variant: "text" },
 };
