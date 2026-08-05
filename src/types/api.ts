@@ -19,8 +19,10 @@ export interface BoxDto {
   shape: "O" | "X";
   num: number;
   item: ItemDto | null;
+  itemId: number | null;
   things: ThingDto[] | null;
   oldItem: ItemDto | null;
+  oldItemId: number | null;
   oldThings: ThingDto[] | null;
   dateStr: string;
   checkbox: boolean;

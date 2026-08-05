@@ -19,9 +19,9 @@ export const boxFilterDescriptors: readonly BoxFilterDescriptor[] = [
   { id: "objectCode", variant: "text", filterKey: "objectCode" },
   { id: "shape", variant: "select", filterKey: "shape" },
   { id: "num", variant: "range", filterKeys: ["numMin", "numMax"] },
-  { id: "item", variant: "relation", filterKey: "itemId" },
+  { id: "item", variant: "relation", field: "itemId", filterKey: "itemId" },
   { id: "things", variant: "multiRelation", filterKey: "thingIds" },
-  { id: "oldItem", variant: "relation", filterKey: "oldItemId" },
+  { id: "oldItem", variant: "relation", field: "oldItemId", filterKey: "oldItemId" },
   { id: "oldThings", variant: "multiRelation", filterKey: "oldThingIds" },
   {
     id: "dateStr",

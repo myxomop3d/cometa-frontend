@@ -13,7 +13,9 @@ function pickThings(ids: number[]) {
     .filter((t): t is NonNullable<typeof t> => t != null);
 }
 
-export const boxes: BoxDto[] = [
+type BoxSeed = Omit<BoxDto, "itemId" | "oldItemId">;
+
+const boxSeeds: BoxSeed[] = [
   { id: 1, name: "Контейнер Alpha-1", objectCode: "CNT-001", shape: "O", num: 100, item: pickItem(1), things: pickThings([1, 2, 3]), oldItem: pickItem(5), oldThings: pickThings([10, 11]), dateStr: "2025-01-15", checkbox: true, tags: ["production", "critical"] },
   { id: 2, name: "Контейнер Beta-2", objectCode: "CNT-002", shape: "X", num: 205, item: pickItem(2), things: pickThings([4, 5]), oldItem: null, oldThings: null, dateStr: "2025-01-20", checkbox: false, tags: ["staging"] },
   { id: 3, name: "Контейнер Gamma-3", objectCode: null, shape: "O", num: 310, item: null, things: null, oldItem: pickItem(3), oldThings: pickThings([1, 2]), dateStr: "2025-02-01", checkbox: true, tags: ["dev", "experimental"] },
@@ -155,3 +157,9 @@ export const boxes: BoxDto[] = [
   { id: 139, name: "Контейнер Ohm-139", objectCode: "CNT-139", shape: "O", num: 14590, item: pickItem(7), things: pickThings([2, 8]), oldItem: pickItem(6), oldThings: null, dateStr: "2027-01-01", checkbox: true, tags: ["production"] },
   { id: 140, name: "Контейнер Ampere-140", objectCode: "CNT-140", shape: "X", num: 14695, item: pickItem(2), things: pickThings([5, 12, 15]), oldItem: null, oldThings: pickThings([4, 7]), dateStr: "2027-01-05", checkbox: false, tags: ["staging", "pre-release"] },
 ];
+
+export const boxes: BoxDto[] = boxSeeds.map((b) => ({
+  ...b,
+  itemId: b.item?.id ?? null,
+  oldItemId: b.oldItem?.id ?? null,
+}));

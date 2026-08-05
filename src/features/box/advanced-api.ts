@@ -20,10 +20,10 @@ export const boxFieldByColumnId: Record<string, FieldEntry> = {
   dateStr:    { field: "dateStr",    variant: "dateRange" },
   checkbox:   { field: "checkbox",   variant: "boolean" },
   tags:       { field: "tags",       variant: "text" },
-  item:       { field: "item",       variant: "relation" },
+  item:       { field: "itemId",     variant: "relation" },
   "item.name": { field: "item/name", variant: "text" },
   things:     { field: "things",     variant: "multiRelation" },
-  oldItem:    { field: "oldItem",    variant: "relation" },
+  oldItem:    { field: "oldItemId",  variant: "relation" },
   oldThings:  { field: "oldThings",  variant: "multiRelation" },
 };
 

@@ -10,11 +10,13 @@ const baseDto: BoxDto = {
   shape: "O",
   num: 7,
   item: { id: 1, name: "i1", status: "ON", date: "2026-01-01", count: 0 },
+  itemId: 1,
   things: [
     { id: 10, name: "t1", status: "ON", date: "2026-01-01", count: 0 },
     { id: 11, name: "t2", status: "OFF", date: "2026-01-01", count: 0 },
   ],
   oldItem: { id: 2, name: "i2", status: "OFF", date: "2026-01-01", count: 0 },
+  oldItemId: 2,
   oldThings: [
     { id: 20, name: "ot1", status: "ON", date: "2026-01-01", count: 0 },
   ],
@@ -45,8 +47,10 @@ describe("boxDtoToForm", () => {
     const dto: BoxDto = {
       ...baseDto,
       item: null,
+      itemId: null,
       things: null,
       oldItem: null,
+      oldItemId: null,
       oldThings: null,
     };
     const form = boxDtoToForm(dto);
