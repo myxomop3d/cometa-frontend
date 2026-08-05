@@ -45,7 +45,15 @@ flow. It is extended, not replaced.
 - **`relation` filter variant is changed, not duplicated.** It now emits a flat
   `field eq id` instead of `field/id eq id`. Box migrates to match.
 - **Leader column is sortable** by `leader.lastName`, via a new optional
-  `sortField` on the filter descriptor.
+  `sortField` on the filter descriptor. **Superseded — not what shipped.**
+  This was reversed during Phase 3: `$orderby=leader.lastName` cannot pass
+  `ODataChecker.checkFields` (it accepts only flat entity field names or
+  `@ODataMapping` aliases, and `TeamDto` has neither for `leader.lastName`),
+  so the human partner decided to disable leader sorting outright rather than
+  add the alias needed to make it legal. `sortField` itself is real and
+  shipped (see Phase 2) — it's just unused by the `leader` entry. See Known
+  Limitations and `issue/relationSorting.md` findings 2–4 for the full
+  reasoning.
 - **Sequencing:** Person first (no backend dependency), then the Team backend
   change, then the Team page.
 
@@ -353,7 +361,7 @@ New files in the existing `src/features/team/`, matching the Person set, plus:
   { id: "code",       variant: "range",      filterKeys: ["codeMin", "codeMax"] },
   { id: "type",       variant: "select",     filterKey: "type" },   // CHANGE / RUN
   { id: "leader",     variant: "relation",   field: "leaderId",
-    filterKey: "leaderId", sortField: "leader.lastName" },
+    filterKey: "leaderId" },   // no sortField — leader sorting is disabled, see Known Limitations
   { id: "leaderRole", variant: "text",       filterKey: "leaderRole" },
   { id: "structure",  variant: "text",       filterKey: "structure" },
   ```
