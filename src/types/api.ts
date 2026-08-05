@@ -204,6 +204,13 @@ export interface PersonDto {
   middleName: string;
 }
 
+export interface PersonFilters extends Partial<PaginationParams> {
+  email?: string;
+  lastName?: string;
+  firstName?: string;
+  middleName?: string;
+}
+
 export interface TeamDto {
   id: number;
   insertedAt: string | null;
