@@ -58,13 +58,16 @@ export interface CreateCrudApiOptions {
   queryKey: readonly unknown[];
   /** Filter descriptors used by dataTableQueryOptions. */
   filterDescriptors: readonly FilterDescriptor[];
+  /** Query params appended to every list request, e.g. `{ fields: "leader" }`
+   *  to make the backend eager-fetch a relation via its entity graph. */
+  staticParams?: Record<string, string>;
 }
 
 export function createCrudApi<
   TDto extends { id: number },
   TFilters extends object,
   TWritePayload,
->({ basePath, queryKey, filterDescriptors }: CreateCrudApiOptions) {
+>({ basePath, queryKey, filterDescriptors, staticParams }: CreateCrudApiOptions) {
   async function fetchList(
     filters: TFilters = {} as TFilters,
   ): Promise<ApiResponse<TDto[]>> {
@@ -76,6 +79,9 @@ export function createCrudApi<
       } else {
         params.set(k, String(v));
       }
+    }
+    for (const [k, v] of Object.entries(staticParams ?? {})) {
+      params.set(k, v);
     }
     return apiFetch<ApiResponse<TDto[]>>(`${basePath}?${params}`);
   }
@@ -116,6 +122,9 @@ export function createCrudApi<
       ...params,
       descriptors: filterDescriptors,
     });
+    for (const [k, v] of Object.entries(staticParams ?? {})) {
+      searchParams.set(k, v);
+    }
     return apiFetch<ApiResponse<TDto[]>>(
       `${basePath}?${searchParams.toString()}`,
     );
