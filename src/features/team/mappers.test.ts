@@ -12,7 +12,7 @@ const dto: TeamDto = {
   type: "CHANGE",
   leaderId: 7,
   leader: {
-    id: 7,
+    id: 99,
     insertedAt: null,
     updatedAt: null,
     email: "ivanov@example.com",
@@ -40,7 +40,7 @@ describe("teamDtoToForm", () => {
 
   it("falls back to the nested leader id when the scalar is null", () => {
     const withoutScalar: TeamDto = { ...dto, leaderId: null };
-    expect(teamDtoToForm(withoutScalar).leaderId).toBe(7);
+    expect(teamDtoToForm(withoutScalar).leaderId).toBe(99);
   });
 
   it("yields leaderId 0 when neither is present, so the form flags it required", () => {
