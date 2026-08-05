@@ -32,7 +32,15 @@ function comboboxQueryOptions(search: string) {
   });
 }
 
-/** Resolve a selected team's label by id (may fall outside the top-20 set). */
+/**
+ * Resolve a selected team's label by id (may fall outside the top-20 set).
+ *
+ * This is now behaviourally identical to the `detailQueryOptions` that
+ * `createCrudApi` generates on `baseApi` (same query key, same URL). It is
+ * kept — and placed after `...baseApi` in the exported `teamApi` below so it
+ * wins — because the user-registration flow pins its resolution to this
+ * local implementation. Do not delete this as dead duplication.
+ */
 function detailQueryOptions(id: number) {
   return queryOptions({
     queryKey: ["teams", "detail", id] as const,

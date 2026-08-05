@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { personsFilteredQueryOptions } from "@/features/person/api";
-import { personLabel } from "@/features/person/components/PersonCombobox";
+import { personLabel } from "@/features/person/label";
 import type { PersonDto, TeamDto } from "@/types/api";
 import type { TeamRowAction } from "./row-action";
 

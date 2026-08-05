@@ -5,18 +5,11 @@ import { DebouncedInput } from "@/components/DebouncedInput";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { personApi } from "@/features/person/api";
-import type { PersonDto } from "@/types/api";
+import { personLabel } from "@/features/person/label";
 
 interface PersonComboboxProps {
   value: number | null;
   onChange: (personId: number | null) => void;
-}
-
-export function personLabel(person: PersonDto): string {
-  const full = [person.lastName, person.firstName, person.middleName]
-    .filter(Boolean)
-    .join(" ");
-  return full || person.email || `Person #${person.id}`;
 }
 
 export function PersonCombobox({ value, onChange }: PersonComboboxProps) {
@@ -29,7 +22,7 @@ export function PersonCombobox({ value, onChange }: PersonComboboxProps) {
 
   // Selected person may fall outside the top-20 result set — fetch by id.
   const detailQuery = useQuery({
-    ...personApi.detailQueryOptions(value as number),
+    ...personApi.detailQueryOptions(value ?? 0),
     enabled: value !== null,
   });
   const selected = detailQuery.data?.data;

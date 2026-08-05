@@ -57,11 +57,13 @@ export async function fetchPersonsFiltered(
       `(contains_ignoring_case(lastName, '${esc}') or contains_ignoring_case(firstName, '${esc}'))`,
     );
   }
-  if (
-    Array.isArray(fieldFilters.ids) &&
-    (fieldFilters.ids as number[]).length > 0
-  ) {
-    clauses.push(`id in (${(fieldFilters.ids as number[]).join(",")})`);
+  if (Array.isArray(fieldFilters.ids) && fieldFilters.ids.length > 0) {
+    const ids = (fieldFilters.ids as unknown[])
+      .map(Number)
+      .filter(Number.isFinite);
+    if (ids.length > 0) {
+      clauses.push(`id in (${ids.join(",")})`);
+    }
   }
   if (clauses.length > 0) {
     params.set("$filter", clauses.join(" and "));
@@ -76,7 +78,7 @@ export function personsFilteredQueryOptions(
   filters: Record<string, unknown> = {},
 ) {
   return queryOptions({
-    queryKey: ["persons", "list", filters] as const,
+    queryKey: ["persons", "relation-list", filters] as const,
     queryFn: () => fetchPersonsFiltered(filters),
     placeholderData: keepPreviousData,
   });
