@@ -220,8 +220,20 @@ export interface TeamDto {
   name: string | null;
   code: number | null;
   type: string | null;
+  leaderId: number | null;
+  leader: PersonDto | null;
   leaderRole: string | null;
   structure: string | null;
+}
+
+export interface TeamFilters extends Partial<PaginationParams> {
+  name?: string;
+  codeMin?: number;
+  codeMax?: number;
+  type?: string;
+  leaderId?: number;
+  leaderRole?: string;
+  structure?: string;
 }
 
 export interface RegisterRequest {

@@ -1,7 +1,17 @@
 import { queryOptions, keepPreviousData } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api/create-crud-api";
+import { apiFetch, createCrudApi } from "@/lib/api/create-crud-api";
 import { odataString } from "@/lib/odata/build-filter-params";
-import type { ApiResponse, TeamDto } from "@/types/api";
+import type { ApiResponse, TeamDto, TeamFilters } from "@/types/api";
+import type { TeamWritePayload } from "./schema";
+import { teamFilterDescriptors } from "./filter-descriptors";
+import { advancedDataTableQueryOptions } from "./advanced-api";
+
+const baseApi = createCrudApi<TeamDto, TeamFilters, TeamWritePayload>({
+  basePath: "/api/v1/team",
+  queryKey: ["teams"],
+  filterDescriptors: teamFilterDescriptors,
+  staticParams: { fields: "leader" },
+});
 
 /** Combobox options: server-side search — $top=20 + $filter over team name. */
 function comboboxQueryOptions(search: string) {
@@ -30,4 +40,9 @@ function detailQueryOptions(id: number) {
   });
 }
 
-export const teamApi = { comboboxQueryOptions, detailQueryOptions };
+export const teamApi = {
+  ...baseApi,
+  advancedDataTableQueryOptions,
+  comboboxQueryOptions,
+  detailQueryOptions,
+};
