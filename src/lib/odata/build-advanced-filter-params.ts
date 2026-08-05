@@ -74,7 +74,7 @@ function clauseFor(
           : typeof value === "number"
             ? value
             : Number(value);
-        return `${field}/id ${op} ${relId}`;
+        return `${field} ${op} ${relId}`;
       }
       if (variant === "number" || variant === "range") {
         return `${field} ${op} ${Number(value)}`;

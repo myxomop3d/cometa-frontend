@@ -116,7 +116,7 @@ export function buildFilterParams({
       case "relation": {
         const relId = value as number | undefined;
         if (relId !== undefined && relId !== null) {
-          clauses.push(`${field}/id eq ${Number(relId)}`);
+          clauses.push(`${field} eq ${Number(relId)}`);
         }
         break;
       }

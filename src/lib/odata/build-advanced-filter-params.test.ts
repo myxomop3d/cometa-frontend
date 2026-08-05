@@ -9,7 +9,7 @@ const fieldByColumnId = {
   tags:      { field: "tags",      variant: "multiSelect" as const },
   checkbox:  { field: "checkbox",  variant: "boolean" as const },
   dateStr:   { field: "dateStr",   variant: "dateRange" as const },
-  item:      { field: "item",      variant: "relation" as const },
+  item:      { field: "itemId",    variant: "relation" as const },
   things:    { field: "things",    variant: "multiRelation" as const },
 };
 
@@ -96,11 +96,11 @@ describe("buildAdvancedFilterParams", () => {
     expect(p.get("$filter")).toBe("checkbox eq true");
   });
 
-  it("relation eq/ne uses field/id eq N", () => {
+  it("relation eq/ne compares the flat scalar field", () => {
     const p = build([
       { id: "item", operator: "eq", value: { id: 7, label: "Seven" } },
     ]);
-    expect(p.get("$filter")).toBe("item/id eq 7");
+    expect(p.get("$filter")).toBe("itemId eq 7");
   });
 
   it("multiRelation inArray -> field/any(x: x/id in (...))", () => {
