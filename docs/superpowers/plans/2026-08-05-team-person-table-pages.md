@@ -458,7 +458,7 @@ export function personFormToPatch(
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/features/person/mappers.test.ts`
-Expected: PASS, 5 tests.
+Expected: PASS, 6 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -1080,7 +1080,7 @@ const navItems = [
 - [ ] **Step 4: Regenerate the route tree and type-check**
 
 Run: `npx tsc -b`
-Expected: may fail first with "/person/" not assignable — the route tree has not regenerated yet. If so, run `npm run build` once (which runs the router plugin), then re-run `npx tsc -b`.
+Expected: may fail first with "/person/" not assignable — the route tree has not regenerated yet. If so, run `npx vite build` once (`npm run build` runs `tsc -b && vite build`, so it short-circuits on the very type error the regeneration is meant to fix; `npx vite build` alone runs the router plugin without that gate), then re-run `npx tsc -b`.
 Expected after regeneration: exits 0.
 
 - [ ] **Step 5: Verify in the browser**
@@ -1191,7 +1191,7 @@ Leave the `multiRelation` case exactly as it is.
 - [ ] **Step 4: Run to verify it passes**
 
 Run: `npx vitest run src/lib/odata/build-filter-params.test.ts`
-Expected: PASS, 5 tests.
+Expected: PASS, 4 tests.
 
 - [ ] **Step 5: Update the advanced builder**
 
@@ -1579,16 +1579,8 @@ export interface CreateCrudApiOptions {
 }
 ```
 
-and destructure it:
+and add `staticParams` to the destructured parameter list so the signature reads:
 
-```ts
-}: CreateCrudApiOptions) {
-```
-becomes
-```ts
-}: CreateCrudApiOptions) {
-```
-with the parameter list above it updated to
 ```ts
 export function createCrudApi<
   TDto extends { id: number },
@@ -2072,6 +2064,10 @@ export function deriveColumnFiltersFromSearch(
 
 `leaderId` is required; the rest are nullable, matching the entity.
 
+This repo runs zod 4.3.6, which removed the option-object error keys
+(`invalid_type_error`, `required_error`) in favour of a single unified
+`{ error: "..." }`:
+
 ```ts
 import { z } from "zod";
 
@@ -2081,14 +2077,14 @@ export const teamFormSchema = z.object({
     .nullable()
     .transform((v) => (v === "" ? null : v)),
   code: z
-    .number({ invalid_type_error: "Code must be a number" })
+    .number({ error: "Code must be a number" })
     .nullable(),
   type: z
     .string()
     .nullable()
     .transform((v) => (v === "" ? null : v)),
   leaderId: z
-    .number({ required_error: "Leader is required" })
+    .number({ error: "Leader is required" })
     .int()
     .positive("Leader is required"),
   leaderRole: z
@@ -2252,7 +2248,7 @@ const dto: TeamDto = {
   type: "CHANGE",
   leaderId: 7,
   leader: {
-    id: 7,
+    id: 99,
     insertedAt: null,
     updatedAt: null,
     email: "ivanov@example.com",
@@ -2280,7 +2276,7 @@ describe("teamDtoToForm", () => {
 
   it("falls back to the nested leader id when the scalar is null", () => {
     const withoutScalar: TeamDto = { ...dto, leaderId: null };
-    expect(teamDtoToForm(withoutScalar).leaderId).toBe(7);
+    expect(teamDtoToForm(withoutScalar).leaderId).toBe(99);
   });
 
   it("yields leaderId 0 when neither is present, so the form flags it required", () => {
@@ -3142,7 +3138,7 @@ In `src/components/app-sidebar.tsx`, add `{ to: "/team", label: "Teams" }` direc
 - [ ] **Step 4: Type-check**
 
 Run: `npx tsc -b`
-Expected: exits 0. If `/team/` is not a known route, run `npm run build` once to regenerate `routeTree.gen.ts`, then re-run.
+Expected: exits 0. If `/team/` is not a known route, run `npx vite build` once to regenerate `routeTree.gen.ts` (not `npm run build` — that's `tsc -b && vite build`, which short-circuits on the very type error the regeneration is meant to fix), then re-run.
 
 - [ ] **Step 5: Full suite and lint**
 

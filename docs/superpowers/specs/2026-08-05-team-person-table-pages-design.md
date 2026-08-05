@@ -70,7 +70,7 @@ New `src/features/person/`, mirroring `src/features/flow/`:
 
 | File | Contents |
 |---|---|
-| `api.ts` | `createCrudApi<PersonDto, PersonFilters, PersonWritePayload>({ basePath: "/api/v1/person", queryKey: ["persons"], filterDescriptors })` plus `comboboxQueryOptions` and `detailQueryOptions` (needed by Team's leader picker in Phase 4) |
+| `api.ts` | `createCrudApi<PersonDto, PersonFilters, PersonWritePayload>({ basePath: "/api/v1/person", queryKey: ["persons"], filterDescriptors })` plus `comboboxQueryOptions` and `detailQueryOptions` (needed by Team's leader picker in Phase 4); also `personsFilteredQueryOptions` / `fetchPersonsFiltered`, a separate query-options factory serving `RelationPicker`'s `{ name?, ids?, page?, pageSize? }` contract, distinct from the `listQueryOptions` that `createCrudApi` generates (which takes `PersonFilters` and emits plain key=value params). Modeled on `fetchItemsFiltered` in `src/api/item.ts`; consumed by Team's Leader column filter in Phase 4. |
 | `advanced-api.ts` | `personFieldByColumnId` + `advancedDataTableQueryOptions` |
 | `columns.tsx` | `select`, `id`, `email`, `lastName`, `firstName`, `middleName`, `actions` |
 | `filter-descriptors.ts` | four `text` descriptors + `deriveColumnFiltersFromSearch` |
@@ -92,8 +92,9 @@ mirroring `FlowFilters`).
 Sidebar (`src/components/app-sidebar.tsx`): add
 `{ to: "/person", label: "Persons" }`.
 
-**Acceptance:** `/person` serves a switchable page, both modes work, CRUD round-trips
-against the real backend, `tsc -b` clean, vitest green.
+**Acceptance:** `/person` serves a switchable page, both modes work, create/edit
+round-trip against the real backend (no delete, per the Goal), `tsc -b` clean,
+vitest green.
 
 ## Phase 2 — Shared filter infrastructure
 
@@ -280,7 +281,11 @@ New files in the existing `src/features/team/`, matching the Person set, plus:
   untouched. List queries carry `staticParams: { fields: "leader" }`.
 - **`columns.tsx`:** `select`, `id`, `name`, `code`, `type`, `leader`,
   `leaderRole`, `structure`, `actions`. The `leader` cell renders
-  `row.leader` (nested `PersonDto`), falling back to `—`.
+  `row.leader` (nested `PersonDto`), falling back to `—`. The `leader` column's
+  filter widget is configured via `meta.relationConfig`, whose
+  `queryOptionsFn` is Phase 1's `personsFilteredQueryOptions` — the same
+  factory the Leader column filter in both simple and advanced mode goes
+  through.
 - **`filter-descriptors.ts`:**
   ```ts
   { id: "name",       variant: "text",       filterKey: "name" },
@@ -310,8 +315,8 @@ exist and is added.
 Sidebar: add `{ to: "/team", label: "Teams" }`.
 
 **Acceptance:** `/team` serves a switchable page, both modes work, leader filter
-and (if check 4 passed) leader sort work, create/edit/delete round-trip against
-the real backend, `tsc -b` clean, vitest green.
+and (if check 4 passed) leader sort work, create/edit round-trip against the
+real backend (no delete, per the Goal), `tsc -b` clean, vitest green.
 
 ## Error handling
 
@@ -340,6 +345,7 @@ field lists. Three cases specific to this work:
 | `lib/odata/build-filter-params.test.ts` | **new file** — the simple builder is currently untested and its `relation` case is changing; cover `relation` and `sortField` at minimum |
 | `sortField` translation | new cases in both builders — `sort=leader.asc` → `$orderby=leader.lastName asc` |
 | `mocks/lib/odata.test.ts` | update for the `itemId` / `oldItemId` fixture fields |
+| `mocks/data/boxes.test.ts` | new — end-to-end through the mock OData engine: derives `itemId`/`oldItemId` from the nested `item`/`oldItem` on every fixture row, then filters on the flat scalars (`itemId eq N`, `oldItemId eq N`) and on `things/any(...)` via `applyOData` directly |
 
 Backend verification is manual — see Phase 3.
 
@@ -353,8 +359,16 @@ Backend verification is manual — see Phase 3.
   (`"Операторы any/all пока не поддерживаются"`). Out of scope here.
 - **Person's `teams` M2M is not exposed** on `PersonDto` and is not surfaced on
   `/person`. Adding it is a separate piece of work gated on the point above.
-- **Leader sort depends on Phase 3 check 4.** If that check fails the column ships
-  non-sortable.
+- **Phase 3 check 4 (leader sort against a running backend) is still outstanding
+  as of this commit.** It requires a running backend and is pending with the
+  human partner; no outcome should be assumed either way. The leader column
+  currently ships sortable: `src/features/team/filter-descriptors.ts` and
+  `src/features/team/advanced-api.ts` both set `sortField: "leader.lastName"`
+  on the `leader` entry, and `src/features/team/columns.tsx` sets
+  `enableSorting: true` on the `leader` column. If check 4 fails, the reversal
+  is exactly three edits: drop `sortField` from the `leader` entry in
+  `filter-descriptors.ts` and in `advanced-api.ts`, and set
+  `enableSorting: false` on the `leader` column in `columns.tsx`.
 - **No delete UI**, per the Goal. One consequence is worth recording for whenever
   delete is added: `leader_person_id` is `NOT NULL` with no cascade, so deleting a
   Person who leads a Team will fail at the DB with an FK violation. A useful
