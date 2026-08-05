@@ -152,7 +152,10 @@ The URL carries `sort=leader.asc`; the request carries
 ### `staticParams`
 
 `CreateCrudApiOptions` gains optional `staticParams?: Record<string, string>`,
-merged into the built `URLSearchParams`. Needed for Team's `?fields=leader`.
+merged into the built `URLSearchParams`. Needed for Team's `$fields=leader`
+against `/api/v1/team/graph` (see Phase 3 — the plain `/api/v1/team` route
+and an unprefixed `fields` parameter do not trigger the entity-graph fetch;
+`$fields` against the `/graph` sub-path is required).
 `advanced-api.ts` needs the same treatment. No change for existing callers.
 
 **Acceptance:** `/box-dice` relation filters still work against the mock;
@@ -236,8 +239,20 @@ name-matches `dto.leaderId → entity.leaderId`, which Hibernate discards as
 `target = "leader"` is what makes the write land.
 
 `@Condition` guards only the nested `leader`; `leaderId` reads off the scalar, so
-it is populated on every response. `?fields=leader` is needed only for the nested
-object that renders the name.
+it is populated on every response. `GET /api/v1/team/graph?$fields=leader` is
+needed only for the nested object that renders the name (see Manual
+verification below — the plain `/api/v1/team` route and an unprefixed `fields`
+parameter were tried first and do not work).
+
+**Write-response caveat, verified 2026-08-05 (see Manual verification below):**
+because `leaderId` is `insertable = false, updatable = false`, Hibernate does
+not re-read it within the same persistence context after a write. A
+successful `POST`/`PATCH` response body carries a **stale** `leaderId`/`leader`
+(`null` right after create, the pre-change value right after an update) even
+though the database was updated correctly. This is expected behavior, not a
+bug — callers needing the post-write value must re-fetch (plain `GET` for
+`leaderId`, `/graph?$fields=leader` for the nested object). See
+`issue/relationSorting.md` for the full write-then-read transcript.
 
 `nullValuePropertyMappingStrategy = IGNORE` (from `CometaCommonMapperConfig`)
 means a PATCH omitting `leaderId` will not null the leader — correct for a
@@ -249,27 +264,66 @@ is not exposed to the known MapStruct corruption trap. Keep it.
 ### Manual verification
 
 The backend module has no integration-test harness (6 test files total) and
-building one is out of scope. Four checks against the running backend, in order:
+building one is out of scope. Four checks were planned against the running
+backend. **All four have since resolved — three by direct execution against a
+live backend on 2026-08-05, the fourth by a decision that made execution
+unnecessary.** Full transcript:
+`.superpowers/sdd/2026-08-05-team-person-table-pages/task-11-verification-report.md`.
 
 1. `POST /api/v1/team` with `leaderId` → row persists with the correct
    `leader_person_id`. Proves the MapStruct write path.
-2. `GET /api/v1/team?fields=leader` → nested `leader` populated, `leaderId`
-   present.
+   **PASS.** `POST` with `leaderId: 30` created a row; direct SQL immediately
+   after confirmed `leader_person_id = 30`. The response body itself showed a
+   stale `leaderId: null` — expected, see the write-response caveat above, not
+   a failure. **Additionally verified, not originally planned:** `PATCH
+   /api/v1/team/{id}` with `{"leaderId": 31}` moved `leader_person_id` from 30
+   to 31 in the DB (confirmed by direct SQL), proving `update`'s
+   `@Mapping(target="leader", source="leaderId")` /
+   `@Mapping(target="leaderId", ignore=true)` pair works identically to
+   `fromDto`'s on create.
+2. `GET /api/v1/team/graph?$top=5&$fields=leader` → nested `leader` populated,
+   `leaderId` present. **PASS.** (This item originally read `GET
+   /api/v1/team?fields=leader` — that endpoint/parameter combination was
+   wrong and never worked; see `issue/relationSorting.md` finding 7 for the
+   full story and the fix applied to `src/features/team/api.ts` /
+   `advanced-api.ts`.) All 5 sampled rows returned a fully populated `leader`
+   object. Plain `GET /api/v1/team` returns `leader: null` on every row with
+   `leaderId` populated, as designed. `/graph` **without** `$fields=leader`
+   also returns `leader: null` — both the sub-path and the parameter are
+   required together, neither alone is sufficient.
 3. `GET /api/v1/team?$filter=leaderId eq N` → filters correctly **and returns a
-   correct `count`**. This is the count-query check.
+   correct `count`**. This is the count-query check. **PASS.** Verified
+   against three different leader ids with 0, 1, and 19 matching teams;
+   `count` matched a direct `SELECT count(*) ... WHERE leader_person_id = N`
+   exactly in all three cases. No 500s, no fetch-join-in-count-query error.
 4. `GET /api/v1/team?$orderby=leader.lastName asc&fields=leader` → exercises two
    hazards: `getOrderList` runs in the `ODataCriteriaService` constructor and
    calls `root.fetch("leader")`, while `getQuery()` separately runs
    `getFetchTablesSet().forEach(root::fetch)` — potentially a duplicate join; and
    `ODataOrderbyHelper.parseTreeWalk` does a post-order walk that `put`s one order
    entry per matching node, so a two-segment path may register two entries.
+   **Superseded, never executed.** The human partner decided to disable leader
+   sorting outright before this check was run — reading the OData library's
+   source showed `$orderby=leader.lastName` cannot even pass
+   `ODataChecker.checkFields` (it accepts only flat entity field names or
+   `@ODataMapping` aliases, and `TeamDto` has neither for `leader.lastName`),
+   so there was nothing to gain by probing the two deeper hazards this check
+   was meant to catch. Those two hazards remain genuinely unverified — see
+   `issue/relationSorting.md` finding 3. See Known Limitations below for the
+   sorting decision.
 
-**Check 4 is the most likely to fail.** If it does, the fallback is
-`enableSorting: false` on the Leader column, which costs nothing else in the
-design — filtering is unaffected because it uses the flat scalar.
+**Also verified, added after the original four** (raised by
+`issue/relationSorting.md` finding 5 during the investigation into check 4):
+the enum-typed `type` filter. `$filter=type eq 'CHANGE'` returned `count: 85`,
+`$filter=type eq 'RUN'` returned `count: 26`, both matching a direct `SELECT
+type, count(*) FROM gmsb.team GROUP BY type` exactly. This had been flagged as
+a risk because `ODataFilterHelper`'s literal-coercion switch has no explicit
+`enum` branch, but it works correctly; the mechanism was not determined (see
+`issue/relationSorting.md` finding 5 — don't invent an explanation elsewhere).
 
-**Acceptance:** all four checks pass, or check 4 fails and the Leader column is
-marked non-sortable with the reason recorded.
+**Acceptance:** all four checks resolve — checks 1–3 pass directly, check 4 is
+superseded by the sorting-disable decision — and the Leader column is marked
+non-sortable with the reason recorded (see Known Limitations).
 
 ## Phase 4 — `/team`
 
@@ -278,7 +332,14 @@ New files in the existing `src/features/team/`, matching the Person set, plus:
 - **`api.ts` is extended, not replaced.** `createCrudApi` and
   `advancedDataTableQueryOptions` are added alongside the existing
   `comboboxQueryOptions` / `detailQueryOptions`, so the registration flow is
-  untouched. List queries carry `staticParams: { fields: "leader" }`.
+  untouched. List operations (`fetchList`/`fetchDataTable`, via a `listPath`
+  option on `createCrudApi`) target `/api/v1/team/graph` and carry
+  `staticParams: { "$fields": "leader" }`; `create`/`patch`/`fetchOne`/`remove`
+  keep `basePath: "/api/v1/team"` (the `/graph` route is read-only). This was
+  corrected from an earlier `{ fields: "leader" }` against the plain
+  `/api/v1/team` route, which silently never triggered the entity-graph fetch
+  — see `issue/relationSorting.md` finding 7 and the Manual verification
+  section above.
 - **`columns.tsx`:** `select`, `id`, `name`, `code`, `type`, `leader`,
   `leaderRole`, `structure`, `actions`. The `leader` cell renders
   `row.leader` (nested `PersonDto`), falling back to `—`. The `leader` column's
@@ -315,8 +376,9 @@ exist and is added.
 Sidebar: add `{ to: "/team", label: "Teams" }`.
 
 **Acceptance:** `/team` serves a switchable page, both modes work, leader filter
-and (if check 4 passed) leader sort work, create/edit round-trip against the
-real backend (no delete, per the Goal), `tsc -b` clean, vitest green.
+works (leader sort is disabled by decision, not attempted — see Known
+Limitations), create/edit round-trip against the real backend (no delete, per
+the Goal), `tsc -b` clean, vitest green.
 
 ## Error handling
 
@@ -359,16 +421,26 @@ Backend verification is manual — see Phase 3.
   (`"Операторы any/all пока не поддерживаются"`). Out of scope here.
 - **Person's `teams` M2M is not exposed** on `PersonDto` and is not surfaced on
   `/person`. Adding it is a separate piece of work gated on the point above.
-- **Phase 3 check 4 (leader sort against a running backend) is still outstanding
-  as of this commit.** It requires a running backend and is pending with the
-  human partner; no outcome should be assumed either way. The leader column
-  currently ships sortable: `src/features/team/filter-descriptors.ts` and
-  `src/features/team/advanced-api.ts` both set `sortField: "leader.lastName"`
-  on the `leader` entry, and `src/features/team/columns.tsx` sets
-  `enableSorting: true` on the `leader` column. If check 4 fails, the reversal
-  is exactly three edits: drop `sortField` from the `leader` entry in
-  `filter-descriptors.ts` and in `advanced-api.ts`, and set
-  `enableSorting: false` on the `leader` column in `columns.tsx`.
+- **Leader sorting is disabled by decision, and the reason is now known
+  precisely — this is settled, not outstanding.** The design above locked
+  "Leader column is sortable by `leader.lastName`," but that was never
+  reachable: `$orderby=leader.lastName` cannot pass
+  `ODataChecker.checkFields` (called from `OData2Jpql.parseOrderByConditions`
+  before any parse-tree walk happens), which accepts only flat entity field
+  names or fields registered via an `@ODataMapping(dtoField=...,
+  entityField=...)` alias on the DTO — `TeamDto` carries zero `@ODataMapping`
+  annotations, so `"leader.lastName"` matches neither and the request would
+  throw `FieldNotFoundException` before it is even parsed. The human partner
+  decided to disable sorting outright rather than add the `@ODataMapping`
+  alias that would be needed to make it legal (and even with that alias, two
+  further hazards — a possible duplicate fetch join and possible duplicate
+  order-map entries — remain unverified against a running server). Shipped
+  as: `sortField` removed from the `leader` entry in
+  `src/features/team/filter-descriptors.ts` and from `teamFieldByColumnId` in
+  `src/features/team/advanced-api.ts`, and `enableSorting: false` on the
+  `leader` column in `src/features/team/columns.tsx`. Filtering is unaffected
+  — it uses the flat `leaderId` scalar, a separate, verified-working
+  mechanism. Full analysis: `issue/relationSorting.md`, findings 2–4.
 - **No delete UI**, per the Goal. One consequence is worth recording for whenever
   delete is added: `leader_person_id` is `NOT NULL` with no cascade, so deleting a
   Person who leads a Team will fail at the DB with an FK violation. A useful

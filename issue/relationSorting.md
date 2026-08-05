@@ -14,6 +14,17 @@ the wrong endpoint (`/api/v1/team` instead of `/api/v1/team/graph`) with the
 wrong parameter name (`fields` instead of `$fields`), so the backend's
 entity-graph eager-fetch never applied. See finding 7.
 
+**Update, 2026-08-05 — live-backend verification pass.** A verification pass
+against a running backend has since settled two of this document's open
+items: finding 5 (enum-typed filter) now verified working, and finding 7 (the
+`/graph` + `$fields` repoint) now verified working end-to-end, including the
+detail that `/graph` without `$fields` still yields `leader: null`. It also
+surfaced a real, previously-undocumented gotcha — write responses (`POST`/
+`PATCH`) return a stale `leaderId`/`leader` — recorded as finding 8. Finding 3
+(nested-sort hazards) remains genuinely unverified; leader sorting is
+disabled, so nested sorting was never attempted. Full transcript:
+`.superpowers/sdd/2026-08-05-team-person-table-pages/task-11-verification-report.md`.
+
 ## How these findings were established
 
 All findings below come from reading the actual library source shipped in the
@@ -35,12 +46,17 @@ unzip odata-mini-filter-sort-2.0.3.jar -d out
 ```
 
 Findings 1, 2, 4, 6, and 7 are fully verified this way, cross-checked against
-what actually ships in the frontend and backend repos. Findings 3 and 5 are
-explicitly **not** verified against a running server — see each section.
-(Finding 3a's original text mis-stated the mechanism populating
-`fetchTablesSet`; it has since been corrected in place — the correction
-itself is source-verified, the underlying live-server caution in finding 3
-still stands.)
+what actually ships in the frontend and backend repos. Finding 7 has
+additionally been verified against a running server (2026-08-05, see its
+section). Finding 5 was originally source-read-only and flagged unverified;
+it has since been verified against a running server too (2026-08-05, see its
+section) — the source reading correctly identified the missing switch
+branch, but the live behavior contradicts the prediction built on it: the
+filter works. Finding 3 remains **not** verified against a running server —
+see its section. (Finding 3a's original text mis-stated the mechanism
+populating `fetchTablesSet`; it has since been corrected in place — the
+correction itself is source-verified, the underlying live-server caution in
+finding 3 still stands.)
 
 ---
 
@@ -206,7 +222,13 @@ filtered/sorted via `$orderby=leaderLastName asc`. This still leaves finding
 ## 3. Two further hazards the alias approach does NOT remove — unverified
 
 **Status: not verified against a running server. Needs a live backend before
-anyone relies on nested sorting, even via the `@ODataMapping` alias.**
+anyone relies on nested sorting, even via the `@ODataMapping` alias. This is
+the one item in this document still open** — a 2026-08-05 live-backend
+verification pass resolved findings 5 (enum filter) and 7 (graph endpoint
+repoint), both below, but never exercised nested sorting: leader sorting is
+disabled (see Status at the top of this document), so there was no live
+`$orderby=leader.lastName`-shaped request to observe. A future session
+picking this up should treat findings 5 and 7 as closed and start here.
 
 **a) Possible duplicate fetch join.** `ODataOrderby.getOrderList` runs
 inside the `ODataCriteriaService` constructor:
@@ -369,10 +391,12 @@ outright and leave this as a documented option for later.
 
 ---
 
-## 5. Enum-typed columns may not be filterable at all — unverified, affects a shipped page
+## 5. Enum-typed columns — verified working against a live backend, 2026-08-05
 
-**Status: unverified, and unlike findings 2–4 this affects functionality
-already merged and live on `/team`.**
+**Status: verified. `$filter=type eq 'CHANGE'` and `$filter=type eq 'RUN'`
+both work correctly against a running backend, with counts matching the
+database exactly. No workaround is needed — the `typeName` scalar proposed
+below was not built.**
 
 `ODataFilterHelper`'s literal-coercion logic
 (`addInValue` and `convertArgument`, and the dispatch in `getTypedPredicate`)
@@ -399,8 +423,14 @@ private Predicate getTypedPredicate(CriteriaBuilder cb, Map<ExpressionPart, Obje
 }
 ```
 
-There is no `enum` (or specific `TeamType`) branch. Any Java `enum`-typed
-JPA attribute hits the `default` branch and throws `ConflictException`.
+There is no `enum` (or specific `TeamType`) branch, so the code reads as
+though any Java `enum`-typed JPA attribute must hit the `default` branch and
+throw `ConflictException`. **It does not, in practice — see the live result
+below.** The observation about the missing branch is still accurate and kept
+here because it may matter for a differently-configured enum (e.g. plain
+`@Enumerated` without `EnumType.STRING`, or `EnumType.ORDINAL`) or a different
+operator than `eq` — if a future enum filter *does* fail, this switch is
+where to look first.
 
 `Team.type` is:
 
@@ -421,28 +451,39 @@ Every other `select`-variant filter currently in the codebase targets a
 plain `String` column — `flow.integrity`, `flow.confidentiality`,
 `flow.dataClass` (`src/features/flow/filter-descriptors.ts` /
 `src/features/flow/advanced-api.ts`) are all `String` fields, not JPA
-enums. There is no existing precedent in this codebase for filtering a
-`@Enumerated(EnumType.STRING)` attribute through this library, so it is not
-known whether `Expression.getJavaType()` for such an attribute resolves to
-the enum class (hitting the unhandled `default` branch and throwing) or to
-`String` (works fine) — that depends on how Hibernate's Criteria API reports
-the Java type for `@Enumerated(EnumType.STRING)` fields, which was not
-traced through Hibernate's own source as part of this investigation.
+enums. There was no existing precedent in this codebase for filtering a
+`@Enumerated(EnumType.STRING)` attribute through this library, so before
+live verification it was not known whether `Expression.getJavaType()` for
+such an attribute resolves to the enum class (hitting the unhandled
+`default` branch and throwing) or to `String` (works fine).
 
-**If it fails**, the mirror of finding 1's fix applies: add a read-only
-scalar column,
+**Live verification (2026-08-05,
+`.superpowers/sdd/2026-08-05-team-person-table-pages/task-11-verification-report.md`,
+Check 4):**
 
-```java
-@Column(name = "type", insertable = false, updatable = false)
-private String typeName;
+```
+GET /api/v1/team?$top=20&$filter=type eq 'CHANGE'  →  count: 85
+GET /api/v1/team?$top=20&$filter=type eq 'RUN'     →  count: 26
 ```
 
-on `Team`, and repoint the descriptor at `field: "typeName"`.
+Both matched `SELECT type, count(*) FROM gmsb.team GROUP BY type` exactly
+(`CHANGE: 85`, `RUN: 26`), and `85 + 26 = 111` accounts for every row in the
+table — no rows silently dropped or miscounted. No 500s, no
+`ConflictException`, for either of `TeamType`'s two values.
 
-**This is the one finding in this document that affects functionality
-already merged and shipped** — `$filter=type eq 'CHANGE'` on `/team` may
-currently be broken in production-equivalent conditions. It needs to be
-exercised against a running backend to know either way.
+**The prediction was wrong, and the mechanism was not determined.** Whether
+`Expression.getJavaType()` reports `String` for a
+`@Enumerated(EnumType.STRING)` attribute at the JPA Criteria level, or some
+other path bypasses `getTypedPredicate` entirely, was not traced through
+Hibernate's own source as part of this investigation. Do not invent an
+explanation beyond what was observed — record it as verified-working with
+the mechanism undetermined.
+
+**No workaround needed.** The `typeName` read-only-scalar mirror of finding
+1 that was proposed here as a fallback was not built and is not needed — the
+existing enum column filters correctly as-is. `$filter=type eq 'CHANGE'` on
+`/team` works today, verified against a live backend, not merely against the
+codebase's own mock.
 
 ---
 
@@ -507,7 +548,9 @@ for whoever adds a "filter people by team" feature and assumes
 
 **Status: verified in source, and this was the actual, confirmed root cause
 of the Leader column rendering "—" for every row. Fixed by repointing
-Team's list queries — see below.**
+Team's list queries — see below. Additionally verified against a running
+backend on 2026-08-05 — see "Live verification" at the end of this
+section.**
 
 The design assumed sending `?fields=leader` to the plain `GET /api/v1/team`
 route would make the backend eager-load the `leader` relation. It does not,
@@ -593,19 +636,83 @@ the plain `/api/v1/team` / `/api/v1/team/{id}` routes. The leader filter
 (`field: "leaderId"`, flat scalar, finding 1) and leader sorting
 (disabled, finding 2/4) are unrelated to this fix and were left alone.
 
+**Live verification (2026-08-05,
+`.superpowers/sdd/2026-08-05-team-person-table-pages/task-11-verification-report.md`,
+Check 2):**
+
+```
+GET /api/v1/team/graph?$top=5&$fields=leader   →  leader populated on all 5 rows
+GET /api/v1/team?$top=5                        →  leader: null on every row, leaderId populated
+GET /api/v1/team/graph?$top=5   (no $fields)   →  leader: null on every row
+```
+
+All five sampled rows on `/team/graph?$fields=leader` returned a fully
+populated nested `leader` object (`id`, `email`, `firstName`, `lastName`,
+`middleName`), matching the corresponding `leaderId`. The plain `/team`
+route confirmed the flat-scalar half still works independently (`leaderId`
+populated, `leader: null`, exactly as designed). The additional check —
+`/team/graph` **without** `$fields=leader` — also returned `leader: null` on
+every row. **Both halves of the fix are required together**: the `/graph`
+sub-path alone does not trigger the entity-graph fetch, and (per the fix
+above) neither does `$fields` against the plain `/team` route — only
+`/team/graph` *combined with* `$fields=leader` populates the relation.
+
+---
+
+## 8. Write responses (`POST`/`PATCH`) return a stale `leaderId`/`leader` — verified, not a bug
+
+**Status: verified against a running backend, 2026-08-05. Recorded here
+because, without this note, it reads exactly like a bug to the next person
+who calls these endpoints directly.**
+
+`Team.leaderId` is `insertable = false, updatable = false` (finding 1).
+Hibernate does not re-read a column mapped that way within the same
+persistence context after a write — so the DTO serialized into the same HTTP
+response as a `POST` or `PATCH` reflects the *pre-write* state of that field,
+not the value that was just written, even though the database itself was
+updated correctly.
+
+Observed
+(`.superpowers/sdd/2026-08-05-team-person-table-pages/task-11-verification-report.md`,
+Check 1):
+
+- `POST /api/v1/team` with `leaderId: 30` in the request body returned
+  `"leaderId":null,"leader":null` in the response — while a direct SQL check
+  immediately after confirmed `leader_person_id = 30` was persisted
+  correctly.
+- `PATCH /api/v1/team/{id}` with `{"leaderId":31}` (moving the leader from
+  30 to 31) returned `"leaderId":30` (the pre-PATCH value) in the response —
+  while a direct SQL check immediately after confirmed `leader_person_id`
+  had moved to `31`.
+
+Both are read-your-writes gaps in the response body only, not in what got
+persisted. This is exactly what the mapping (`insertable = false, updatable
+= false`) predicts, and it is not a defect — it is documented here so it
+does not need rediscovering.
+
+**Consequence for callers.** Never treat `leaderId`/`leader` in a `POST`/
+`PATCH` response body as confirmation of what was written. Re-fetch instead:
+a plain `GET` for the flat `leaderId`, or `GET .../graph?$fields=leader` for
+the nested object (finding 7). The frontend's own mutation flow already does
+this — it invalidates and refetches the list/detail query on a successful
+save — so this does not affect `/team` as shipped. It matters for anyone
+calling the API directly (scripts, manual testing, a future integration)
+who might otherwise read a stale response field as "the write didn't take."
+
 ---
 
 ## What a future session needs to decide
 
-In priority order, distinguishing what's verified (safe to act on directly)
-from what needs a running backend first:
+Updated 2026-08-05 after a live-backend verification pass resolved findings
+5 and 7. In priority order, distinguishing what's still open (needs a
+running backend) from what's already settled:
 
-1. **[Unverified, affects shipped code — verify first]** Does
-   `$filter=type eq 'CHANGE'` actually work against `Team.type`
-   (`@Enumerated(EnumType.STRING)`) today? Hit the running `/team/graph` API
-   (the frontend's actual list endpoint per finding 7's fix) with a type
-   filter and check for a `ConflictException` / 500. If it fails, ship the
-   `typeName` read-only-column mirror of finding 1.
+1. **[Unverified, needs a running server before relying on it — the one
+   open item]** Finding 3's two nested-sort hazards (possible duplicate
+   fetch join; possible duplicate/erroring order-map entries) were never
+   exercised — leader sorting is disabled by decision, so no live
+   `$orderby=leader.lastName`/`leaderLastName`-shaped request was ever sent.
+   Needed only if/when item 2 below is acted on.
 
 2. **[Verified mechanism, product decision]** Decide whether leader sorting
    should ever come back, and if so how:
@@ -614,10 +721,9 @@ from what needs a running backend first:
      in finding 4).
    - Correct-but-unverified: `@ODataMapping(dtoField="leaderLastName",
      entityField="leader.lastName")` on `TeamDto` + `sortField:
-     "leaderLastName"` — but only after finding 3's two hazards (duplicate
-     fetch, duplicate/erroring order-map entries) are exercised against a
-     running server against `/team/graph` with
-     `$fields=leader&$orderby=leaderLastName asc` together (both the
+     "leaderLastName"` — but only after finding 3's two hazards (item 1
+     above) are exercised against a running server against `/team/graph`
+     with `$fields=leader&$orderby=leaderLastName asc` together (both the
      entity-graph fetch and the `@ODataMapping`-driven order-by fetch would
      be live at once on that route).
 
@@ -633,8 +739,22 @@ from what needs a running backend first:
    flat `leaderId` scalar shipped and working. Listed here only as the
    precedent the above should follow.
 
-5. **[Already resolved, no action]** Finding 7 (wrong list endpoint/param) —
+5. **[Already resolved, no action]** Finding 5 (enum-typed `type` filter) —
+   verified working against a live backend 2026-08-05 (counts 85/26 matched
+   the DB exactly for `CHANGE`/`RUN`). No `typeName` workaround needed; the
+   missing switch branch remains a place to look if a *different* enum
+   filter ever fails, but `Team.type` itself is fine as shipped.
+
+6. **[Already resolved, no action]** Finding 7 (wrong list endpoint/param) —
    done, Team's list queries repointed at `/api/v1/team/graph` with
-   `$fields=leader`. This was the actual cause of the empty Leader column;
+   `$fields=leader`, and verified against a live backend 2026-08-05
+   (including the detail that `/graph` without `$fields` still returns
+   `leader: null`). This was the actual cause of the empty Leader column;
    findings 2–4 (sorting) remain separately disabled per this document's
    `Status` section.
+
+7. **[Documented behavior, no action needed]** Finding 8 (stale
+   `leaderId`/`leader` in `POST`/`PATCH` response bodies) — verified
+   2026-08-05, expected given the `insertable=false, updatable=false`
+   mapping, not a bug. Recorded so it doesn't get mistaken for one by a
+   future direct API caller.
