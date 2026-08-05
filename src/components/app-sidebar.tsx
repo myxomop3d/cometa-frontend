@@ -44,6 +44,7 @@ const navItems = [
   { to: "/flow-graph", label: "Flow Graph" },
   { to: "/flow", label: "Flows" },
   { to: "/person", label: "Persons" },
+  { to: "/team", label: "Teams" },
   { to: "/components", label: "Components" },
 ] as const;
 
