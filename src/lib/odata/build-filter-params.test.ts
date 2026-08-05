@@ -44,3 +44,37 @@ describe("buildFilterParams multiRelation", () => {
     expect(p.get("$filter")).toBe("things/any(x: x/id in (1,2))");
   });
 });
+
+describe("buildFilterParams $orderby", () => {
+  it("emits the column id when no sortField is configured", () => {
+    const p = build([], "name.asc");
+    expect(p.get("$orderby")).toBe("name asc");
+  });
+
+  it("substitutes sortField for the column id", () => {
+    const p = buildFilterParams({
+      page: 1,
+      pageSize: 10,
+      sort: "item.desc",
+      columnFilters: [],
+      descriptors: [
+        { id: "item", variant: "relation", field: "itemId", sortField: "item.name" },
+      ],
+    });
+    expect(p.get("$orderby")).toBe("item.name desc");
+  });
+
+  it("handles multiple sort parts", () => {
+    const p = buildFilterParams({
+      page: 1,
+      pageSize: 10,
+      sort: "item.asc,name.desc",
+      columnFilters: [],
+      descriptors: [
+        { id: "item", variant: "relation", field: "itemId", sortField: "item.name" },
+        { id: "name", variant: "text" },
+      ],
+    });
+    expect(p.get("$orderby")).toBe("item.name asc,name desc");
+  });
+});

@@ -7,6 +7,9 @@ import { odataString } from "./build-filter-params";
 
 export interface FieldEntry {
   field: string;
+  /** OData field used for $orderby, if different from `field`. May contain a
+   *  navigation path — only ever emitted, never parsed out of the URL. */
+  sortField?: string;
   variant: FilterVariant;
 }
 
@@ -173,7 +176,8 @@ export function buildAdvancedFilterParams({
       .split(",")
       .map((part) => {
         const [f, dir] = part.split(".");
-        return `${f} ${dir}`;
+        const entry = fieldByColumnId[f];
+        return `${entry?.sortField ?? f} ${dir}`;
       })
       .join(",");
     searchParams.set("$orderby", orderby);

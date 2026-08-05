@@ -14,6 +14,10 @@ export interface FilterDescriptor {
   id: string;
   /** OData field name, if different from id. */
   field?: string;
+  /** OData field used for $orderby, if different from the filter field.
+   *  May contain a navigation path (e.g. "leader.lastName") — it is only
+   *  ever emitted, never parsed out of the URL. */
+  sortField?: string;
   variant: FilterVariant;
 }
 
@@ -141,7 +145,8 @@ export function buildFilterParams({
       .split(",")
       .map((part) => {
         const [f, dir] = part.split(".");
-        return `${f} ${dir}`;
+        const desc = byId.get(f);
+        return `${desc?.sortField ?? f} ${dir}`;
       })
       .join(",");
     searchParams.set("$orderby", orderby);

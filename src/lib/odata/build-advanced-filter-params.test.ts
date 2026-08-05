@@ -202,3 +202,23 @@ describe("buildAdvancedFilterParams", () => {
     expect(p.get("$filter")).toBe("name eq 'y'");
   });
 });
+
+describe("buildAdvancedFilterParams $orderby", () => {
+  it("substitutes sortField for the column id", () => {
+    const p = buildAdvancedFilterParams({
+      page: 1,
+      pageSize: 10,
+      sort: "leader.asc",
+      filters: [],
+      joinOperator: "and",
+      fieldByColumnId: {
+        leader: {
+          field: "leaderId",
+          sortField: "leader.lastName",
+          variant: "relation",
+        },
+      },
+    });
+    expect(p.get("$orderby")).toBe("leader.lastName asc");
+  });
+});
