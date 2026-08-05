@@ -7,7 +7,12 @@
 
 Add `/person` and `/team` switchable table pages at full parity with `/flow`:
 simple and advanced filtering, sorting, pagination, column pinning/visibility,
-plus create, edit, and delete.
+plus create and edit.
+
+Parity with `/flow` means **no delete**. `/flow` and `/box-dice` expose Edit only;
+there is no delete UI anywhere in the feature pages and no `AlertDialog`
+component, and `createCrudApi.remove` has no caller. Adding one would establish a
+new shared pattern and is deliberately out of scope.
 
 Team requires a backend change first. `Team.leader` is a required
 `@ManyToOne` to `Person` (`leader_person_id NOT NULL`), but `TeamDto` exposes no
@@ -321,10 +326,6 @@ field lists. Three cases specific to this work:
   surfaces as an FK violation with no field `target`, rendering as a generic toast
   rather than an inline error. Accepted: the combobox only offers real persons.
   Switching to `em.find` with an explicit 404 would cost a query per save.
-- **Deleting a Person who leads a Team** — `leader_person_id` is `NOT NULL` with no
-  cascade, so the delete fails at the DB with an FK violation, surfaced as a
-  toast. A friendlier message ("this person leads N teams") would need a backend
-  pre-check; out of scope.
 - **Duplicate Team `(name, code)`** — the entity carries a `@UniqueConstraint` on
   the pair, so a collision fails at the DB. It arrives with no field `target` and
   renders as a generic toast rather than an inline error on either field.
@@ -354,3 +355,7 @@ Backend verification is manual — see Phase 3.
   `/person`. Adding it is a separate piece of work gated on the point above.
 - **Leader sort depends on Phase 3 check 4.** If that check fails the column ships
   non-sortable.
+- **No delete UI**, per the Goal. One consequence is worth recording for whenever
+  delete is added: `leader_person_id` is `NOT NULL` with no cascade, so deleting a
+  Person who leads a Team will fail at the DB with an FK violation. A useful
+  message ("this person leads N teams") would need a backend pre-check.
