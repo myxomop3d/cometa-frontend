@@ -8,9 +8,13 @@ import { advancedDataTableQueryOptions } from "./advanced-api";
 
 const baseApi = createCrudApi<TeamDto, TeamFilters, TeamWritePayload>({
   basePath: "/api/v1/team",
+  // Reads go through the entity-graph endpoint so the backend populates the
+  // nested `leader` relation; create/patch/fetchOne/remove stay on the plain
+  // resource path (`/graph` is read-only). See `issue/relationSorting.md`.
+  listPath: "/api/v1/team/graph",
   queryKey: ["teams"],
   filterDescriptors: teamFilterDescriptors,
-  staticParams: { fields: "leader" },
+  staticParams: { "$fields": "leader" },
 });
 
 /** Combobox options: server-side search — $top=20 + $filter over team name. */

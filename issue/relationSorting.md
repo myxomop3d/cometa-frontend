@@ -8,6 +8,12 @@ column; `sortField: "leader.lastName"` removed from both the descriptor and
 relation/enum-related OData hazard uncovered while investigating it, for a
 future session to act on.
 
+Separately, a scoped re-review found and fixed the actual root cause of the
+Leader column rendering empty on every row: Team's list queries were hitting
+the wrong endpoint (`/api/v1/team` instead of `/api/v1/team/graph`) with the
+wrong parameter name (`fields` instead of `$fields`), so the backend's
+entity-graph eager-fetch never applied. See finding 7.
+
 ## How these findings were established
 
 All findings below come from reading the actual library source shipped in the
@@ -28,9 +34,13 @@ unzip odata-mini-filter-sort-2.0.3.jar -d out
 # then read out/ru/sber/cs/core/odata/mini/repo/...
 ```
 
-Findings 1, 2, 4, and 6 are fully verified this way, cross-checked against
+Findings 1, 2, 4, 6, and 7 are fully verified this way, cross-checked against
 what actually ships in the frontend and backend repos. Findings 3 and 5 are
 explicitly **not** verified against a running server — see each section.
+(Finding 3a's original text mis-stated the mechanism populating
+`fetchTablesSet`; it has since been corrected in place — the correction
+itself is source-verified, the underlying live-server caution in finding 3
+still stands.)
 
 ---
 
@@ -222,15 +232,56 @@ public TypedQuery<T> getQuery() {
 }
 ```
 
-`fetchTablesSet` is populated from the `?fields=` query parameter (the Team
-API already sends `fields=leader` to eagerly load the leader relation for
-display — see `searchParams.set("fields", "leader")` in
-`src/features/team/advanced-api.ts`). A request carrying both `?fields=leader`
-and an `$orderby` over an aliased `leader.lastName` path would therefore call
-`root.fetch("leader")` twice on the same root — once from the orderby helper,
-once from `getFetchTablesSet().forEach`. Whether JPA/Hibernate tolerates a
-duplicate `fetch()` call on the same association (dedup, silently ignore, or
-error/duplicate join in generated SQL) has not been tested.
+**Correction (previously this section claimed `fetchTablesSet` came from
+`?fields=` — that was wrong and has been rewritten below):**
+
+`fetchTablesSet` is **not** populated from any query parameter, and
+`ODataParams` doesn't even have a `fields` constructor argument to populate
+it from. Its `@Builder` constructor
+(`ru.sber.cs.core.odata.mini.repo.odata.ODataParams`, odata-mini 2.0.3) takes
+`modelClass, dtoClass, skip, top, filter, orderby, parentIdMap` — no
+`fields` — and builds the set purely from annotations on `dtoClass`:
+
+```java
+var oDataMappings = !ObjectUtils.isEmpty(dtoClass)
+        && dtoClass.isAnnotationPresent(ODataMappings.class)
+        ? dtoClass.getAnnotation(ODataMappings.class)
+        : null;
+
+this.fetchTablesSet = ObjectUtils.isEmpty(oDataMappings)
+        ? new HashSet<>()
+        : Arrays.stream(oDataMappings.value())
+        .map(value -> {
+            String[] split = value.entityField().split("\\.");
+            return split.length > 0 ? split[0] : "";
+        })
+        .collect(Collectors.toSet());
+```
+
+`oDataMappings.value()` is the array of `@ODataMapping` entries inside the
+repeatable container `@ODataMappings` — so `fetchTablesSet` is built solely
+by reading `@ODataMapping(entityField = ...)` declarations on the DTO class
+and taking the first `.`-segment of each `entityField()`. `TeamDto`
+currently carries zero `@ODataMapping` annotations (see finding 2), so
+`fetchTablesSet` is the empty set on every request `/team` (or `/team/graph`)
+receives today — the `getQuery().oDataParams.getFetchTablesSet().forEach(root::fetch)`
+line is presently a no-op for Team, and always has been; no query parameter
+of any name feeds it.
+
+The actual mechanism that eager-loads `leader` for display is a completely
+separate code path: the graph-aware `GET /api/v1/team/graph` endpoint
+(`ODataEntityGraphReadApi`/`EntityGraphBaseCrudController`, see the new
+finding below) applies a JPA `EntityGraph` keyed off its own `$fields`
+request parameter, independent of `ODataParams`/`fetchTablesSet` entirely.
+So on today's actual list route (`/team/graph`), there is no fetch-join
+contention between `$orderby` and `$fields` — `fetchTablesSet` never
+contributes a fetch for Team regardless. If a future `@ODataMapping` alias is
+added to `TeamDto` for nested sorting (finding 2's sanctioned spelling), and
+its `entityField()` happens to name the same association the entity-graph
+`$fields` also loads, *that* combination — `@ODataMapping`-driven
+`fetchTablesSet` fetch vs. entity-graph fetch, both against the same root —
+is the one that would need checking for a duplicate/conflicting fetch. It
+remains untested either way.
 
 **b) Possible duplicate order entries.** `ODataOrderbyHelper.parseTreeWalk`
 (`ru.sber.cs.core.odata.mini.repo.odata.orderby.ODataOrderbyHelper`) is a
@@ -452,6 +503,98 @@ for whoever adds a "filter people by team" feature and assumes
 
 ---
 
+## 7. The Leader column was empty because Team's list queries hit the wrong endpoint and parameter (resolved — this was the actual root cause)
+
+**Status: verified in source, and this was the actual, confirmed root cause
+of the Leader column rendering "—" for every row. Fixed by repointing
+Team's list queries — see below.**
+
+The design assumed sending `?fields=leader` to the plain `GET /api/v1/team`
+route would make the backend eager-load the `leader` relation. It does not,
+for two independent reasons, both readable directly in
+`ru.sberbank.cib.gmbus.web.api.v1` in the backend repo:
+
+- **Wrong route.** `ODataEntityGraphReadApi` declares its graph-aware
+  `getAll`/`get` under `@GetMapping({"graph"})` / `@GetMapping({"graph/{id}"})`
+  — i.e. `GET /api/v1/<resource>/graph` and `GET /api/v1/<resource>/graph/{id}`,
+  not the base resource path. `GET /api/v1/team` never runs this code at
+  all.
+- **Wrong parameter name.** Even on the correct route, the parameter is
+  declared `@RequestParam(value = "$fields", required = false) String fields`
+  — the wire name is `$fields`, not `fields`.
+
+```java
+// ODataEntityGraphReadApi.java
+@GetMapping({"graph"})
+...
+default ResponseEntity<ResultObj<List<DTO>>> getAll(
+        @RequestParam(value = "$skip", defaultValue = "0", required = false) Integer skip,
+        @RequestParam(value = "$top", defaultValue = "0", required = false) Integer top,
+        @RequestParam(value = "$filter", required = false) String filter,
+        @RequestParam(value = "$orderby", required = false) String orderby,
+        @RequestParam(value = "$fields", required = false) String fields) {
+    ResultObj<List<DTO>> resultObj = new ResultObj();
+    resultObj.addMessages(new AppMessage[]{AppMessage.error("Операция не поддерживается")});
+    return ResponseFactory.create(HttpStatus.OK, resultObj);
+}
+```
+
+That default body — "Операция не поддерживается" ("operation not
+supported") — is exactly what runs for any controller that implements
+`ODataEntityGraphReadApi` without overriding it. `EntityGraphBaseCrudController`
+is the one class that does override both methods for real, delegating to
+`service.getAll(skip, top, filter, orderby, fields)`:
+
+```java
+// EntityGraphBaseCrudController.java
+public ResponseEntity<ResultObj<List<DTO>>> getAll(Integer skip, Integer top, String filter, String orderby, String fields) {
+    return ResponseFactory.create(HttpStatus.OK, this.service.getAll(skip, top, filter, orderby, fields));
+}
+```
+
+So whether `/<resource>/graph` actually *works* (functional entity graph) or
+silently returns the "not supported" message depends entirely on whether
+that resource's controller extends `EntityGraphBaseCrudController`. As of
+this writing, the controllers that do are: `TeamRestController`,
+`PersonRestController`, `NodeRestController`, `FlowRestController`,
+`LinkRestController`, and `AutomatedSystemRestController` (all in
+`cometa-web-module/src/main/java/ru/sberbank/cib/gmbus/web/api/v1/`). No
+other controller in that package implements `ODataEntityGraphReadApi` at
+all — e.g. `TopicRestController` declares its own plain `$fields`-taking
+`getAll`/`get` outside this interface entirely, so it isn't affected by
+either branch of this finding, and `Box`/`Item`/`Thing`-style resources have
+no `/graph` route to call in the first place.
+
+**The failure was silent, not an error.** `TeamMapper` guards the nested
+`leader` mapping with `@Condition isEntityLoaded(Person)`. When the graph
+never applies — whether because the request hit `/team` instead of
+`/team/graph`, or sent `fields` instead of `$fields` — `team.getLeader()`
+stays an uninitialized Hibernate proxy, the condition excludes it, and the
+mapper emits `leader: null`. No exception, no 4xx, no N+1 query storm to
+notice in logs — the response looks completely well-formed, just with an
+empty relation. The Leader column rendered "—" for every row precisely
+because of this: it looked exactly like "the backend just doesn't have this
+data," not "the frontend called the wrong endpoint." Any future DTO that
+adds a nested relation gated the same way will hit this identically, and
+will be just as easy to misdiagnose.
+
+**Fix applied:** `src/features/team/api.ts` now gives the list operations
+(`fetchList`/`fetchDataTable`, via a new `listPath` option on
+`createCrudApi`) `/api/v1/team/graph` while `create`/`patch`/`fetchOne`/
+`remove` keep using `basePath: "/api/v1/team"` (the `/graph` route is
+read-only). `staticParams` changed from `{ fields: "leader" }` to
+`{ "$fields": "leader" }`. `src/features/team/advanced-api.ts` changed its
+URL from `/api/v1/team?...` to `/api/v1/team/graph?...` and
+`searchParams.set("fields", "leader")` to `searchParams.set("$fields",
+"leader")`. `comboboxQueryOptions` and `detailQueryOptions` in
+`src/features/team/api.ts` are intentionally untouched — they serve the
+user-registration flow, never needed the leader relation, and keep hitting
+the plain `/api/v1/team` / `/api/v1/team/{id}` routes. The leader filter
+(`field: "leaderId"`, flat scalar, finding 1) and leader sorting
+(disabled, finding 2/4) are unrelated to this fix and were left alone.
+
+---
+
 ## What a future session needs to decide
 
 In priority order, distinguishing what's verified (safe to act on directly)
@@ -459,9 +602,10 @@ from what needs a running backend first:
 
 1. **[Unverified, affects shipped code — verify first]** Does
    `$filter=type eq 'CHANGE'` actually work against `Team.type`
-   (`@Enumerated(EnumType.STRING)`) today? Hit the running `/team` API with a
-   type filter and check for a `ConflictException` / 500. If it fails, ship
-   the `typeName` read-only-column mirror of finding 1.
+   (`@Enumerated(EnumType.STRING)`) today? Hit the running `/team/graph` API
+   (the frontend's actual list endpoint per finding 7's fix) with a type
+   filter and check for a `ConflictException` / 500. If it fails, ship the
+   `typeName` read-only-column mirror of finding 1.
 
 2. **[Verified mechanism, product decision]** Decide whether leader sorting
    should ever come back, and if so how:
@@ -472,8 +616,10 @@ from what needs a running backend first:
      entityField="leader.lastName")` on `TeamDto` + `sortField:
      "leaderLastName"` — but only after finding 3's two hazards (duplicate
      fetch, duplicate/erroring order-map entries) are exercised against a
-     running server with `?fields=leader&$orderby=leaderLastName asc`
-     together.
+     running server against `/team/graph` with
+     `$fields=leader&$orderby=leaderLastName asc` together (both the
+     entity-graph fetch and the `@ODataMapping`-driven order-by fetch would
+     be live at once on that route).
 
 3. **[Unverified, no live consumer yet — verify before building on it]**
    Before adding any `multiRelation` filter against a real backend
@@ -486,3 +632,9 @@ from what needs a running backend first:
 4. **[Already resolved, no action]** Finding 1 (nested `$filter`) — done,
    flat `leaderId` scalar shipped and working. Listed here only as the
    precedent the above should follow.
+
+5. **[Already resolved, no action]** Finding 7 (wrong list endpoint/param) —
+   done, Team's list queries repointed at `/api/v1/team/graph` with
+   `$fields=leader`. This was the actual cause of the empty Leader column;
+   findings 2–4 (sorting) remain separately disabled per this document's
+   `Status` section.

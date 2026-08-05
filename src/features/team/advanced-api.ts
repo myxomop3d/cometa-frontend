@@ -42,9 +42,9 @@ export function advancedDataTableQueryOptions(
         ...params,
         fieldByColumnId: teamFieldByColumnId,
       });
-      searchParams.set("fields", "leader");
+      searchParams.set("$fields", "leader");
       return apiFetch<ApiResponse<TeamDto[]>>(
-        `/api/v1/team?${searchParams.toString()}`,
+        `/api/v1/team/graph?${searchParams.toString()}`,
       );
     },
     placeholderData: keepPreviousData,

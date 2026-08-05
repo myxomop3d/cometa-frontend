@@ -54,11 +54,16 @@ export interface DataTableQueryParams {
 
 export interface CreateCrudApiOptions {
   basePath: string;
+  /** Path used for list reads (`fetchList` / `fetchDataTable`) only.
+   *  Defaults to `basePath`. Use this when the list needs to hit a
+   *  read-only entity-graph endpoint (e.g. `/api/v1/team/graph`) while
+   *  `create`/`patch`/`fetchOne`/`remove` keep targeting `basePath`. */
+  listPath?: string;
   /** Root queryKey, e.g. `["boxes"]`. Sub-keys are appended per operation. */
   queryKey: readonly unknown[];
   /** Filter descriptors used by dataTableQueryOptions. */
   filterDescriptors: readonly FilterDescriptor[];
-  /** Query params appended to every list request, e.g. `{ fields: "leader" }`
+  /** Query params appended to every list request, e.g. `{ "$fields": "leader" }`
    *  to make the backend eager-fetch a relation via its entity graph. */
   staticParams?: Record<string, string>;
 }
@@ -67,7 +72,9 @@ export function createCrudApi<
   TDto extends { id: number },
   TFilters extends object,
   TWritePayload,
->({ basePath, queryKey, filterDescriptors, staticParams }: CreateCrudApiOptions) {
+>({ basePath, listPath, queryKey, filterDescriptors, staticParams }: CreateCrudApiOptions) {
+  const resolvedListPath = listPath ?? basePath;
+
   async function fetchList(
     filters: TFilters = {} as TFilters,
   ): Promise<ApiResponse<TDto[]>> {
@@ -83,7 +90,7 @@ export function createCrudApi<
     for (const [k, v] of Object.entries(staticParams ?? {})) {
       params.set(k, v);
     }
-    return apiFetch<ApiResponse<TDto[]>>(`${basePath}?${params}`);
+    return apiFetch<ApiResponse<TDto[]>>(`${resolvedListPath}?${params}`);
   }
 
   async function fetchOne(id: number): Promise<ApiResponse<TDto>> {
@@ -126,7 +133,7 @@ export function createCrudApi<
       searchParams.set(k, v);
     }
     return apiFetch<ApiResponse<TDto[]>>(
-      `${basePath}?${searchParams.toString()}`,
+      `${resolvedListPath}?${searchParams.toString()}`,
     );
   }
 
