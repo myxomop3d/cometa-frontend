@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForbiddenRouteImport } from './routes/forbidden'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PersonIndexRouteImport } from './routes/person/index'
 import { Route as FlowIndexRouteImport } from './routes/flow/index'
 import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
@@ -38,6 +39,11 @@ const ForbiddenRoute = ForbiddenRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PersonIndexRoute = PersonIndexRouteImport.update({
+  id: '/person/',
+  path: '/person/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FlowIndexRoute = FlowIndexRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/components/': typeof ComponentsIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
+  '/person/': typeof PersonIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/components': typeof ComponentsIndexRoute
   '/flow-graph': typeof FlowGraphIndexRoute
   '/flow': typeof FlowIndexRoute
+  '/person': typeof PersonIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/components/': typeof ComponentsIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
+  '/person/': typeof PersonIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/components/'
     | '/flow-graph/'
     | '/flow/'
+    | '/person/'
     | '/auth/cert/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/flow-graph'
     | '/flow'
+    | '/person'
     | '/auth/cert/callback'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/components/'
     | '/flow-graph/'
     | '/flow/'
+    | '/person/'
     | '/auth/cert/callback'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   ComponentsIndexRoute: typeof ComponentsIndexRoute
   FlowGraphIndexRoute: typeof FlowGraphIndexRoute
   FlowIndexRoute: typeof FlowIndexRoute
+  PersonIndexRoute: typeof PersonIndexRoute
   AuthCertCallbackRoute: typeof AuthCertCallbackRoute
 }
 
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/person/': {
+      id: '/person/'
+      path: '/person'
+      fullPath: '/person/'
+      preLoaderRoute: typeof PersonIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/flow/': {
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComponentsIndexRoute: ComponentsIndexRoute,
   FlowGraphIndexRoute: FlowGraphIndexRoute,
   FlowIndexRoute: FlowIndexRoute,
+  PersonIndexRoute: PersonIndexRoute,
   AuthCertCallbackRoute: AuthCertCallbackRoute,
 }
 export const routeTree = rootRouteImport
