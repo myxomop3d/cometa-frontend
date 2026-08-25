@@ -50,6 +50,7 @@ stand-in entities. Not inferred from source reading.
 | `teams/any(t: t/id eq 5)` | — | **ANTLR parse error** (1-char lambda variable) |
 | `teams/any(Teams: Teams/id eq 5)` | pass | `EXISTS (SELECT Teams FROM Person.teams Teams WHERE Teams.id = 5)` |
 | `type eq 'CHANGE'` (enum) | pass | `Team.type = 'CHANGE'` |
+| any clause *following* an `any()` | pass | **root alias corrupted — see §2.1** |
 
 Three mechanisms explain the table:
 
@@ -74,8 +75,9 @@ Three mechanisms explain the table:
 Point 3 is likely why a raw `release/dateProduction desc` works on another
 project: that project almost certainly runs `throw-on-field-not-found: false`,
 and Hibernate resolves the unqualified path against the single root. That is
-leaning on Hibernate's implicit-root resolution, not on the library behaving
-correctly, and it will break the moment a query has more than one root.
+leaning on Hibernate's implicit-root resolution rather than on the library
+emitting a correct path. Under cometa's strict default the question never
+arises — such a spelling dies at `checkFields` long before Hibernate sees it.
 
 `$fields` is orthogonal to all of this. It feeds cometa's own
 `CometaEntityGraph` (`EntityGraphBaseCrudService.parseFields`) to shape the
@@ -160,6 +162,58 @@ $filter=teams/any(Teams: Teams/id in (1,2))
   This is why the samples annotate `status.*` but never `items`.
 - Count-safe: `count(ODataFilter)` reuses `getWhereJpql()`, and an `EXISTS`
   subquery carries no fetch join.
+- **At most one `any()` per `$filter`, and it must be emitted last** — see the
+  library bug in §2.1.
+
+### 2.1 Library bug: `any()` corrupts the root alias for every later clause
+
+`OData2JpqlExpressionVisitor:135` declares
+
+```java
+Queue<String> bindVariables = new ArrayDeque<>();
+```
+
+and uses it as a *stack*. `add()` appends at the tail while `peek()`/`remove()`
+read and remove at the **head**. `visitAnyClause` pushes the lambda variable
+with `add()` then pops with `remove()` — which evicts the **root** bind
+variable, not the lambda variable it just added. Every clause parsed after the
+first `any()` therefore takes the lambda variable as its root. A `Deque` used
+with `push`/`pop` would be correct.
+
+Verified output:
+
+```
+teams/any(Teams: Teams/id eq 5) and contains_ignoring_case(lastName,'iv')
+ -> EXISTS (SELECT Teams FROM Person.teams Teams WHERE Teams.id = 5)
+    AND LOWER(Teams.lastName) LIKE LOWER('%iv%')          -- want Person.lastName
+
+members/any(Members: Members/email eq 'a') and members/any(Members: Members/lastName eq 'b')
+ -> EXISTS (SELECT Members FROM Team.members    Members WHERE Members.email    = 'a')
+    AND
+    EXISTS (SELECT Members FROM Members.members Members WHERE Members.lastName = 'b')
+                                ^^^^^^^ want Team.members
+```
+
+Clause order decides the damage: `flat AND any` is correct because the flat
+clause is visited first; `any AND flat` is not. The otherwise-passing case
+`LOWER(Person.lastName) ... AND EXISTS(...)` works only by luck of ordering.
+
+`Teams` is not a from-element of the outer query, so Hibernate is expected to
+reject the query outright rather than return wrong rows — but that is inference
+and is on the §6 verification list, not established.
+
+**Consequences for the builders (§4):**
+
+- Emit every `multiRelation` clause **after** all other clauses, regardless of
+  descriptor or filter-row order.
+- Collapse multiple filter rows targeting the same collection field into a
+  single `any(... in (...))` where the operators allow it.
+- If two clauses would still require two lambdas (e.g. `teams inArray [1,2]`
+  **and** `teams notInArray [3]`, or filters on two different collections at
+  once), the second cannot be emitted safely. Person has exactly one collection
+  field, so today this is reachable only via the advanced filter mode.
+- Report the bug upstream; drop these workarounds once a fixed
+  odata-mini-filter-sort ships.
 
 ### Supporting constraints
 
@@ -229,6 +283,16 @@ clauses.push(`${field}/any(${lambda}: ${lambda}/id in (${idList}))`);
   routes both through `any()`, so a to-one FK emits `leaderId/any(...)` —
   meaningless for a scalar column. A `relation` must emit
   `${field} in (${ids})`; only `multiRelation` emits the lambda.
+
+Both files, to work around the §2.1 bug:
+
+- Build `multiRelation` clauses into a separate list and append it **after** all
+  other clauses, so no clause is ever parsed following an `any()`.
+- Merge filter rows targeting the same collection field into one lambda where
+  operators allow. If two lambdas would still be required, emit only the first
+  and `console.warn` — silently dropping a filter is worse than saying so.
+- Add a comment pointing at §2.1 so the workaround is removed, not cargo-culted,
+  once the library is fixed.
 
 Both files: correct the `sortField` JSDoc on `FilterDescriptor` and
 `FieldEntry`. Both currently offer `"leader.lastName"` as the example, which is
@@ -313,8 +377,17 @@ green against a running backend, with results recorded.
    (risk 2) and confirm `count` is correct at `$skip=20`.
 7. Confirm a person belonging to **no** team still appears in an unfiltered
    `/person/graph?$fields=teams` listing.
-8. Regression: `$filter=leaderId eq N` and `$filter=type eq 'CHANGE'` still
-   behave as before.
+8. **§2.1 bug behaviour.** Send the broken ordering deliberately —
+   `$filter=teams/any(Teams: Teams/id eq N) and contains_ignoring_case(lastName,'iv')`
+   — and record whether Hibernate rejects it (expected) or silently returns
+   wrong rows. If it is silent, the §4 builder ordering stops being a
+   nice-to-have and becomes the only thing standing between a user and quietly
+   incorrect data, which should be reflected in how loudly the workaround is
+   documented.
+9. Confirm the fixed ordering — the same two clauses with the `any()` last —
+   returns rows matching a direct SQL equivalent.
+10. Regression: `$filter=leaderId eq N` and `$filter=type eq 'CHANGE'` still
+    behave as before.
 
 ## 7. Documentation
 
