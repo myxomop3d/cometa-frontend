@@ -134,16 +134,16 @@ export function getPersonColumns({
       // task-4 scope — the Teams display column was deliberately deferred to
       // avoid triggering Hibernate in-memory pagination on every Person list
       // request). This column exists solely to host the team-membership
-      // filter picker in the toolbar; it has no accessorKey, so it never
-      // appears in the View Options list, and it's hidden from the table
-      // body via `initialColumnVisibility` in switchable-config.ts.
+      // filter picker in the toolbar. Three mechanisms keep it functional
+      // but invisible: the accessorFn below, `enableHiding: false` below,
+      // and `initialColumnVisibility` in switchable-config.ts.
       id: "teams",
-      // TanStack's `getCanFilter()` requires a truthy `accessorFn` to enable
-      // filtering — with no PersonDto.teams field to key off of (scope
-      // deferred that), this synthetic accessor exists purely to satisfy
-      // that check. It intentionally always returns undefined: there is no
-      // display value, and `enableHiding: false` below keeps the column out
-      // of the View Options list despite now having an accessorFn.
+      // 1. accessorFn: TanStack's `getCanFilter()` requires a truthy
+      // accessorFn before the simple-mode toolbar will render a filter
+      // widget for a column at all. There's no PersonDto.teams field to key
+      // off of, so this synthetic accessor exists purely to satisfy that
+      // check; it intentionally always returns undefined since there's
+      // nothing to display.
       accessorFn: () => undefined,
       header: "Teams",
       meta: {
@@ -160,6 +160,12 @@ export function getPersonColumns({
       },
       enableColumnFilter: true,
       enableSorting: false,
+      // 2. enableHiding: false — now that the column has an accessorFn
+      // (above), this is the sole reason it's excluded from the View
+      // Options dropdown (data-table-view-options.tsx filters on accessorFn
+      // presence AND getCanHide()). Removing this exposes a blank "Teams"
+      // toggle. 3. initialColumnVisibility in switchable-config.ts is what
+      // hides the column from the table body initially.
       enableHiding: false,
       size: 0,
     },

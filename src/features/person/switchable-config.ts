@@ -27,7 +27,9 @@ export const personSwitchableConfig: SwitchableTableConfig<
   initialColumnPinning: { left: ["select", "id"], right: ["actions"] },
   // The "teams" column exists only to host the team-membership filter picker
   // (no PersonDto.teams display field is wired up — see task-4 scope). Hide
-  // it from the table body; it has no accessorFn so it's already excluded
-  // from the View Options toggle list.
+  // it from the table body here; `enableHiding: false` on the column
+  // definition in columns.tsx is what keeps it out of the View Options list
+  // (the column does have an accessorFn, so that alone wouldn't exclude it —
+  // see the comments in columns.tsx for the full mechanism).
   initialColumnVisibility: { teams: false },
 };
