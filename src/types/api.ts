@@ -196,6 +196,11 @@ export interface UserProfile {
 // Registration
 // ────────────────────────────────────────────────────────────
 
+export interface TeamSummaryDto {
+  id: number;
+  name: string;
+}
+
 export interface PersonDto {
   id: number;
   insertedAt: string | null;
@@ -204,6 +209,8 @@ export interface PersonDto {
   lastName: string;
   firstName: string;
   middleName: string;
+  /** Read-only; populated only on /api/v1/person/graph?$fields=teams. */
+  teams?: TeamSummaryDto[];
 }
 
 export interface PersonFilters extends Partial<PaginationParams> {

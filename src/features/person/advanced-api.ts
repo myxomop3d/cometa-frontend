@@ -43,6 +43,7 @@ export function advancedDataTableQueryOptions(
         fieldByColumnId: personFieldByColumnId,
         onLambdaCapped: notifyLambdaCapped,
       });
+      searchParams.set("$fields", "teams");
       return apiFetch<ApiResponse<PersonDto[]>>(
         `/api/v1/person/graph?${searchParams.toString()}`,
       );

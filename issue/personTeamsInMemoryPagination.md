@@ -1,9 +1,11 @@
 # `PersonDto.teams` forces Hibernate into in-memory pagination
 
-**Status:** open, deliberately deferred (2026-08-26). The backend mapping is
-committed and correct; it is simply **not consumed** by the frontend yet, so
-this costs nothing today. Read "What to do when picking this up" before
-enabling the Teams column.
+**Status:** open, deliberately deferred (updated 2026-08-26). The Teams
+display column has shipped and `$fields=teams` is now requested on every
+Person list read, so the in-memory pagination described below is **active in
+production**, not hypothetical. This is a known, accepted cost — the user
+decided to ship the column and live with it for now. Read "What to do when
+picking this up" for the cheapest available follow-up.
 
 ## The finding
 
@@ -35,11 +37,12 @@ table.
 
 ## Why it matters more than the row count suggests
 
-The implementation plan wires the Person list query with
-`staticParams: { "$fields": "teams" }` — which makes `$fields=teams`
-**unconditional for every Person list request**, not an opt-in. That is what
-turns a tolerable one-off into the default path for the whole table. Any fix
-should reconsider that too.
+`src/features/person/api.ts` wires the Person list query with
+`staticParams: { "$fields": "teams" }`, and `src/features/person/advanced-api.ts`
+sets `searchParams.set("$fields", "teams")` on every advanced-mode request too —
+together these make `$fields=teams` **unconditional for every Person list
+request**, not an opt-in. That is what turns a tolerable one-off into the
+default path for the whole table. Any fix should reconsider that too.
 
 ## What was verified, and where
 
@@ -73,17 +76,22 @@ is an OData `any()` lambda evaluated in SQL:
 teams/any(x: x/id in (1425,1432))
 ```
 
-The Teams **display column** was not shipped. That is the only piece blocked by
-this issue.
+The Teams **display column** has shipped (`src/features/person/columns.tsx`).
+Nothing is blocked by this issue anymore — it is now a live performance debt
+being paid on every Person list read, not a blocker on any pending work.
 
 ## What to do when picking this up
 
 Options, roughly in increasing order of effort:
 
-1. **Accept it.** At a few hundred persons the in-memory slice is survivable.
-   If you take this route, drop `staticParams: { "$fields": "teams" }` from the
-   default list query anyway and request `teams` only when the column is
-   actually visible, so the cost is paid only when the data is used.
+1. **Accept it, but stop paying for it when unused.** At a few hundred persons
+   the in-memory slice is survivable, and this is the route taken so far — the
+   column shipped with `staticParams: { "$fields": "teams" }` left in place
+   unconditionally. The cheapest remaining improvement is still open: request
+   `teams` only when the Teams column is actually visible (both in
+   `src/features/person/api.ts` and `src/features/person/advanced-api.ts`),
+   instead of unconditionally on every request, so the cost is paid only when
+   the data is used.
 2. **Two-query fetch.** Page the persons normally (no collection fetch, so
    `LIMIT`/`OFFSET` reach the DB), then issue one batched follow-up for the team
    names of the returned ids. Keeps pagination in SQL; costs one extra round
