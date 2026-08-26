@@ -167,7 +167,6 @@ export function getPersonColumns({
       // toggle. 3. initialColumnVisibility in switchable-config.ts is what
       // hides the column from the table body initially.
       enableHiding: false,
-      size: 0,
     },
     {
       id: "actions",
