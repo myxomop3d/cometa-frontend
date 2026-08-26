@@ -3,9 +3,10 @@
 **Status:** open, deliberately deferred (updated 2026-08-26). The Teams
 display column has shipped and `$fields=teams` is now requested on every
 Person list read, so the in-memory pagination described below is **active in
-production**, not hypothetical. This is a known, accepted cost — the user
-decided to ship the column and live with it for now. Read "What to do when
-picking this up" for the cheapest available follow-up.
+production**, not hypothetical. This is a known, accepted cost — the owner
+decided to ship the column and live with it for now, and separately declined
+gating the fetch on column visibility (see option 1). The real fix, when this
+starts to hurt, is option 2 or 3.
 
 ## The finding
 
@@ -42,7 +43,11 @@ table.
 sets `searchParams.set("$fields", "teams")` on every advanced-mode request too —
 together these make `$fields=teams` **unconditional for every Person list
 request**, not an opt-in. That is what turns a tolerable one-off into the
-default path for the whole table. Any fix should reconsider that too.
+default path for the whole table.
+
+The unconditional fetch is deliberate and has been signed off (option 1) — so a
+fix must make the *underlying* collection fetch cheap, rather than trying to
+avoid asking for `teams` in the first place.
 
 ## What was verified, and where
 
@@ -84,14 +89,23 @@ being paid on every Person list read, not a blocker on any pending work.
 
 Options, roughly in increasing order of effort:
 
-1. **Accept it, but stop paying for it when unused.** At a few hundred persons
-   the in-memory slice is survivable, and this is the route taken so far — the
-   column shipped with `staticParams: { "$fields": "teams" }` left in place
-   unconditionally. The cheapest remaining improvement is still open: request
-   `teams` only when the Teams column is actually visible (both in
-   `src/features/person/api.ts` and `src/features/person/advanced-api.ts`),
-   instead of unconditionally on every request, so the cost is paid only when
-   the data is used.
+1. ~~**Fetch `teams` only when the column is visible.**~~ **Considered and
+   declined (2026-08-26.)** The obvious cheap win — gating
+   `staticParams: { "$fields": "teams" }` on column visibility in
+   `src/features/person/api.ts` and `src/features/person/advanced-api.ts` — was
+   put to the owner and explicitly turned down: fetching `teams` unconditionally
+   is fine, even when the column is hidden.
+
+   Do not implement this without asking first. It is not an oversight, and it
+   carries a real cost of its own: the fetch would depend on table UI state, so
+   toggling the column in View Options would change the query key and refetch
+   the whole page, and the two modes (simple and advanced) would each need to
+   thread visibility down into their query builders.
+
+   The accepted position is: pay the in-memory-pagination cost unconditionally,
+   and fix the underlying problem via option 2 or 3 when it actually starts to
+   hurt.
+
 2. **Two-query fetch.** Page the persons normally (no collection fetch, so
    `LIMIT`/`OFFSET` reach the DB), then issue one batched follow-up for the team
    names of the returned ids. Keeps pagination in SQL; costs one extra round
