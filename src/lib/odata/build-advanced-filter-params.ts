@@ -7,8 +7,10 @@ import { odataString } from "./build-filter-params";
 
 export interface FieldEntry {
   field: string;
-  /** OData field used for $orderby, if different from `field`. May contain a
-   *  navigation path — only ever emitted, never parsed out of the URL. */
+  /** OData field used for $orderby, if different from `field`.
+   *  May be a navigation path using `/` — e.g. "leader/lastName". A dot
+   *  ("leader.lastName") is an ANTLR parse error. Only ever emitted, never
+   *  parsed out of the URL. */
   sortField?: string;
   variant: FilterVariant;
 }
@@ -131,7 +133,12 @@ function clauseFor(
           .map((v) => (isRelationValue(v) ? v.id : Number(v)))
           .filter((n) => !Number.isNaN(n));
         if (ids.length === 0) return null;
-        inner = `${field}/any(x: x/id in (${ids.join(",")}))`;
+        // A to-one relation is a scalar FK column: `leaderId/any(...)` is
+        // meaningless. Only a real collection gets the lambda.
+        inner =
+          variant === "multiRelation"
+            ? `${field}/any(x: x/id in (${ids.join(",")}))`
+            : `${field} in (${ids.join(",")})`;
       } else {
         // select / multiSelect / text
         const literals = value.map(quoteString).join(",");
@@ -159,16 +166,28 @@ export function buildAdvancedFilterParams({
   searchParams.set("$top", String(pageSize));
 
   const clauses: string[] = [];
+  // See §3 of the design spec: any() corrupts the root alias for later clauses.
+  const lambdaClauses: string[] = [];
   for (const filter of filters) {
     const entry = fieldByColumnId[filter.id];
     if (!entry) continue;
     const clause = clauseFor(filter, entry);
     if (clause === null) continue;
-    clauses.push(clause);
+    if (clause.includes("/any(")) lambdaClauses.push(clause);
+    else clauses.push(clause);
   }
 
-  if (clauses.length > 0) {
-    searchParams.set("$filter", clauses.join(` ${joinOperator} `));
+  if (lambdaClauses.length > 1) {
+    console.warn(
+      `[odata] ${lambdaClauses.length} collection filters were requested but only ` +
+        `"${lambdaClauses[0]}" was sent: odata-mini corrupts the root alias after ` +
+        `the first any() lambda.`,
+    );
+  }
+
+  const allClauses = [...clauses, ...lambdaClauses.slice(0, 1)];
+  if (allClauses.length > 0) {
+    searchParams.set("$filter", allClauses.join(` ${joinOperator} `));
   }
 
   if (sort) {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { buildFilterParams } from "./build-filter-params";
 import type { FilterDescriptor } from "./build-filter-params";
 
@@ -6,6 +6,8 @@ const descriptors: readonly FilterDescriptor[] = [
   { id: "name", variant: "text" },
   { id: "item", variant: "relation", field: "itemId" },
   { id: "things", variant: "multiRelation" },
+  { id: "oldThings", variant: "multiRelation" },
+  { id: "leader", variant: "relation", field: "leaderId", sortField: "leader/lastName" },
 ];
 
 function build(columnFilters: { id: string; value: unknown }[], sort?: string) {
@@ -76,5 +78,35 @@ describe("buildFilterParams $orderby", () => {
       ],
     });
     expect(p.get("$orderby")).toBe("item.name asc,name desc");
+  });
+});
+
+describe("buildFilterParams any() clause ordering", () => {
+  it("emits the collection lambda last even when it is filtered first", () => {
+    const p = build([
+      { id: "things", value: [1, 2] },
+      { id: "name", value: "abc" },
+    ]);
+    expect(p.get("$filter")).toBe(
+      "contains_ignoring_case(name, 'abc') and things/any(x: x/id in (1,2))",
+    );
+  });
+
+  it("emits only the first lambda when two collections are filtered", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const p = build([
+      { id: "things", value: [1, 2] },
+      { id: "oldThings", value: [3] },
+    ]);
+    expect(p.get("$filter")).toBe("things/any(x: x/id in (1,2))");
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe("buildFilterParams nav-path sortField", () => {
+  it("emits the configured navigation path for $orderby", () => {
+    const p = build([], "leader.asc");
+    expect(p.get("$orderby")).toBe("leader/lastName asc");
   });
 });

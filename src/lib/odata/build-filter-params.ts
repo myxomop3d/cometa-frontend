@@ -15,8 +15,9 @@ export interface FilterDescriptor {
   /** OData field name, if different from id. */
   field?: string;
   /** OData field used for $orderby, if different from the filter field.
-   *  May contain a navigation path (e.g. "leader.lastName") — it is only
-   *  ever emitted, never parsed out of the URL. */
+   *  May be a navigation path using `/` — e.g. "leader/lastName". A dot
+   *  ("leader.lastName") is an ANTLR parse error. Only ever emitted, never
+   *  parsed out of the URL. */
   sortField?: string;
   variant: FilterVariant;
 }
@@ -45,6 +46,10 @@ export function buildFilterParams({
   searchParams.set("$top", String(pageSize));
 
   const clauses: string[] = [];
+  // odata-mini corrupts the root alias for every clause parsed after an any()
+  // lambda, so collection filters are emitted last and capped at one.
+  // See §3 of docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md
+  const lambdaClauses: string[] = [];
   const byId = new Map(descriptors.map((d) => [d.id, d]));
 
   for (const filter of columnFilters) {
@@ -129,15 +134,24 @@ export function buildFilterParams({
         const relIds = value as number[] | undefined;
         if (relIds && relIds.length > 0) {
           const idList = relIds.map(Number).join(",");
-          clauses.push(`${field}/any(x: x/id in (${idList}))`);
+          lambdaClauses.push(`${field}/any(x: x/id in (${idList}))`);
         }
         break;
       }
     }
   }
 
-  if (clauses.length > 0) {
-    searchParams.set("$filter", clauses.join(" and "));
+  if (lambdaClauses.length > 1) {
+    console.warn(
+      `[odata] ${lambdaClauses.length} collection filters were requested but only ` +
+        `"${lambdaClauses[0]}" was sent: odata-mini corrupts the root alias after ` +
+        `the first any() lambda.`,
+    );
+  }
+
+  const allClauses = [...clauses, ...lambdaClauses.slice(0, 1)];
+  if (allClauses.length > 0) {
+    searchParams.set("$filter", allClauses.join(" and "));
   }
 
   if (sort) {

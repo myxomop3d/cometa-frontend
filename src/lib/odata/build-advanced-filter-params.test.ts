@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { buildAdvancedFilterParams } from "./build-advanced-filter-params";
 import type { ExtendedColumnFilter } from "@/types/data-table";
 
@@ -11,6 +11,7 @@ const fieldByColumnId = {
   dateStr:   { field: "dateStr",   variant: "dateRange" as const },
   item:      { field: "itemId",    variant: "relation" as const },
   things:    { field: "things",    variant: "multiRelation" as const },
+  oldThings: { field: "oldThings", variant: "multiRelation" as const },
 };
 
 function build(
@@ -220,5 +221,42 @@ describe("buildAdvancedFilterParams $orderby", () => {
       },
     });
     expect(p.get("$orderby")).toBe("leader.lastName asc");
+  });
+});
+
+describe("buildAdvancedFilterParams relation vs multiRelation", () => {
+  it("emits a flat in-list for a to-one relation", () => {
+    const p = build([
+      { id: "item", operator: "inArray", value: [30, 31] },
+    ]);
+    expect(p.get("$filter")).toBe("itemId in (30,31)");
+  });
+
+  it("emits an any() lambda for a to-many relation", () => {
+    const p = build([
+      { id: "things", operator: "inArray", value: [1425] },
+    ]);
+    expect(p.get("$filter")).toBe("things/any(x: x/id in (1425))");
+  });
+
+  it("puts the lambda last regardless of filter order", () => {
+    const p = build([
+      { id: "things", operator: "inArray", value: [1425] },
+      { id: "name", operator: "iLike", value: "мох" },
+    ]);
+    expect(p.get("$filter")).toBe(
+      "contains_ignoring_case(name, 'мох') and things/any(x: x/id in (1425))",
+    );
+  });
+
+  it("keeps only the first lambda", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const p = build([
+      { id: "things", operator: "inArray", value: [1] },
+      { id: "oldThings", operator: "inArray", value: [2] },
+    ]);
+    expect(p.get("$filter")).toBe("things/any(x: x/id in (1))");
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
