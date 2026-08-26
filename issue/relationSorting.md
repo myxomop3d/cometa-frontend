@@ -1,397 +1,148 @@
-# Relation sorting and related OData hazards on `/team` and `/person`
+# Relation filtering and sorting on `/team` and `/person`
 
-## Status
+**Full design record (read this first):**
+`docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md`.
+This document is the narrower issue-log companion: it retains the three
+findings from an earlier investigation that were verified live and remain
+true, folds in everything the design's live-verification pass settled, and
+points at the design doc for anything not repeated here.
 
-Leader sorting has been turned off (`enableSorting: false` on the Team `leader`
-column; `sortField: "leader.lastName"` removed from both the descriptor and
-`teamFieldByColumnId`). This document records why, plus every other
-relation/enum-related OData hazard uncovered while investigating it, for a
-future session to act on.
+**Related:** `issue/personTeamsInMemoryPagination.md` — the to-many
+*display*-column limitation (Person's Teams column). The **filter**
+(`teams/any(x: x/id in (…))`) is unaffected by that issue and works today.
 
-Separately, a scoped re-review found and fixed the actual root cause of the
-Leader column rendering empty on every row: Team's list queries were hitting
-the wrong endpoint (`/api/v1/team` instead of `/api/v1/team/graph`) with the
-wrong parameter name (`fields` instead of `$fields`), so the backend's
-entity-graph eager-fetch never applied. See finding 7.
+## Status (rewritten 2026-08-26)
 
-**Update, 2026-08-05 — live-backend verification pass.** A verification pass
-against a running backend has since settled two of this document's open
-items: finding 5 (enum-typed filter) now verified working, and finding 7 (the
-`/graph` + `$fields` repoint) now verified working end-to-end, including the
-detail that `/graph` without `$fields` still yields `leader: null`. It also
-surfaced a real, previously-undocumented gotcha — write responses (`POST`/
-`PATCH`) return a stale `leaderId`/`leader` — recorded as finding 8. Finding 3
-(nested-sort hazards) remains genuinely unverified; leader sorting is
-disabled, so nested sorting was never attempted. Full transcript:
-`.superpowers/sdd/2026-08-05-team-person-table-pages/task-11-verification-report.md`.
+Cometa uses `BaseCrudRepository`'s JPQL-string path
+(`TeamCrudRepository` → `EntityGraphBaseCrudRepository` →
+`BaseCrudRepository`, assembling a JPQL string from `ODataFilter.getWhereJpql()`
+and `ODataOrderby.getOrderbyJpql()`). `ODataCriteriaService` — the JPA
+Criteria API builder that a much earlier version of this document reasoned
+about — **is never instantiated anywhere in the backend.** The four findings
+that relied on it (originally numbered 1, 2, 3 and 6: nested `$filter` can't
+work, nested `$orderby` fails at field validation, two further Criteria-API
+hazards, and `any()`/`all()` being unsupported) do not apply to this backend
+and have been **replaced below**, not appended to.
 
-## How these findings were established
+Current state, all shipped and live-verified:
 
-All findings below come from reading the actual library source shipped in the
-local Maven repository, not from inference or documentation. The library jars
-under `~/.m2/repository/ru/sber/cs/core/odata/` embed their `.java` sources
-directly inside the class jar (no separate `-sources.jar` needed — e.g.
-`odata-mini-filter-sort-2.0.3.jar` contains
-`ru/sber/cs/core/odata/mini/repo/odata/filter/ODataFilterHelper.java` etc.
-alongside the `.class` files). The version used is pinned by
-`F:\programming\cometa\pom.xml` (`<odata-mini-repo.version>2.0.3</odata-mini-repo.version>`),
-which pulls the matching `odata-mini-filter-sort:2.0.3`.
+- **Leader sorting is ON**, not off — `sortField: "leader/lastName"`
+  (`src/features/team/filter-descriptors.ts`,
+  `src/features/team/advanced-api.ts`), `enableSorting: true`
+  (`src/features/team/columns.tsx`). This also closes the old "stale
+  bookmarked URL" hole: a `?sort=leader.asc` link now resolves through
+  `sortField` to the nav path instead of falling back to the bare `leader`
+  column id.
+- The Team **leader filter** still compares the flat, read-only `leaderId`
+  scalar column (`field: "leaderId"`) — an equality/`in`-list filter on a FK
+  id is simplest as a flat scalar, and it is unrelated to the nav-path
+  standard below, which exists for **sorting** (and for filtering on
+  attributes of the related row itself, e.g. the leader's surname).
+- Person **filters** by team membership via an `any()` lambda
+  (`teams/any(x: x/id in (…))`, `src/features/person/filter-descriptors.ts`).
+  Person does **not** sort by teams (ill-defined over a to-many) and does not
+  yet **display** a Teams column — see the cross-linked pagination issue.
 
-Every class and method name cited below was read directly out of that jar.
-To re-verify, unzip the jar and read the `.java` file at the path given:
+## 1. The standard (spec §2)
+
+### Rule A — to-one relation → navigation path
 
 ```
-unzip odata-mini-filter-sort-2.0.3.jar -d out
-# then read out/ru/sber/cs/core/odata/mini/repo/...
+$orderby=leader/lastName desc
+$filter=contains_ignoring_case(leader/lastName, 'мох')
 ```
 
-Findings 1, 2, 4, 6, and 7 are fully verified this way, cross-checked against
-what actually ships in the frontend and backend repos. Finding 7 has
-additionally been verified against a running server (2026-08-05, see its
-section). Finding 5 was originally source-read-only and flagged unverified;
-it has since been verified against a running server too (2026-08-05, see its
-section) — the source reading correctly identified the missing switch
-branch, but the live behavior contradicts the prediction built on it: the
-filter works. Finding 3 remains **not** verified against a running server —
-see its section. (Finding 3a's original text mis-stated the mechanism
-populating `fetchTablesSet`; it has since been corrected in place — the
-correction itself is source-verified, the underlying live-server caution in
-finding 3 still stands.)
+- Separator is `/`, **not** `.` — a dot is an ANTLR parse error.
+- No backend change per field; any relation attribute is immediately
+  sortable and filterable this way.
+- Frontend spelling: `sortField: "leader/lastName"`.
+- Requires lenient validation — see §1.2.
 
----
+### Rule B — to-many relation → `any()` lambda
 
-## 1. Nested-path `$filter` cannot work (resolved — this is the precedent)
-
-**Status: fixed, already shipped.** Recorded here because it is the pattern
-the other findings should follow.
-
-`ODataFilterHelper.getPathExpression(Root<?> root, Object pathObject)`
-(`ru.sber.cs.core.odata.mini.repo.odata.filter.ODataFilterHelper`) does:
-
-```java
-private Expression<String> getPathExpression(Root<?> root, Object pathObject) {
-    var path = odataChecker.getEntityFieldName((String) pathObject);
-    if (path.contains(".")) {
-        var parts = path.split("\\.");
-        root.fetch(parts[0]);
-        return root.get(parts[0]).get(parts[1]);
-    } else {
-        return root.get(path);
-    }
-}
+```
+$filter=teams/any(x: x/id in (1425,1432))
 ```
 
-Any dotted path unconditionally calls `root.fetch(parts[0])` — a fetch join.
+- **Filterable only, never sortable.**
+- Never annotate a collection with `@ODataMapping`: the resulting inner
+  `JOIN FETCH` drops parents with no children and duplicates those with
+  several.
+- **At most one `any()` per `$filter`, emitted last** — see §2 below.
+- The lambda variable stays `x`. The grammar reserves `t, a, e, d, m, n, s`
+  as literal prefixes — those single letters fail to parse. `x` is safe but
+  the choice is load-bearing; don't change it casually.
 
-`ODataCriteriaService` (`ru.sber.cs.core.odata.mini.repo.odata.ODataCriteriaService`)
-builds a **second**, independent root for the count query and re-applies the
-same where-predicate to it:
+### 1.2 Required backend configuration
 
-```java
-private CriteriaQuery<Long> createCountQuery(Class<T> modelClass) {
-    var cr = criteriaBuilder.createQuery(Long.class);
-    var from = cr.from(modelClass);
-    cr.select(criteriaBuilder.count(from));
-    cr.where(oDataParams.getODataFilter().getWherePredicate(criteriaBuilder, from));
-    return cr;
-}
+```yaml
+# cometa-web-module/src/main/resources/application.yaml
+odata.mini.repo:
+  throw-on-field-not-found: false
 ```
 
-Because the where-predicate was built against the *main* root but contains an
-`Expression` obtained via `from.fetch(...)` semantics baked into the dotted
-path, a `SELECT COUNT(...)` query ends up with a fetch join in it, which
-Hibernate rejects at query-compile time.
+Both rules depend on this. Strict validation (the library default) rejects
+`leader/lastName` and `teams/any(...)` at `ODataChecker.checkFields` before
+either ever reaches Hibernate, because a to-one association's nested field
+and a collection's lambda path are not flat field names it knows about. With
+strict validation off, an unknown field instead becomes a Hibernate
+`SemanticException` at execution — still a 500, so the practical trade is
+error-message quality, not safety.
 
-**Consequence already shipped:** the `relation` filter variant
-(`src/lib/odata/build-filter-params.ts`, `src/lib/odata/build-advanced-filter-params.ts`)
-emits a flat `field eq N` instead of a navigation-path `field/id eq N`
-(see git commit `4d89367 fix(odata): relation filters emit a flat scalar
-instead of a nav path`, and `dc2f6d0 refactor(box): filter relations by flat
-itemId/oldItemId scalars`). To make that possible, `Team` gained a
-read-only scalar column:
+## 2. Library bug: `any()` corrupts the root alias for every later clause
 
-```java
-// cometa-persistence-module/.../entity/auth/Team.java
-@Column(name = "leader_person_id", insertable = false, updatable = false)
-private Long leaderId;
+`OData2JpqlExpressionVisitor` declares its bind-variable tracker as a
+`Queue<String>` (`ArrayDeque`) and uses it like a stack: `add()` appends at
+the tail, but `visitAnyClause` pops with `remove()`, which operates on the
+**head** — evicting the root variable, not the lambda variable it just
+pushed. Every clause parsed after the first `any()` then resolves against
+the lambda variable instead of the root. A `Deque` used with `push`/`pop`
+would be correct; this one mixes queue and stack semantics.
+
+Verified live (odata-mini 2.2.0-SNAPSHOT, odata-parser 1.2.2, Hibernate
+7.2.12.Final):
+
+```
+any THEN flat →  SemanticException: Could not interpret path expression 'Teams.lastName'
+flat THEN any →  200, count=1, correct
+two any()     →  EXISTS (SELECT Teams FROM Person.teams  Teams …)
+                 AND
+                 EXISTS (SELECT Teams FROM Teams.teams   Teams …)   -- want Person.teams
 ```
 
-filtered via `field: "leaderId"` in `src/features/team/filter-descriptors.ts`
-and `src/features/team/advanced-api.ts`. This works and is unaffected by
-today's change — **do not touch the leader filter.**
+It fails loudly (a 500) rather than silently returning wrong rows, so the
+ordering rule is a correctness guard, not a data-integrity emergency. The
+frontend's two OData param builders enforce it: both
+`src/lib/odata/build-filter-params.ts` and
+`src/lib/odata/build-advanced-filter-params.ts` collect `multiRelation`
+clauses separately from scalar clauses and pass both, plus the join
+separator, to a single shared helper —
+`joinWithCappedLambdas` (`src/lib/odata/build-filter-params.ts`) — that caps
+lambda clauses at one, appends the surviving one last, and `console.warn`s if
+a second was requested and dropped. Report upstream and delete the workaround
+(the helper and the split-collection logic in both builders) once a fixed
+library version ships.
 
----
+## Note on the findings retained below
 
-## 2. Nested-path `$orderby` fails earlier still — at field validation
+The three sections that follow (§3–§5) are the original findings 5, 7 and 8,
+kept **verbatim** — they were verified against a running backend on
+2026-08-05 and remain true; the prose is unedited even where its literal
+wording is now dated. Two things to know when reading them:
 
-**Status: this is why leader sorting is now off.**
+- Where they say **"finding 1"**, that refers to the flat, read-only
+  `leaderId` scalar column described in the Status section above — still
+  real and unrelated to this rewrite.
+- Where they say **"finding 2/4"** or describe leader sorting as
+  **disabled**, that was true when the finding was written (2026-08-05) and
+  is no longer true: leader sorting has since shipped via `leader/lastName`
+  (see the Status section above). The finding's own subject matter — the
+  `/graph` + `$fields` endpoint fix, and the stale write-response fields —
+  is unaffected by that and still stands as written.
+- Where the last one says **"finding 7"**, that's the `/graph` + `$fields`
+  endpoint fix immediately below it (§4 in this document's numbering).
 
-`ODataOrderby`'s constructor (`ru.sber.cs.core.odata.mini.repo.odata.orderby.ODataOrderby`)
-calls `prepareOrderby()`:
-
-```java
-@Builder
-public ODataOrderby(Class<?> modelClass, Class<?> dtoClass, String orderby) {
-    ...
-    this.odataJpql = new OData2Jpql(modelClass, dtoClass);
-    this.orderbyRequest = orderby;
-    this.orderbyJpql = prepareOrderby();
-}
-
-private String prepareOrderby() {
-    if (orderbyRequest == null || orderbyRequest.isBlank()) {
-        return "";
-    }
-    return odataJpql.parseOrderByConditions(orderbyRequest, modelClass.getSimpleName(), null);
-}
-```
-
-`OData2Jpql.parseOrderByConditions` (`ru.sber.cs.core.odata.mini.repo.odata.OData2Jpql`)
-validates fields **before** any parsing of the navigation path:
-
-```java
-public String parseOrderByConditions(String orderby, String bindVariable, Map<String, String> aliases) {
-    if (orderby == null) {
-        return null;
-    }
-    checkFields(getFieldsByOrderby(orderby));
-    ...
-}
-```
-
-`checkFields` delegates to `ODataChecker.checkFields(Set<String>)`
-(`ru.sber.cs.core.odata.mini.repo.odata.ODataChecker`):
-
-```java
-public void checkFields(Set<String> fields) {
-    if (fields == null || fields.isEmpty()) {
-        return;
-    }
-    for (String field : fields) {
-        if (!modelFieldNames.contains(field) && !dtoFieldNames.containsKey(field)) {
-            throw new FieldNotFoundException("field '" + field + "' doesn't exist");
-        }
-    }
-}
-```
-
-`modelFieldNames` comes from `getAllFields(Class<?> clazz)`, which walks the
-class hierarchy via `getDeclaredFields()` / `getSuperclass()` and collects
-**flat field names only** — it never expands or accepts dotted paths.
-`dtoFieldNames` is populated only from `@ODataMapping(dtoField=…,
-entityField=…)` annotations on the DTO class:
-
-```java
-public ODataChecker(Class<?> modelClass, Class<?> dtoClass) {
-    this.oDataMappings = (dtoClass == null) ? null : dtoClass.getAnnotationsByType(ODataMapping.class);
-    this.modelFieldNames = getAllFields(modelClass).stream()
-            .map(Member::getName)
-            .collect(Collectors.toSet());
-    this.dtoFieldNames = getDtoFieldNames();
-}
-```
-
-`"leader.lastName"` is neither a flat field name on `Team` nor a registered
-DTO alias, so `checkFields` throws `FieldNotFoundException` before the parse
-tree is even walked. This is a harder failure than finding 1: filtering at
-least reaches Hibernate before dying; sorting never gets that far.
-
-Confirmed there are currently **zero** `@ODataMapping` usages anywhere in the
-backend repo (`F:\programming\cometa`) — grepping the whole tree for
-`ODataMapping` returns no matches outside the library itself.
-
-The dot-splitting logic in `ODataOrderbyHelper.getPathExpression` (see
-finding 3) exists to expand a *registered alias* (an `@ODataMapping`-declared
-`dtoField`) whose `entityField` value happens to contain a dot — into a nav
-path at the JPA Criteria level, once `checkFields` has already let it
-through. It is not a general "any dotted path works" facility; the alias has
-to be declared first.
-
-**The sanctioned spelling**, when someone wants this to work, is:
-
-```java
-@ODataMapping(dtoField = "leaderLastName", entityField = "leader.lastName")
-// on TeamDto
-```
-
-filtered/sorted via `$orderby=leaderLastName asc`. This still leaves finding
-3's hazards unaddressed.
-
----
-
-## 3. Two further hazards the alias approach does NOT remove — unverified
-
-**Status: not verified against a running server. Needs a live backend before
-anyone relies on nested sorting, even via the `@ODataMapping` alias. This is
-the one item in this document still open** — a 2026-08-05 live-backend
-verification pass resolved findings 5 (enum filter) and 7 (graph endpoint
-repoint), both below, but never exercised nested sorting: leader sorting is
-disabled (see Status at the top of this document), so there was no live
-`$orderby=leader.lastName`-shaped request to observe. A future session
-picking this up should treat findings 5 and 7 as closed and start here.
-
-**a) Possible duplicate fetch join.** `ODataOrderby.getOrderList` runs
-inside the `ODataCriteriaService` constructor:
-
-```java
-public ODataCriteriaService(EntityManager entityManager, Class<T> modelClass, ODataParams oDataParams) {
-    ...
-    this.wherePredicate = oDataParams.getODataFilter().getWherePredicate(criteriaBuilder, root);
-    this.orderbyList = oDataParams.getODataOrderby().getOrderList(criteriaBuilder, root);
-    this.criteriaCountQuery = createCountQuery(modelClass);
-}
-```
-
-and `getOrderList` → `OData2Jpql.mapParseTreeToOrder` →
-`ODataOrderbyHelper.parseTreeToOrderList` → `getPathExpression`, which for a
-dotted alias calls `root.fetch(parts[0])` on the **main** root — the same
-root used elsewhere. Separately, `getQuery()` does:
-
-```java
-public TypedQuery<T> getQuery() {
-    oDataParams.getFetchTablesSet().forEach(root::fetch);
-    ...
-}
-```
-
-**Correction (previously this section claimed `fetchTablesSet` came from
-`?fields=` — that was wrong and has been rewritten below):**
-
-`fetchTablesSet` is **not** populated from any query parameter, and
-`ODataParams` doesn't even have a `fields` constructor argument to populate
-it from. Its `@Builder` constructor
-(`ru.sber.cs.core.odata.mini.repo.odata.ODataParams`, odata-mini 2.0.3) takes
-`modelClass, dtoClass, skip, top, filter, orderby, parentIdMap` — no
-`fields` — and builds the set purely from annotations on `dtoClass`:
-
-```java
-var oDataMappings = !ObjectUtils.isEmpty(dtoClass)
-        && dtoClass.isAnnotationPresent(ODataMappings.class)
-        ? dtoClass.getAnnotation(ODataMappings.class)
-        : null;
-
-this.fetchTablesSet = ObjectUtils.isEmpty(oDataMappings)
-        ? new HashSet<>()
-        : Arrays.stream(oDataMappings.value())
-        .map(value -> {
-            String[] split = value.entityField().split("\\.");
-            return split.length > 0 ? split[0] : "";
-        })
-        .collect(Collectors.toSet());
-```
-
-`oDataMappings.value()` is the array of `@ODataMapping` entries inside the
-repeatable container `@ODataMappings` — so `fetchTablesSet` is built solely
-by reading `@ODataMapping(entityField = ...)` declarations on the DTO class
-and taking the first `.`-segment of each `entityField()`. `TeamDto`
-currently carries zero `@ODataMapping` annotations (see finding 2), so
-`fetchTablesSet` is the empty set on every request `/team` (or `/team/graph`)
-receives today — the `getQuery().oDataParams.getFetchTablesSet().forEach(root::fetch)`
-line is presently a no-op for Team, and always has been; no query parameter
-of any name feeds it.
-
-The actual mechanism that eager-loads `leader` for display is a completely
-separate code path: the graph-aware `GET /api/v1/team/graph` endpoint
-(`ODataEntityGraphReadApi`/`EntityGraphBaseCrudController`, see the new
-finding below) applies a JPA `EntityGraph` keyed off its own `$fields`
-request parameter, independent of `ODataParams`/`fetchTablesSet` entirely.
-So on today's actual list route (`/team/graph`), there is no fetch-join
-contention between `$orderby` and `$fields` — `fetchTablesSet` never
-contributes a fetch for Team regardless. If a future `@ODataMapping` alias is
-added to `TeamDto` for nested sorting (finding 2's sanctioned spelling), and
-its `entityField()` happens to name the same association the entity-graph
-`$fields` also loads, *that* combination — `@ODataMapping`-driven
-`fetchTablesSet` fetch vs. entity-graph fetch, both against the same root —
-is the one that would need checking for a duplicate/conflicting fetch. It
-remains untested either way.
-
-**b) Possible duplicate order entries.** `ODataOrderbyHelper.parseTreeWalk`
-(`ru.sber.cs.core.odata.mini.repo.odata.orderby.ODataOrderbyHelper`) is a
-post-order recursive walk:
-
-```java
-private void parseTreeWalk(ParseTree tree, CriteriaBuilder cb, Root<?> root) {
-    for (int i = 0; i < tree.getChildCount(); ++i) {
-        parseTreeWalk(tree.getChild(i), cb, root);
-    }
-    if (tree.getClass().equals(ODataParserParser.EntityColNavigationPropertyContext.class)) {
-        orderMap.put(getPathExpression(root, tree.getText()), Trend.ASC);
-    }
-    if (tree.getClass().equals(ODataParserParser.OrderbyTrendContext.class)) {
-        orderMap.put(
-                orderMap.entrySet().stream().skip(orderMap.size() - 1L).findFirst().get().getKey(),
-                "asc".equals(tree.getText()) ? Trend.ASC : Trend.DESC
-        );
-    }
-}
-```
-
-It `put`s one entry into `orderMap` for every matching grammar node
-encountered during the walk. Whether the ANTLR grammar produces exactly one
-`EntityColNavigationPropertyContext` node for a two-segment alias path like
-`leader.lastName`, or more than one (which would register two order entries
-instead of one, and could throw on the `OrderbyTrendContext` branch's
-`.findFirst().get()` if the map is empty at the wrong point), has not been
-traced through the generated parser. Needs a running server test.
-
----
-
-## 4. Turning leader sorting off leaves a stale-URL hole (accepted, recorded)
-
-`enableSorting: false` on the `leader` column
-(`src/features/team/columns.tsx`) stops the table UI from ever generating a
-`sort=leader.asc` URL param going forward. It does **not** protect against a
-URL a user already bookmarked or shared before this change.
-
-Both param builders fall back to the raw column id when no `sortField` is
-configured for that column:
-
-```ts
-// src/lib/odata/build-filter-params.ts
-const orderby = sort.split(",").map((part) => {
-  const [f, dir] = part.split(".");
-  const desc = byId.get(f);
-  return `${desc?.sortField ?? f} ${dir}`;
-}).join(",");
-```
-
-```ts
-// src/lib/odata/build-advanced-filter-params.ts
-const orderby = sort.split(",").map((part) => {
-  const [f, dir] = part.split(".");
-  const entry = fieldByColumnId[f];
-  return `${entry?.sortField ?? f} ${dir}`;
-}).join(",");
-```
-
-A stale `?sort=leader.asc` URL still reaches the API as `$orderby=leader asc`.
-Because `Team.leader` (`cometa-persistence-module/.../entity/auth/Team.java`)
-is a real `@ManyToOne` field on the entity:
-
-```java
-@ManyToOne(fetch = FetchType.LAZY, optional = false)
-@JoinColumn(name = "leader_person_id", nullable = false)
-private Person leader;
-```
-
-`modelFieldNames.contains("leader")` is true, so `ODataChecker.checkFields`
-**passes** — the request is not rejected at validation. It proceeds to
-`root.get("leader")`, ordering by the association itself. At best this
-orders by the underlying FK id (harmless but meaningless as "leader
-sorting"); at worst, depending on how Hibernate resolves `ORDER BY` over an
-entity-typed path, it errors. This has not been tested either way.
-
-**Future option, not applied here:** set `sortField: "leaderId"` instead of
-leaving `sortField` unset. `leaderId` is the existing read-only flat scalar
-column from finding 1 — join-free, count-query-safe, and immune to this
-stale-URL hole because it resolves to a real scalar field regardless of
-whether the UI still offers leader sorting. This was considered but not
-applied in this change; the human partner's decision was to disable sorting
-outright and leave this as a documented option for later.
-
----
-
-## 5. Enum-typed columns — verified working against a live backend, 2026-08-05
+## 3. Enum-typed columns — verified working against a live backend, 2026-08-05
 
 **Status: verified. `$filter=type eq 'CHANGE'` and `$filter=type eq 'RUN'`
 both work correctly against a running backend, with counts matching the
@@ -485,66 +236,7 @@ existing enum column filters correctly as-is. `$filter=type eq 'CHANGE'` on
 `/team` works today, verified against a live backend, not merely against the
 codebase's own mock.
 
----
-
-## 6. Collection navigation (`multiRelation`) is unsupported server-side
-
-**Status: verified in source; currently unreachable in practice, but will
-become reachable the moment `/person` gets a `teams` filter.**
-
-The shared `multiRelation` filter variant (`src/lib/odata/build-filter-params.ts`,
-`src/lib/odata/build-advanced-filter-params.ts`) emits an OData `any()`
-lambda:
-
-```ts
-case "multiRelation": {
-  const relIds = value as number[] | undefined;
-  if (relIds && relIds.length > 0) {
-    const idList = relIds.map(Number).join(",");
-    clauses.push(`${field}/any(x: x/id in (${idList}))`);
-  }
-  break;
-}
-```
-
-`ODataFilterHelper.visitFilterInstance`
-(`ru.sber.cs.core.odata.mini.repo.odata.filter.ODataFilterHelper`) explicitly
-rejects this:
-
-```java
-if (ctx.anyClause() != null || ctx.allClause() != null) {
-    throw new ConflictException("Операторы any/all пока не поддерживаются");
-}
-```
-
-("any/all operators are not yet supported"). It is a hard, unconditional
-throw — there is no partial support.
-
-Today this is unreachable in practice: the only current consumer of the
-`multiRelation` variant is the Box feature (`src/features/box/*`), which is
-MSW-mock-only and never hits the real backend, per `grep` across
-`src/features` — `multiRelation` appears only in
-`build-advanced-filter-params.ts`, `build-filter-params.ts`, and the `box`
-feature's own files.
-
-The first *real* collection relation is the obvious next candidate:
-`Person.teams`, defined as
-
-```java
-// cometa-persistence-module/.../entity/auth/Person.java
-@ManyToMany(fetch = FetchType.LAZY)
-private Set<Team> teams;
-```
-
-But `PersonDto` (`cometa-service-module/.../service/dto/PersonDto.java`)
-currently does not expose `teams` at all — it has only `email`, `lastName`,
-`firstName`, `middleName`. So there is no live bug today; this is a landmine
-for whoever adds a "filter people by team" feature and assumes
-`multiRelation` will just work because it does in the Box mock.
-
----
-
-## 7. The Leader column was empty because Team's list queries hit the wrong endpoint and parameter (resolved — this was the actual root cause)
+## 4. The Leader column was empty because Team's list queries hit the wrong endpoint and parameter (resolved — this was the actual root cause)
 
 **Status: verified in source, and this was the actual, confirmed root cause
 of the Leader column rendering "—" for every row. Fixed by repointing
@@ -657,9 +349,7 @@ sub-path alone does not trigger the entity-graph fetch, and (per the fix
 above) neither does `$fields` against the plain `/team` route — only
 `/team/graph` *combined with* `$fields=leader` populates the relation.
 
----
-
-## 8. Write responses (`POST`/`PATCH`) return a stale `leaderId`/`leader` — verified, not a bug
+## 5. Write responses (`POST`/`PATCH`) return a stale `leaderId`/`leader` — verified, not a bug
 
 **Status: verified against a running backend, 2026-08-05. Recorded here
 because, without this note, it reads exactly like a bug to the next person
@@ -699,62 +389,79 @@ save — so this does not affect `/team` as shipped. It matters for anyone
 calling the API directly (scripts, manual testing, a future integration)
 who might otherwise read a stale response field as "the write didn't take."
 
----
+## 6. Nested sorting and collection filtering, verified 2026-08-26
 
-## What a future session needs to decide
+Two items the original document left open (nested `$orderby` hazards;
+`multiRelation`/`any()` support) have since been verified live and are
+**no longer open**:
 
-Updated 2026-08-05 after a live-backend verification pass resolved findings
-5 and 7. In priority order, distinguishing what's still open (needs a
-running backend) from what's already settled:
+**Nested sort works.** The original concern was a possible duplicate fetch
+join or duplicate order-map entry from the ANTLR parse tree. Verified
+instead:
 
-1. **[Unverified, needs a running server before relying on it — the one
-   open item]** Finding 3's two nested-sort hazards (possible duplicate
-   fetch join; possible duplicate/erroring order-map entries) were never
-   exercised — leader sorting is disabled by decision, so no live
-   `$orderby=leader.lastName`/`leaderLastName`-shaped request was ever sent.
-   Needed only if/when item 2 below is acted on.
+```
+GET /api/v1/team/graph?$top=5&$fields=leader&$orderby=leader/lastName desc
+HTTP 200  count=111
+  1450 SberCIB Terminal Processing    Яковлева
+  1451 eFX FIX Channels               Южаков
+  1518 SberCIB Terminal FX Products   Южаков
+  1437 [Service] Index Platform       Юдаков
+  1436 [Service] Emission Platform    Юдаков
+```
 
-2. **[Verified mechanism, product decision]** Decide whether leader sorting
-   should ever come back, and if so how:
-   - Cheapest, immediately available: `sortField: "leaderId"` (FK id order,
-     not alphabetical by name, but join-free and closes the stale-URL hole
-     in finding 4).
-   - Correct-but-unverified: `@ODataMapping(dtoField="leaderLastName",
-     entityField="leader.lastName")` on `TeamDto` + `sortField:
-     "leaderLastName"` — but only after finding 3's two hazards (item 1
-     above) are exercised against a running server against `/team/graph`
-     with `$fields=leader&$orderby=leaderLastName asc` together (both the
-     entity-graph fetch and the `@ODataMapping`-driven order-by fetch would
-     be live at once on that route).
+Identical to `SELECT … ORDER BY p.last_name DESC` in SQL. The library emits
+`ORDER BY leader.lastName` **without** a root-alias prefix (unlike a flat
+field, which gets `ORDER BY Team.name`); Hibernate 7.2 resolves the
+unqualified path against the single root `readAll` always produces, so
+there's no ambiguity. This is a real dependency on Hibernate's
+implicit-root resolution, not a documented contract — see the design spec's
+§6 "Remaining risks" for the fallback if a library/Hibernate bump ever
+breaks it.
 
-3. **[Unverified, no live consumer yet — verify before building on it]**
-   Before adding any `multiRelation` filter against a real backend
-   (e.g. "people by team"), confirm finding 6 by hitting any real
-   `any()`-based filter against the running API and confirming the
-   `ConflictException`. Then decide: expose `Person.teams` on `PersonDto`
-   only once there's a supported server-side path, e.g. a dedicated junction
-   filter/endpoint, since `any()` itself is a dead end.
+**`multiRelation` is supported, contrary to the original finding.** The
+original finding read `ODataFilterHelper.visitFilterInstance`
+unconditionally throwing `ConflictException` on `any()`/`all()` — but that
+class belongs to `ODataCriteriaService` (see Status above), which this
+backend never runs. On the actual `BaseCrudRepository`/JPQL path,
+`teams/any(x: x/id in (1425))` returns HTTP 200 with exactly the two
+expected people (Нилов and Мохов) on both `/api/v1/person` and
+`/api/v1/person/graph`. Order matters (§2 above): `contains_ignoring_case`
+before the `any()` clause returns 200; the reverse order returns 500.
 
-4. **[Already resolved, no action]** Finding 1 (nested `$filter`) — done,
-   flat `leaderId` scalar shipped and working. Listed here only as the
-   precedent the above should follow.
+## 7. Test coverage pinning this behaviour
 
-5. **[Already resolved, no action]** Finding 5 (enum-typed `type` filter) —
-   verified working against a live backend 2026-08-05 (counts 85/26 matched
-   the DB exactly for `CHANGE`/`RUN`). No `typeName` workaround needed; the
-   missing switch branch remains a place to look if a *different* enum
-   filter ever fails, but `Team.type` itself is fine as shipped.
+Backend: `ODataJpqlGenerationTest`
+(`cometa-service-module/src/test/java/ru/sberbank/cib/gmbus/odata/`) asserts
+the generated JPQL for six spellings from the design spec's
+verified-behaviour matrix — 6/6 passing as of this writing, and every
+assertion matches the matrix exactly. This exists so a library or Hibernate
+version bump that changes any of the above fails a test instead of silently
+producing wrong SQL. Two of its tests are explicitly commented as canaries
+for an upstream behaviour change: `navigationPathOrderByOmitsRootAlias`
+(flags it if the library ever starts qualifying `leader.lastName` with a
+root alias) and `clauseAfterAnyLambdaLosesTheRootAlias` (flags it if the
+root-alias corruption after `any()` ever stops reproducing). **For the
+latter, failing is good news**: it means the upstream library fixed the §2
+bug, and the frontend workaround (the "cap at one, emit last" ordering in
+`joinWithCappedLambdas`) can be simplified or removed.
 
-6. **[Already resolved, no action]** Finding 7 (wrong list endpoint/param) —
-   done, Team's list queries repointed at `/api/v1/team/graph` with
-   `$fields=leader`, and verified against a live backend 2026-08-05
-   (including the detail that `/graph` without `$fields` still returns
-   `leader: null`). This was the actual cause of the empty Leader column;
-   findings 2–4 (sorting) remain separately disabled per this document's
-   `Status` section.
+Frontend: `src/lib/odata/build-filter-params.test.ts` and
+`src/lib/odata/build-advanced-filter-params.test.ts` pin the `$filter`/
+`$orderby` strings each builder emits, including the `any()`-last ordering
+and the relation-vs-multiRelation split.
 
-7. **[Documented behavior, no action needed]** Finding 8 (stale
-   `leaderId`/`leader` in `POST`/`PATCH` response bodies) — verified
-   2026-08-05, expected given the `insertable=false, updatable=false`
-   mapping, not a bug. Recorded so it doesn't get mistaken for one by a
-   future direct API caller.
+## 8. Gotcha for any ad-hoc use of `OData2Jpql` outside the Spring request path
+
+`throw-on-field-not-found` (§1.2) is read **once**, at Spring
+autoconfiguration time, into a JVM-static field on
+`ThrowOnFieldNotFoundPropertyProvider`; later writes are ignored, and there
+is **no reset path**. That autoconfiguration is what disables strict
+validation for real requests. A script, REPL session, or a new test that
+constructs `OData2Jpql` directly — outside the Spring request path — never
+runs that autoconfiguration, so the flag stays at its default (`true`,
+strict) and any nav path or `any()` lambda throws `FieldNotFoundException`
+immediately. If you hit this, call
+`ThrowOnFieldNotFoundPropertyProvider.setThrowOnFieldNotFound(false)`
+yourself before constructing `OData2Jpql` — and do it early, since once the
+static is read/cached elsewhere in the same JVM, subsequent writes to it are
+silently ignored.

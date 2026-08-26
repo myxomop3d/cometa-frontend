@@ -69,4 +69,12 @@ src/
 - `.npmrc` has `legacy-peer-deps=true` (Vite 8 peer dep compat)
 - **New tables**: define columns, drive state via `useDataTable`, compose with `components/data-table/*`; pick filters from `components/filters/*` and operator/variant config from `config/data-table.ts`.
 - **New API resources**: add a file under `src/api/` exporting `queryOptions(...)` factories; reuse the OData filter helpers.
+- **Relation filters/sorts** (OData): a **to-one** relation uses a navigation
+  path with `/` — `sortField: "leader/lastName"`, `contains_ignoring_case(leader/lastName, 'x')`.
+  A dot is a parse error. A **to-many** relation uses `field/any(x: x/id in (…))`,
+  is filterable only (never sortable), and must be the **last** clause in a
+  `$filter` with at most one per request — odata-mini corrupts the root alias
+  for every clause after an `any()`. Requires
+  `odata.mini.repo.throw-on-field-not-found: false` on the backend. Full record:
+  `docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md`.
 - TS config: strict, `noUnusedLocals`/`noUnusedParameters`, ES2023 target, bundler resolution, `jsx: react-jsx`
