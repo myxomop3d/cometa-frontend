@@ -256,6 +256,20 @@ Then partition clauses in `buildAdvancedFilterParams`. Detect a lambda by its te
   }
 ```
 
+> **Correction (recorded during final review, after this plan shipped):** the
+> text-based check above (`clause.includes("/any(")`) is what was actually
+> implemented first, and it is wrong — a *text* filter whose value contains
+> the literal substring `/any(` is misclassified as a lambda, so it can win
+> the one-lambda cap and silently discard a real `multiRelation` filter. The
+> shipped fix partitions **structurally** on `entry.variant ===
+> "multiRelation"` instead: it is immune to user text, and since `not (…)`
+> wrapping doesn't touch `entry.variant`, it still catches negated lambdas —
+> the original rationale for the text check was false. See
+> `src/lib/odata/build-advanced-filter-params.ts` (the `entry.variant ===
+> "multiRelation"` partition) and the regression test `does not misclassify a
+> text value containing '/any(' as a lambda` in
+> `src/lib/odata/build-advanced-filter-params.test.ts`.
+
 - [ ] **Step 8: Fix the misleading JSDoc in both files**
 
 In `src/lib/odata/build-filter-params.ts`, replace the `sortField` doc comment on `FilterDescriptor`:
