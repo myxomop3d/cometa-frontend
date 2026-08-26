@@ -144,7 +144,7 @@ export function getTeamColumns({
         },
       },
       enableColumnFilter: true,
-      enableSorting: false,
+      enableSorting: true,
       size: 220,
     },
     {

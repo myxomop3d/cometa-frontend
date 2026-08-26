@@ -13,6 +13,7 @@ export const teamFilterDescriptors: readonly TeamFilterDescriptor[] = [
     id: "leader",
     variant: "relation",
     field: "leaderId",
+    sortField: "leader/lastName",
     filterKey: "leaderId",
   },
   { id: "leaderRole", variant: "text", filterKey: "leaderRole" },
