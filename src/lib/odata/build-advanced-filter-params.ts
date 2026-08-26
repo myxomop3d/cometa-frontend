@@ -3,7 +3,11 @@ import type {
   FilterOperator,
   FilterVariant,
 } from "@/types/data-table";
-import { joinWithCappedLambdas, odataString } from "./build-filter-params";
+import {
+  joinWithCappedLambdas,
+  odataString,
+  type CappedLambdaInfo,
+} from "./build-filter-params";
 
 export interface FieldEntry {
   field: string;
@@ -22,6 +26,9 @@ export interface BuildAdvancedFilterParamsInput {
   filters: ExtendedColumnFilter[];
   joinOperator: "and" | "or";
   fieldByColumnId: Record<string, FieldEntry>;
+  /** Called when a second (or later) collection `any()` filter had to be
+   *  dropped. See `joinWithCappedLambdas`. */
+  onLambdaCapped?: (info: CappedLambdaInfo) => void;
 }
 
 /** Operators that emit a clause even when value is empty/undefined. */
@@ -160,6 +167,7 @@ export function buildAdvancedFilterParams({
   filters,
   joinOperator,
   fieldByColumnId,
+  onLambdaCapped,
 }: BuildAdvancedFilterParamsInput): URLSearchParams {
   const searchParams = new URLSearchParams();
   searchParams.set("$skip", String((page - 1) * pageSize));
@@ -167,22 +175,30 @@ export function buildAdvancedFilterParams({
 
   const clauses: string[] = [];
   // Collection (multiRelation) filters go here instead of `clauses` — see
-  // joinWithCappedLambdas in build-filter-params.ts for why.
+  // joinWithCappedLambdas in build-filter-params.ts for why. Partitioned
+  // structurally on `entry.variant`, not by inspecting the rendered clause
+  // text: a text filter's own value can legitimately contain the substring
+  // "/any(" (e.g. searching for that literal text), and a string check would
+  // misclassify it as a lambda clause, stealing the one-lambda cap slot from
+  // a real multiRelation filter and silently dropping it. `entry.variant` is
+  // unaffected by `not (...)` wrapping too, so this also still catches
+  // negated (`notInArray`) lambda clauses correctly.
   const lambdaClauses: string[] = [];
   for (const filter of filters) {
     const entry = fieldByColumnId[filter.id];
     if (!entry) continue;
     const clause = clauseFor(filter, entry);
     if (clause === null) continue;
-    if (clause.includes("/any(")) lambdaClauses.push(clause);
+    if (entry.variant === "multiRelation") lambdaClauses.push(clause);
     else clauses.push(clause);
   }
 
-  const filterStr = joinWithCappedLambdas(
+  const filterStr = joinWithCappedLambdas({
     clauses,
     lambdaClauses,
-    ` ${joinOperator} `,
-  );
+    separator: ` ${joinOperator} `,
+    onCapped: onLambdaCapped,
+  });
   if (filterStr !== null) {
     searchParams.set("$filter", filterStr);
   }

@@ -259,4 +259,24 @@ describe("buildAdvancedFilterParams relation vs multiRelation", () => {
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
   });
+
+  // Regression for Critical-1: a text filter whose value happens to contain
+  // the substring "/any(" must NOT be misclassified as a collection lambda.
+  // The old code classified by `clause.includes("/any(")`, so this text
+  // clause would win the one-lambda cap slot and the real `things/any(...)`
+  // filter would be silently dropped. Partitioning must be structural, on
+  // `entry.variant`, not on the rendered clause text.
+  it("does not misclassify a text value containing '/any(' as a lambda", () => {
+    const p = build([
+      { id: "name", operator: "iLike", value: "a/any(b" },
+      {
+        id: "things",
+        operator: "inArray",
+        value: [{ id: 7, label: "g" }],
+      },
+    ]);
+    expect(p.get("$filter")).toBe(
+      "contains_ignoring_case(name, 'a/any(b') and things/any(x: x/id in (7))",
+    );
+  });
 });
