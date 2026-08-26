@@ -9,6 +9,32 @@ export function odataString(v: unknown): string {
   return String(v).replace(/'/g, "''");
 }
 
+/**
+ * Join scalar clauses with the (at most one) collection `any()` lambda
+ * appended last, or return null if there's nothing to filter on.
+ *
+ * odata-mini corrupts the root alias for every clause parsed after the first
+ * `any()` lambda, so lambda clauses are capped at one and always emitted
+ * last; a second one is dropped with a console warning rather than silently
+ * lost. See §3 of
+ * docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md
+ */
+export function joinWithCappedLambdas(
+  clauses: string[],
+  lambdaClauses: string[],
+  separator: string,
+): string | null {
+  if (lambdaClauses.length > 1) {
+    console.warn(
+      `[odata] ${lambdaClauses.length} collection filters were requested but only ` +
+        `"${lambdaClauses[0]}" was sent: odata-mini corrupts the root alias after ` +
+        `the first any() lambda.`,
+    );
+  }
+  const allClauses = [...clauses, ...lambdaClauses.slice(0, 1)];
+  return allClauses.length > 0 ? allClauses.join(separator) : null;
+}
+
 export interface FilterDescriptor {
   /** Column id (used as $filter field name, unless overridden). */
   id: string;
@@ -46,9 +72,8 @@ export function buildFilterParams({
   searchParams.set("$top", String(pageSize));
 
   const clauses: string[] = [];
-  // odata-mini corrupts the root alias for every clause parsed after an any()
-  // lambda, so collection filters are emitted last and capped at one.
-  // See §3 of docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md
+  // Collection (multiRelation) filters go here instead of `clauses` — see
+  // joinWithCappedLambdas above for why.
   const lambdaClauses: string[] = [];
   const byId = new Map(descriptors.map((d) => [d.id, d]));
 
@@ -141,17 +166,9 @@ export function buildFilterParams({
     }
   }
 
-  if (lambdaClauses.length > 1) {
-    console.warn(
-      `[odata] ${lambdaClauses.length} collection filters were requested but only ` +
-        `"${lambdaClauses[0]}" was sent: odata-mini corrupts the root alias after ` +
-        `the first any() lambda.`,
-    );
-  }
-
-  const allClauses = [...clauses, ...lambdaClauses.slice(0, 1)];
-  if (allClauses.length > 0) {
-    searchParams.set("$filter", allClauses.join(" and "));
+  const filterStr = joinWithCappedLambdas(clauses, lambdaClauses, " and ");
+  if (filterStr !== null) {
+    searchParams.set("$filter", filterStr);
   }
 
   if (sort) {

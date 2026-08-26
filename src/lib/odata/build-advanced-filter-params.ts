@@ -3,7 +3,7 @@ import type {
   FilterOperator,
   FilterVariant,
 } from "@/types/data-table";
-import { odataString } from "./build-filter-params";
+import { joinWithCappedLambdas, odataString } from "./build-filter-params";
 
 export interface FieldEntry {
   field: string;
@@ -166,7 +166,8 @@ export function buildAdvancedFilterParams({
   searchParams.set("$top", String(pageSize));
 
   const clauses: string[] = [];
-  // See §3 of the design spec: any() corrupts the root alias for later clauses.
+  // Collection (multiRelation) filters go here instead of `clauses` — see
+  // joinWithCappedLambdas in build-filter-params.ts for why.
   const lambdaClauses: string[] = [];
   for (const filter of filters) {
     const entry = fieldByColumnId[filter.id];
@@ -177,17 +178,13 @@ export function buildAdvancedFilterParams({
     else clauses.push(clause);
   }
 
-  if (lambdaClauses.length > 1) {
-    console.warn(
-      `[odata] ${lambdaClauses.length} collection filters were requested but only ` +
-        `"${lambdaClauses[0]}" was sent: odata-mini corrupts the root alias after ` +
-        `the first any() lambda.`,
-    );
-  }
-
-  const allClauses = [...clauses, ...lambdaClauses.slice(0, 1)];
-  if (allClauses.length > 0) {
-    searchParams.set("$filter", allClauses.join(` ${joinOperator} `));
+  const filterStr = joinWithCappedLambdas(
+    clauses,
+    lambdaClauses,
+    ` ${joinOperator} `,
+  );
+  if (filterStr !== null) {
+    searchParams.set("$filter", filterStr);
   }
 
   if (sort) {
