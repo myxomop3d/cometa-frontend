@@ -17,6 +17,16 @@ export interface CappedLambdaInfo {
   droppedCount: number;
 }
 
+/** A collection (`multiRelation`) filter clause, paired with the plain OData
+ *  field name it was built from. The field is threaded through structurally
+ *  — rather than re-derived by splitting the rendered `clause` text on
+ *  "/any(" — because a negated clause is wrapped as `not (field/any(...))`,
+ *  and splitting that on "/any(" yields "not (field", not "field". */
+export interface LambdaClause {
+  clause: string;
+  field: string;
+}
+
 /**
  * Join scalar clauses with the (at most one) collection `any()` lambda
  * appended last, or return null if there's nothing to filter on.
@@ -38,22 +48,25 @@ export function joinWithCappedLambdas({
   onCapped,
 }: {
   clauses: string[];
-  lambdaClauses: string[];
+  lambdaClauses: LambdaClause[];
   separator: string;
   onCapped?: (info: CappedLambdaInfo) => void;
 }): string | null {
   if (lambdaClauses.length > 1) {
     console.warn(
       `[odata] ${lambdaClauses.length} collection filters were requested but only ` +
-        `"${lambdaClauses[0]}" was sent: odata-mini corrupts the root alias after ` +
+        `"${lambdaClauses[0].clause}" was sent: odata-mini corrupts the root alias after ` +
         `the first any() lambda.`,
     );
     onCapped?.({
-      keptField: lambdaClauses[0].split("/any(")[0],
+      keptField: lambdaClauses[0].field,
       droppedCount: lambdaClauses.length - 1,
     });
   }
-  const allClauses = [...clauses, ...lambdaClauses.slice(0, 1)];
+  const allClauses = [
+    ...clauses,
+    ...lambdaClauses.slice(0, 1).map((l) => l.clause),
+  ];
   return allClauses.length > 0 ? allClauses.join(separator) : null;
 }
 
@@ -100,7 +113,7 @@ export function buildFilterParams({
   const clauses: string[] = [];
   // Collection (multiRelation) filters go here instead of `clauses` — see
   // joinWithCappedLambdas above for why.
-  const lambdaClauses: string[] = [];
+  const lambdaClauses: LambdaClause[] = [];
   const byId = new Map(descriptors.map((d) => [d.id, d]));
 
   for (const filter of columnFilters) {
@@ -186,7 +199,10 @@ export function buildFilterParams({
           ?.map(Number)
           .filter((n) => !Number.isNaN(n));
         if (relIds && relIds.length > 0) {
-          lambdaClauses.push(`${field}/any(x: x/id in (${relIds.join(",")}))`);
+          lambdaClauses.push({
+            clause: `${field}/any(x: x/id in (${relIds.join(",")}))`,
+            field,
+          });
         }
         break;
       }

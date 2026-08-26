@@ -16,5 +16,9 @@ export function notifyLambdaCapped({ keptField, droppedCount }: CappedLambdaInfo
     droppedCount === 1 ? "1 other filter" : `${droppedCount} other filters`;
   toast.warning(
     `Only one collection filter can be applied at a time — showing results for "${keptField}" only (${skipped} skipped).`,
+    // Stable id so repeated fetches (pagination, refetchOnWindowFocus, a new
+    // query key on every filter change) replace the existing toast instead
+    // of stacking a new one — sonner does not dedupe unowned toasts.
+    { id: `odata-lambda-capped:${keptField}` },
   );
 }

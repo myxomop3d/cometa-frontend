@@ -7,6 +7,7 @@ import {
   joinWithCappedLambdas,
   odataString,
   type CappedLambdaInfo,
+  type LambdaClause,
 } from "./build-filter-params";
 
 export interface FieldEntry {
@@ -68,6 +69,17 @@ function clauseFor(
   const { operator, value } = filter;
 
   if (NO_VALUE_OPERATORS.includes(operator)) {
+    // `multiRelation` is a JPA collection: comparing it to null (`things eq
+    // null`) raises a JPQL SemanticException -> HTTP 500. The UI no longer
+    // offers isEmpty/isNotEmpty for multiRelation columns
+    // (operatorsByVariant in config/data-table.ts), but filters round-trip
+    // through the URL and are validated only against the flat operator list
+    // (switchable-search.ts), not per-variant — so a bookmarked/shared URL
+    // from before that guard can still deserialize one. Contribute no
+    // clause rather than emit the invalid comparison. This also keeps such
+    // a filter out of `lambdaClauses` entirely (see the caller below), so it
+    // can't steal the one-lambda cap slot from a real collection filter.
+    if (variant === "multiRelation") return null;
     return operator === "isEmpty" ? `${field} eq null` : `${field} ne null`;
   }
 
@@ -183,14 +195,21 @@ export function buildAdvancedFilterParams({
   // a real multiRelation filter and silently dropping it. `entry.variant` is
   // unaffected by `not (...)` wrapping too, so this also still catches
   // negated (`notInArray`) lambda clauses correctly.
-  const lambdaClauses: string[] = [];
+  const lambdaClauses: LambdaClause[] = [];
   for (const filter of filters) {
     const entry = fieldByColumnId[filter.id];
     if (!entry) continue;
     const clause = clauseFor(filter, entry);
     if (clause === null) continue;
-    if (entry.variant === "multiRelation") lambdaClauses.push(clause);
-    else clauses.push(clause);
+    if (entry.variant === "multiRelation") {
+      // Pass entry.field structurally rather than re-deriving it from the
+      // clause text: a notInArray lambda renders as `not (field/any(...))`,
+      // and splitting that on "/any(" yields "not (field", which leaked
+      // into the user-facing toast (see notify-lambda-capped.ts).
+      lambdaClauses.push({ clause, field: entry.field });
+    } else {
+      clauses.push(clause);
+    }
   }
 
   const filterStr = joinWithCappedLambdas({

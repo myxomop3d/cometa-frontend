@@ -279,4 +279,66 @@ describe("buildAdvancedFilterParams relation vs multiRelation", () => {
       "contains_ignoring_case(name, 'a/any(b') and things/any(x: x/id in (7))",
     );
   });
+
+  // Regression: keptField must be derived structurally (entry.field), not by
+  // splitting the rendered clause on "/any(". A negated lambda renders as
+  // `not (things/any(...))`, and splitting that on "/any(" used to leak
+  // "not (things" into the user-facing toast.
+  it("reports the plain field name (no 'not (' prefix) when the kept lambda is negated", () => {
+    const onLambdaCapped = vi.fn();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const p = buildAdvancedFilterParams({
+      page: 1,
+      pageSize: 20,
+      filters: [
+        {
+          id: "things",
+          operator: "notInArray",
+          value: [{ id: 1, label: "a" }],
+        },
+        { id: "oldThings", operator: "inArray", value: [{ id: 2, label: "b" }] },
+      ],
+      joinOperator: "and",
+      fieldByColumnId,
+      onLambdaCapped,
+    });
+    expect(p.get("$filter")).toBe("not (things/any(x: x/id in (1)))");
+    expect(onLambdaCapped).toHaveBeenCalledWith({
+      keptField: "things",
+      droppedCount: 1,
+    });
+    warn.mockRestore();
+  });
+
+  // Regression for the last review item: a multiRelation + isEmpty/isNotEmpty
+  // filter must contribute no clause at all. `things eq null` raises a JPQL
+  // SemanticException -> HTTP 500 against this backend, and — because
+  // partitioning is now structural on entry.variant — a `things eq null`
+  // clause has no "/any(" in it yet would still be routed into
+  // lambdaClauses, where it could steal the one-lambda cap slot from a real
+  // collection filter. The guard in clauseFor must return null before either
+  // happens. This filter shape can only reach the builder via a
+  // bookmarked/shared URL now that the UI no longer offers these operators
+  // for multiRelation (see config/data-table.ts).
+  it("multiRelation isEmpty/isNotEmpty contributes no clause (would otherwise 500)", () => {
+    const p = build([{ id: "things", operator: "isEmpty", value: undefined }]);
+    expect(p.get("$filter")).toBeNull();
+
+    const p2 = build([
+      { id: "things", operator: "isNotEmpty", value: undefined },
+    ]);
+    expect(p2.get("$filter")).toBeNull();
+  });
+
+  it("multiRelation isEmpty does not steal the lambda cap from a real collection filter", () => {
+    const p = build([
+      { id: "things", operator: "isEmpty", value: undefined },
+      {
+        id: "oldThings",
+        operator: "inArray",
+        value: [{ id: 9, label: "z" }],
+      },
+    ]);
+    expect(p.get("$filter")).toBe("oldThings/any(x: x/id in (9))");
+  });
 });
