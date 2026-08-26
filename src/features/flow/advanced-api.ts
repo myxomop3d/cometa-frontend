@@ -6,6 +6,7 @@ import {
   buildAdvancedFilterParams,
   type FieldEntry,
 } from "@/lib/odata/build-advanced-filter-params";
+import { notifyLambdaCapped } from "@/lib/odata/notify-lambda-capped";
 
 export const flowFieldByColumnId: Record<string, FieldEntry> = {
   key:            { field: "key",            variant: "text" },
@@ -41,6 +42,7 @@ export function advancedDataTableQueryOptions(
       const searchParams = buildAdvancedFilterParams({
         ...params,
         fieldByColumnId: flowFieldByColumnId,
+        onLambdaCapped: notifyLambdaCapped,
       });
       return apiFetch<ApiResponse<FlowDto[]>>(
         `/api/v1/flow?${searchParams.toString()}`,

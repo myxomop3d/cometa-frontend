@@ -5,6 +5,7 @@ import {
   buildFilterParams,
   type FilterDescriptor,
 } from "@/lib/odata/build-filter-params";
+import { notifyLambdaCapped } from "@/lib/odata/notify-lambda-capped";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -128,6 +129,7 @@ export function createCrudApi<
     const searchParams = buildFilterParams({
       ...params,
       descriptors: filterDescriptors,
+      onLambdaCapped: notifyLambdaCapped,
     });
     for (const [k, v] of Object.entries(staticParams ?? {})) {
       searchParams.set(k, v);

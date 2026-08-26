@@ -6,6 +6,7 @@ import {
   buildAdvancedFilterParams,
   type FieldEntry,
 } from "@/lib/odata/build-advanced-filter-params";
+import { notifyLambdaCapped } from "@/lib/odata/notify-lambda-capped";
 
 export const teamFieldByColumnId: Record<string, FieldEntry> = {
   name:       { field: "name",       variant: "text" },
@@ -41,6 +42,7 @@ export function advancedDataTableQueryOptions(
       const searchParams = buildAdvancedFilterParams({
         ...params,
         fieldByColumnId: teamFieldByColumnId,
+        onLambdaCapped: notifyLambdaCapped,
       });
       searchParams.set("$fields", "leader");
       return apiFetch<ApiResponse<TeamDto[]>>(

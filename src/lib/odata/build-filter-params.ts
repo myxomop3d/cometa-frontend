@@ -9,6 +9,14 @@ export function odataString(v: unknown): string {
   return String(v).replace(/'/g, "''");
 }
 
+/** Reported when more than one collection `any()` lambda was requested and
+ *  one had to be dropped. `keptField` is the OData field name of the lambda
+ *  that survived (e.g. "things" for "things/any(x: x/id in (1,2))"). */
+export interface CappedLambdaInfo {
+  keptField: string;
+  droppedCount: number;
+}
+
 /**
  * Join scalar clauses with the (at most one) collection `any()` lambda
  * appended last, or return null if there's nothing to filter on.
@@ -18,18 +26,32 @@ export function odataString(v: unknown): string {
  * last; a second one is dropped with a console warning rather than silently
  * lost. See §3 of
  * docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md
+ *
+ * `onCapped` is an optional side-channel for a caller in a React layer (e.g.
+ * a queryFn) to surface a user-facing toast; this function stays pure aside
+ * from that opt-in callback and never triggers UI itself.
  */
-export function joinWithCappedLambdas(
-  clauses: string[],
-  lambdaClauses: string[],
-  separator: string,
-): string | null {
+export function joinWithCappedLambdas({
+  clauses,
+  lambdaClauses,
+  separator,
+  onCapped,
+}: {
+  clauses: string[];
+  lambdaClauses: string[];
+  separator: string;
+  onCapped?: (info: CappedLambdaInfo) => void;
+}): string | null {
   if (lambdaClauses.length > 1) {
     console.warn(
       `[odata] ${lambdaClauses.length} collection filters were requested but only ` +
         `"${lambdaClauses[0]}" was sent: odata-mini corrupts the root alias after ` +
         `the first any() lambda.`,
     );
+    onCapped?.({
+      keptField: lambdaClauses[0].split("/any(")[0],
+      droppedCount: lambdaClauses.length - 1,
+    });
   }
   const allClauses = [...clauses, ...lambdaClauses.slice(0, 1)];
   return allClauses.length > 0 ? allClauses.join(separator) : null;
@@ -54,6 +76,9 @@ export interface BuildFilterParamsInput {
   sort?: string;
   columnFilters: ColumnFiltersState;
   descriptors: readonly FilterDescriptor[];
+  /** Called when a second (or later) collection `any()` filter had to be
+   *  dropped. See `joinWithCappedLambdas`. */
+  onLambdaCapped?: (info: CappedLambdaInfo) => void;
 }
 
 /**
@@ -66,6 +91,7 @@ export function buildFilterParams({
   sort,
   columnFilters,
   descriptors,
+  onLambdaCapped,
 }: BuildFilterParamsInput): URLSearchParams {
   const searchParams = new URLSearchParams();
   searchParams.set("$skip", String((page - 1) * pageSize));
@@ -156,17 +182,23 @@ export function buildFilterParams({
       }
 
       case "multiRelation": {
-        const relIds = value as number[] | undefined;
+        const relIds = (value as number[] | undefined)
+          ?.map(Number)
+          .filter((n) => !Number.isNaN(n));
         if (relIds && relIds.length > 0) {
-          const idList = relIds.map(Number).join(",");
-          lambdaClauses.push(`${field}/any(x: x/id in (${idList}))`);
+          lambdaClauses.push(`${field}/any(x: x/id in (${relIds.join(",")}))`);
         }
         break;
       }
     }
   }
 
-  const filterStr = joinWithCappedLambdas(clauses, lambdaClauses, " and ");
+  const filterStr = joinWithCappedLambdas({
+    clauses,
+    lambdaClauses,
+    separator: " and ",
+    onCapped: onLambdaCapped,
+  });
   if (filterStr !== null) {
     searchParams.set("$filter", filterStr);
   }

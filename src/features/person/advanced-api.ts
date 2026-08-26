@@ -6,6 +6,7 @@ import {
   buildAdvancedFilterParams,
   type FieldEntry,
 } from "@/lib/odata/build-advanced-filter-params";
+import { notifyLambdaCapped } from "@/lib/odata/notify-lambda-capped";
 
 export const personFieldByColumnId: Record<string, FieldEntry> = {
   email:      { field: "email",      variant: "text" },
@@ -40,6 +41,7 @@ export function advancedDataTableQueryOptions(
       const searchParams = buildAdvancedFilterParams({
         ...params,
         fieldByColumnId: personFieldByColumnId,
+        onLambdaCapped: notifyLambdaCapped,
       });
       return apiFetch<ApiResponse<PersonDto[]>>(
         `/api/v1/person/graph?${searchParams.toString()}`,

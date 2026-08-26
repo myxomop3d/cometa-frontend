@@ -6,6 +6,7 @@ import {
   buildAdvancedFilterParams,
   type FieldEntry,
 } from "@/lib/odata/build-advanced-filter-params";
+import { notifyLambdaCapped } from "@/lib/odata/notify-lambda-capped";
 
 /**
  * Column-id -> OData field mapping for the advanced filter builder.
@@ -52,6 +53,7 @@ export function advancedDataTableQueryOptions(
       const searchParams = buildAdvancedFilterParams({
         ...params,
         fieldByColumnId: boxFieldByColumnId,
+        onLambdaCapped: notifyLambdaCapped,
       });
       return apiFetch<ApiResponse<BoxDto[]>>(
         `/api/v1/box?${searchParams.toString()}`,
