@@ -1,3 +1,5 @@
+import { parseIdList } from "@/lib/data-table/switchable-search";
+
 function asStr(v: unknown): string | undefined {
   return typeof v === "string" ? v : undefined;
 }
@@ -8,5 +10,6 @@ export function validatePersonSimpleFields(search: Record<string, unknown>) {
     lastName: asStr(search.lastName),
     firstName: asStr(search.firstName),
     middleName: asStr(search.middleName),
+    teamIds: parseIdList(search.teamIds),
   };
 }

@@ -12,12 +12,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import type { PersonDto } from "@/types/api";
+import { teamsFilteredQueryOptions } from "@/features/team/api";
+import type { PersonDto, TeamDto } from "@/types/api";
 import type { PersonRowAction } from "./row-action";
 
 interface GetPersonColumnsProps {
   setRowAction: React.Dispatch<React.SetStateAction<PersonRowAction | null>>;
 }
+
+const teamRelationColumns: ColumnDef<TeamDto, unknown>[] = [
+  { accessorKey: "id", header: "ID", size: 80 },
+  { accessorKey: "name", header: "Name" },
+];
 
 export function getPersonColumns({
   setRowAction,
@@ -122,6 +128,40 @@ export function getPersonColumns({
       enableColumnFilter: true,
       enableSorting: true,
       size: 180,
+    },
+    {
+      // Filter-only: no PersonDto.teams display field is wired up (see
+      // task-4 scope — the Teams display column was deliberately deferred to
+      // avoid triggering Hibernate in-memory pagination on every Person list
+      // request). This column exists solely to host the team-membership
+      // filter picker in the toolbar; it has no accessorKey, so it never
+      // appears in the View Options list, and it's hidden from the table
+      // body via `initialColumnVisibility` in switchable-config.ts.
+      id: "teams",
+      // TanStack's `getCanFilter()` requires a truthy `accessorFn` to enable
+      // filtering — with no PersonDto.teams field to key off of (scope
+      // deferred that), this synthetic accessor exists purely to satisfy
+      // that check. It intentionally always returns undefined: there is no
+      // display value, and `enableHiding: false` below keeps the column out
+      // of the View Options list despite now having an accessorFn.
+      accessorFn: () => undefined,
+      header: "Teams",
+      meta: {
+        label: "Teams",
+        variant: "multiRelation",
+        filterKey: "teamIds",
+        relationConfig: {
+          queryOptionsFn: (filters: Record<string, unknown>) =>
+            teamsFilteredQueryOptions(filters),
+          columns: teamRelationColumns,
+          getLabel: (team: TeamDto) => team.name ?? String(team.id),
+          getId: (team: TeamDto) => team.id,
+        },
+      },
+      enableColumnFilter: true,
+      enableSorting: false,
+      enableHiding: false,
+      size: 0,
     },
     {
       id: "actions",

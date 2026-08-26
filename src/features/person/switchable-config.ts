@@ -11,6 +11,7 @@ export const personSimpleFilterKeys = [
   "lastName",
   "firstName",
   "middleName",
+  "teamIds",
 ] as const;
 
 export const personSwitchableConfig: SwitchableTableConfig<
@@ -24,4 +25,9 @@ export const personSwitchableConfig: SwitchableTableConfig<
   simpleFilterKeys: personSimpleFilterKeys,
   getColumns: getPersonColumns,
   initialColumnPinning: { left: ["select", "id"], right: ["actions"] },
+  // The "teams" column exists only to host the team-membership filter picker
+  // (no PersonDto.teams display field is wired up — see task-4 scope). Hide
+  // it from the table body; it has no accessorFn so it's already excluded
+  // from the View Options toggle list.
+  initialColumnVisibility: { teams: false },
 };

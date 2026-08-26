@@ -52,6 +52,42 @@ function detailQueryOptions(id: number) {
   });
 }
 
+/**
+ * Options for `RelationPicker` (used by the Person table's Teams filter).
+ * Same `{ name?, ids?, page?, pageSize? }` contract as `fetchPersonsFiltered`
+ * in `src/features/person/api.ts`. Uses plain `/api/v1/team`.
+ */
+export async function fetchTeamsFiltered(
+  filters: Record<string, unknown> = {},
+): Promise<ApiResponse<TeamDto[]>> {
+  const params = new URLSearchParams();
+  const { page = 1, pageSize = 20, ...fieldFilters } = filters;
+  params.set("$skip", String((Number(page) - 1) * Number(pageSize)));
+  params.set("$top", String(pageSize));
+
+  const clauses: string[] = [];
+  if (fieldFilters.name) {
+    clauses.push(`contains_ignoring_case(name, '${odataString(fieldFilters.name)}')`);
+  }
+  if (Array.isArray(fieldFilters.ids) && fieldFilters.ids.length > 0) {
+    const ids = (fieldFilters.ids as unknown[]).map(Number).filter(Number.isFinite);
+    if (ids.length > 0) clauses.push(`id in (${ids.join(",")})`);
+  }
+  if (clauses.length > 0) params.set("$filter", clauses.join(" and "));
+
+  return apiFetch<ApiResponse<TeamDto[]>>(`/api/v1/team?${params.toString()}`);
+}
+
+export function teamsFilteredQueryOptions(
+  filters: Record<string, unknown> = {},
+) {
+  return queryOptions({
+    queryKey: ["teams", "relation-list", filters] as const,
+    queryFn: () => fetchTeamsFiltered(filters),
+    placeholderData: keepPreviousData,
+  });
+}
+
 export const teamApi = {
   ...baseApi,
   advancedDataTableQueryOptions,

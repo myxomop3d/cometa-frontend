@@ -8,6 +8,13 @@ import { advancedDataTableQueryOptions } from "./advanced-api";
 
 const baseApi = createCrudApi<PersonDto, PersonFilters, PersonWritePayload>({
   basePath: "/api/v1/person",
+  // Reads go through the entity-graph endpoint so both plain and any()
+  // lambda filters (e.g. teams/any(...)) work consistently; create/patch/
+  // fetchOne/remove stay on the plain resource path (`/graph` is read-only).
+  // No `staticParams: { "$fields": "teams" }` here — the Teams display
+  // column was deliberately deferred (see task-4 scope) to avoid triggering
+  // Hibernate in-memory pagination (HHH90003004) on every Person list read.
+  listPath: "/api/v1/person/graph",
   queryKey: ["persons"],
   filterDescriptors: personFilterDescriptors,
 });

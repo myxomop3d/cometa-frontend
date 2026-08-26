@@ -12,6 +12,7 @@ export const personFieldByColumnId: Record<string, FieldEntry> = {
   lastName:   { field: "lastName",   variant: "text" },
   firstName:  { field: "firstName",  variant: "text" },
   middleName: { field: "middleName", variant: "text" },
+  teams:      { field: "teams",      variant: "multiRelation" },
 };
 
 export interface AdvancedDataTableQueryParams {
@@ -41,7 +42,7 @@ export function advancedDataTableQueryOptions(
         fieldByColumnId: personFieldByColumnId,
       });
       return apiFetch<ApiResponse<PersonDto[]>>(
-        `/api/v1/person?${searchParams.toString()}`,
+        `/api/v1/person/graph?${searchParams.toString()}`,
       );
     },
     placeholderData: keepPreviousData,
