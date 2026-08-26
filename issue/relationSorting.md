@@ -18,11 +18,24 @@ Cometa uses `BaseCrudRepository`'s JPQL-string path
 `BaseCrudRepository`, assembling a JPQL string from `ODataFilter.getWhereJpql()`
 and `ODataOrderby.getOrderbyJpql()`). `ODataCriteriaService` — the JPA
 Criteria API builder that a much earlier version of this document reasoned
-about — **is never instantiated anywhere in the backend.** The four findings
-that relied on it (originally numbered 1, 2, 3 and 6: nested `$filter` can't
-work, nested `$orderby` fails at field validation, two further Criteria-API
-hazards, and `any()`/`all()` being unsupported) do not apply to this backend
-and have been **replaced below**, not appended to.
+about — **is never instantiated anywhere in the backend.** Three of the
+original findings (numbered 1, 3 and 6: nested `$filter` can't work, two
+further Criteria-API hazards, and `any()`/`all()` being unconditionally
+rejected) are entirely about that class, do not apply to this backend, and
+have been **replaced below**, not appended to.
+
+The original finding 2 ("nested `$orderby` fails at field validation") is
+different and needs a more careful correction, not a blanket dismissal: its
+*mechanism* — `ODataOrderby`'s constructor calling `OData2Jpql.parseOrderByConditions`,
+which calls `ODataChecker.checkFields` before any path parsing — is real and
+runs on the JPQL-string path this backend does use (the same
+`ODataOrderby.getOrderbyJpql()` named above). What was wrong was its
+*conclusion* that nested sorting is therefore impossible. `checkFields` only
+throws when strict validation is on, and §1.2 below turns strict validation
+off (`odata.mini.repo.throw-on-field-not-found: false`) — which is exactly
+what makes Rule A's nav-path sorting work in practice. So finding 2's
+mechanism is accurate and still runs today; only its blanket "this can't
+work" conclusion is superseded.
 
 Current state, all shipped and live-verified:
 
@@ -44,6 +57,21 @@ Current state, all shipped and live-verified:
   yet **display** a Teams column — see the cross-linked pagination issue.
 
 ## 1. The standard (spec §2)
+
+Verified behaviour for every spelling exercised, copied from the design
+spec's "Verified behaviour" table (spec, "Verified behaviour" section):
+
+| spelling | strict `checkFields` | generated JPQL | live result |
+|---|---|---|---|
+| `name desc` | pass | `Team.name desc` | 200 |
+| `leader/lastName desc` | **`FieldNotFoundException`** | `leader.lastName desc` (no root alias) | **200 when strict is off** |
+| `leader.lastName desc` | — | ANTLR parse error | 500 |
+| `leaderLastName desc` (`@ODataMapping`) | pass | `Team.leader.lastName desc` | not exercised |
+| `contains_ignoring_case(leader/lastName,'мох')` | `FieldNotFoundException` | `LOWER(leader.lastName) LIKE …` | 200, count=1 when strict is off |
+| `teams/any(x: x/id eq N)` | `FieldNotFoundException` | `EXISTS (SELECT x FROM Person.teams x WHERE x.id = N)` | 200, correct rows when strict is off |
+| `teams/any(Teams: Teams/id eq N)` | pass | `EXISTS (SELECT Teams FROM Person.teams Teams …)` | 200, correct rows |
+| clause *following* an `any()` | pass | root alias corrupted | **500** — see §2 below |
+| `type eq 'CHANGE'` (enum) | pass | `Team.type = 'CHANGE'` | 200, count=85 |
 
 ### Rule A — to-one relation → navigation path
 
@@ -81,13 +109,20 @@ odata.mini.repo:
   throw-on-field-not-found: false
 ```
 
-Both rules depend on this. Strict validation (the library default) rejects
-`leader/lastName` and `teams/any(...)` at `ODataChecker.checkFields` before
-either ever reaches Hibernate, because a to-one association's nested field
-and a collection's lambda path are not flat field names it knows about. With
-strict validation off, an unknown field instead becomes a Hibernate
-`SemanticException` at execution — still a 500, so the practical trade is
-error-message quality, not safety.
+Both rules depend on this. `ODataChecker` (2.2.0) registers three forms of
+field name: flat entity fields (`leader`, `name`); `<Entity>.<flat>` forms
+(`Team.leader`); and — **only for `Collection`-typed fields** —
+`Capitalize(field).<child>` (e.g. `Teams.id`). A to-one association gets no
+nested registration at all, so strict validation rejects `leader/lastName`
+**unconditionally** — no lambda-variable-style spelling would satisfy it,
+because there is no lambda involved. A to-many `any()` lambda is different:
+`teams/any(Teams: Teams/id eq N)` **passes** strict validation, because
+`Teams.id` is exactly the registered `Capitalize(collectionField).<child>`
+form (see the matrix above). It is specifically our `x` spelling
+(`teams/any(x: x/id eq N)`) that strict rejects, since `x` isn't the
+field's capitalized name. With strict validation off, an unknown field
+instead becomes a Hibernate `SemanticException` at execution — still a 500,
+so the practical trade is error-message quality, not safety.
 
 ## 2. Library bug: `any()` corrupts the root alias for every later clause
 
@@ -128,7 +163,7 @@ library version ships.
 The three sections that follow (§3–§5) are the original findings 5, 7 and 8,
 kept **verbatim** — they were verified against a running backend on
 2026-08-05 and remain true; the prose is unedited even where its literal
-wording is now dated. Two things to know when reading them:
+wording is now dated. Three things to know when reading them:
 
 - Where they say **"finding 1"**, that refers to the flat, read-only
   `leaderId` scalar column described in the Status section above — still
@@ -237,6 +272,9 @@ existing enum column filters correctly as-is. `$filter=type eq 'CHANGE'` on
 codebase's own mock.
 
 ## 4. The Leader column was empty because Team's list queries hit the wrong endpoint and parameter (resolved — this was the actual root cause)
+
+*(Retained verbatim — see "Note on the findings retained below" above §3 for
+what its internal "finding 1" / "finding 2/4" references mean today.)*
 
 **Status: verified in source, and this was the actual, confirmed root cause
 of the Leader column rendering "—" for every row. Fixed by repointing
@@ -350,6 +388,9 @@ above) neither does `$fields` against the plain `/team` route — only
 `/team/graph` *combined with* `$fields=leader` populates the relation.
 
 ## 5. Write responses (`POST`/`PATCH`) return a stale `leaderId`/`leader` — verified, not a bug
+
+*(Retained verbatim — see "Note on the findings retained below" above §3 for
+what its internal "finding 1" / "finding 7" references mean today.)*
 
 **Status: verified against a running backend, 2026-08-05. Recorded here
 because, without this note, it reads exactly like a bug to the next person
