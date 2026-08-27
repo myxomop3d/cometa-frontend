@@ -1,12 +1,23 @@
 # `PersonDto.teams` forces Hibernate into in-memory pagination
 
-**Status:** open, deliberately deferred (updated 2026-08-26). The Teams
-display column has shipped and `$fields=teams` is now requested on every
-Person list read, so the in-memory pagination described below is **active in
-production**, not hypothetical. This is a known, accepted cost — the owner
-decided to ship the column and live with it for now, and separately declined
-gating the fetch on column visibility (see option 1). The real fix, when this
-starts to hurt, is option 2 or 3.
+**Status:** fixed (updated 2026-08-27). Backend commits `9d84518` (detect
+to-many attributes in an entity graph via the JPA metamodel), `3cc44d4` (page
+roots then fetch the graph when it pulls a collection), and `b3498cb` (read
+the list count and page in one transaction), on branch `feature/gm` in
+`F:\programming\cometa`, implement option 2 below. Design record:
+`docs/superpowers/specs/2026-08-27-entity-graph-collection-pagination-design.md`.
+
+`$fields=teams` still remains unconditional on every Person list request —
+that decision (option 1, declined) is unchanged by this work. What changed is
+that the underlying `teams` collection fetch is now cheap: `EntityGraphBaseCrudRepository`
+checks the JPA metamodel to see whether a request's entity graph pulls a
+to-many collection, and when it does and the request is paged, the read
+splits into a plain query that pages the roots (so `LIMIT`/`OFFSET` reach
+Postgres) followed by a second query that fetches the graph for exactly those
+ids, with the first query's row order restored in Java. To-one graphs such as
+`/team`'s `$fields=leader` are unaffected and still take the single-query
+path. This is exactly what option 2 promised, and it is what live
+verification below confirms.
 
 ## The finding
 
@@ -21,20 +32,24 @@ with collection fetch; applying in memory
 The warning fired on **every** paginated request that included `$fields=teams` —
 three out of three during the verification run.
 
-This is a **performance** defect, not a correctness one. Everything still
-returns the right answer:
+This was a **performance** defect, not a correctness one — the answer was
+always right. It was verified once more, live, after the fix landed
+(`.superpowers/sdd/2026-08-27-entity-graph-collection-pagination/task-4-report.md`
+has the full transcript):
 
 | Check | Result |
 |---|---|
 | `teams` populated with the right shape (`{id, name}`, no `leader` nesting) | PASS |
 | `count` correct on a later page (`$top=20&$skip=20`) — 222, 20 rows returned | PASS |
 | Persons in no team still appear (`$top=200`) — 200 returned, 198 teamless | PASS |
-| No in-memory-pagination warning | **FAIL** |
+| `HHH90003004` in-memory-pagination warning count across the whole matrix | **0 (PASS)** |
+| Page query for `$top=20&$skip=20&$fields=teams` reaches Postgres as SQL paging | `select ... from gmsb.person p1_0 order by p1_0.id offset 20 rows fetch first 20 rows only`, followed by a separate `where p1_0.id in (83,84,...,102)` fetch for the teams graph — **PASS** |
 
-At the current dataset (222 persons) the practical cost is that each page
-request materialises all 222 matching rows and slices them in the JVM, rather
-than pushing `LIMIT`/`OFFSET` to Postgres. It scales linearly with the person
-table.
+At the current dataset (222 persons) the fix means each page request pages
+20 root rows in SQL and then fetches the graph for exactly those 20 ids,
+instead of materialising all 222 matching rows and slicing them in the JVM.
+The cost no longer scales with the whole person table, only with the page
+size.
 
 ## Why it matters more than the row count suggests
 
@@ -82,8 +97,10 @@ teams/any(x: x/id in (1425,1432))
 ```
 
 The Teams **display column** has shipped (`src/features/person/columns.tsx`).
-Nothing is blocked by this issue anymore — it is now a live performance debt
-being paid on every Person list read, not a blocker on any pending work.
+`$fields=teams` is still requested unconditionally on every Person list read
+(option 1 remains declined, see below), but the fetch it triggers is now
+cheap — see the results table under "The finding" above for the measured
+outcome.
 
 ## What to do when picking this up
 
@@ -106,19 +123,32 @@ Options, roughly in increasing order of effort:
    and fix the underlying problem via option 2 or 3 when it actually starts to
    hurt.
 
-2. **Two-query fetch.** Page the persons normally (no collection fetch, so
-   `LIMIT`/`OFFSET` reach the DB), then issue one batched follow-up for the team
-   names of the returned ids. Keeps pagination in SQL; costs one extra round
-   trip.
+2. ~~**Two-query fetch.**~~ **Implemented (2026-08-27).** Page the persons
+   normally (no collection fetch, so `LIMIT`/`OFFSET` reach the DB), then issue
+   one batched follow-up for the team names of the returned ids. This is what
+   `EntityGraphBaseCrudRepository` does now: a metamodel check detects when a
+   request's entity graph pulls a to-many collection, and when the request is
+   also paged, the repository pages the root ids with a plain query first and
+   fetches the graph for those ids second, restoring the original row order in
+   Java. Keeps pagination in SQL at the cost of one extra round trip, exactly
+   as this option predicted. Backend commits `9d84518`, `3cc44d4`, `b3498cb`
+   on `feature/gm`; design record
+   `docs/superpowers/specs/2026-08-27-entity-graph-collection-pagination-design.md`.
 3. **Fix it at the ORM layer.** A `@BatchSize` / `subselect` fetch strategy on
    `Person.teams`, or an explicit projection query, can keep pagination in SQL.
    Needs care: the naive `JOIN FETCH` is exactly what produces the warning.
+   Not needed — option 2 resolved the problem without touching the ORM fetch
+   strategy.
 
-Do **not** "work around" it by clamping page size or by fetching the collection
-eagerly on every entity — both trade this problem for a worse one.
+The triage also ruled out "working around" it by clamping page size or by
+fetching the collection eagerly on every entity — both would have traded this
+problem for a worse one. Kept here as a record of what was ruled out, since
+option 2 made neither necessary.
 
 ## Related
 
 - `issue/relationSorting.md` — the broader OData relation filter/sort hazard log.
 - `docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md` — the
-  design this work implements.
+  design that introduced `$fields=teams`.
+- `docs/superpowers/specs/2026-08-27-entity-graph-collection-pagination-design.md` —
+  the design that fixed the in-memory pagination described in this issue.

@@ -77,10 +77,14 @@ four text fields. `RelationPicker` is not a labelable native input, so this is
 not a one-line fix; it needs an `aria-labelledby` on the picker's trigger.
 Accessibility follow-up.
 
-## Related, still live
+## Related, now fixed
 
 `issue/personTeamsInMemoryPagination.md` — requesting `$fields=teams`
-unconditionally makes Hibernate paginate the Person list in memory. That cost
-was accepted before this work and is unchanged by it, but this standard makes
-`$fields` requests more common, so it is worth re-reading before adding another
-unconditional relation fetch.
+unconditionally used to make Hibernate paginate the Person list in memory.
+That cost was accepted before this work and was unchanged by it, but it is
+now fixed: `EntityGraphBaseCrudRepository` pages the roots and fetches the
+graph in a second query whenever an entity graph pulls a to-many collection,
+per `docs/superpowers/specs/2026-08-27-entity-graph-collection-pagination-design.md`.
+`$fields=teams` is still unconditional — that part of the picture is
+unchanged — but the fetch it triggers is cheap now, which is worth knowing
+before adding another unconditional relation fetch.
