@@ -18,8 +18,8 @@ describe("team leader sorting", () => {
     expect(build("leader.desc").get("$orderby")).toBe("leader/lastName desc");
   });
 
-  it("still filters the leader by the flat scalar FK", () => {
+  it("filters the leader via the nav path", () => {
     const p = build(undefined, [{ id: "leader", value: 30 }]);
-    expect(p.get("$filter")).toBe("leaderId eq 30");
+    expect(p.get("$filter")).toBe("leader/id eq 30");
   });
 });

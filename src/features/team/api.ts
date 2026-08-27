@@ -48,7 +48,11 @@ function comboboxQueryOptions(search: string) {
 function detailQueryOptions(id: number) {
   return queryOptions({
     queryKey: ["teams", "detail", id] as const,
-    queryFn: () => apiFetch<ApiResponse<TeamDto>>(`/api/v1/team/${id}`),
+    // $fields=leader is required: since TeamDto.leaderId was removed, the
+    // leader's id arrives only inside the nested ref. Without it,
+    // teamDtoToForm yields leaderId 0 and the sheet reports a missing leader.
+    queryFn: () =>
+      apiFetch<ApiResponse<TeamDto>>(`/api/v1/team/${id}?$fields=leader`),
   });
 }
 

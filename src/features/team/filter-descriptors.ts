@@ -12,7 +12,11 @@ export const teamFilterDescriptors: readonly TeamFilterDescriptor[] = [
   {
     id: "leader",
     variant: "relation",
-    field: "leaderId",
+    // OData path against the Team entity. `field` is the query spelling and
+    // moved to the nav path when Team.leaderId was removed; `filterKey` is the
+    // URL search-param name and must NEVER change — renaming it breaks
+    // bookmarked URLs. Live-verified for row set and envelope count.
+    field: "leader/id",
     sortField: "leader/lastName",
     filterKey: "leaderId",
   },
