@@ -7,6 +7,9 @@ export function personDtoToForm(dto: PersonDto): PersonFormValues {
     lastName: dto.lastName,
     firstName: dto.firstName,
     middleName: dto.middleName,
+    // `teams` is absent on any read that omitted $fields=teams; an absent
+    // relation and an empty relation both mean "nothing to preselect".
+    teamIds: dto.teams?.map((t) => t.id) ?? [],
   };
 }
 
@@ -16,6 +19,7 @@ export function personFormToCreate(v: PersonFormValues): PersonWritePayload {
     lastName: v.lastName,
     firstName: v.firstName,
     middleName: v.middleName,
+    teams: v.teamIds.map((id) => ({ id })),
   };
 }
 
@@ -29,14 +33,30 @@ function isDirty(flag: unknown): boolean {
   return Boolean(flag);
 }
 
+/** Order-independent set comparison. Team membership has no meaningful order,
+ *  so a reorder must not be reported as a change. */
+function sameIdSet(a: number[], b: number[]): boolean {
+  if (a.length !== b.length) return false;
+  const seen = new Set(b);
+  return a.every((id) => seen.has(id));
+}
+
 export function personFormToPatch(
   v: PersonFormValues,
   dirty: PersonDirtyFields,
+  originalTeamIds: number[],
 ): Partial<PersonWritePayload> {
   const out: Partial<PersonWritePayload> = {};
   if (isDirty(dirty.email)) out.email = v.email;
   if (isDirty(dirty.lastName)) out.lastName = v.lastName;
   if (isDirty(dirty.firstName)) out.firstName = v.firstName;
   if (isDirty(dirty.middleName)) out.middleName = v.middleName;
+
+  // Deliberately NOT driven by `dirty.teamIds`. react-hook-form reports an
+  // emptied array as clean under `isDirty` above, so "remove from every team"
+  // would silently no-op. Compare against the original set instead.
+  if (!sameIdSet(v.teamIds, originalTeamIds)) {
+    out.teams = v.teamIds.map((id) => ({ id }));
+  }
   return out;
 }

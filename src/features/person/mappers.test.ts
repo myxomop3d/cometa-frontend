@@ -15,6 +15,18 @@ const dto: PersonDto = {
   lastName: "Иванов",
   firstName: "Иван",
   middleName: "Иванович",
+  teams: [
+    {
+      id: 3,
+      insertedAt: null,
+      updatedAt: null,
+      name: "Платформа",
+      code: 1234,
+      type: "CHANGE",
+      leaderRole: null,
+      structure: null,
+    },
+  ],
 };
 
 const form: PersonFormValues = {
@@ -22,43 +34,93 @@ const form: PersonFormValues = {
   lastName: "Иванов",
   firstName: "Иван",
   middleName: "Иванович",
+  teamIds: [3],
 };
 
 describe("personDtoToForm", () => {
   it("drops server-managed fields and keeps the four editable ones", () => {
     expect(personDtoToForm(dto)).toEqual(form);
   });
+
+  it("yields an empty team list when teams is absent", () => {
+    // Any read that omitted $fields=teams.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { teams: _teams, ...withoutTeams } = dto;
+    expect(personDtoToForm(withoutTeams as PersonDto).teamIds).toEqual([]);
+  });
+
+  it("yields an empty team list when the person is in no teams", () => {
+    expect(personDtoToForm({ ...dto, teams: [] }).teamIds).toEqual([]);
+  });
 });
 
 describe("personFormToCreate", () => {
-  it("returns the full write payload", () => {
+  it("writes teams as refs", () => {
     expect(personFormToCreate(form)).toEqual({
       email: "ivanov@example.com",
       lastName: "Иванов",
       firstName: "Иван",
       middleName: "Иванович",
+      teams: [{ id: 3 }],
     });
   });
 });
 
 describe("personFormToPatch", () => {
   it("returns only dirty fields", () => {
-    expect(personFormToPatch(form, { email: true })).toEqual({
+    expect(personFormToPatch(form, { email: true }, form.teamIds)).toEqual({
       email: "ivanov@example.com",
     });
   });
 
   it("returns an empty object when nothing is dirty", () => {
-    expect(personFormToPatch(form, {})).toEqual({});
+    expect(personFormToPatch(form, {}, form.teamIds)).toEqual({});
   });
 
   it("treats a non-empty array flag as dirty", () => {
-    expect(personFormToPatch(form, { lastName: [true] })).toEqual({
+    expect(
+      personFormToPatch(form, { lastName: [true] }, form.teamIds),
+    ).toEqual({
       lastName: "Иванов",
     });
   });
 
   it("treats an empty array flag as clean", () => {
-    expect(personFormToPatch(form, { lastName: [] })).toEqual({});
+    expect(personFormToPatch(form, { lastName: [] }, form.teamIds)).toEqual(
+      {},
+    );
+  });
+});
+
+describe("personFormToPatch team membership", () => {
+  it("omits teams entirely when membership is unchanged", () => {
+    expect(personFormToPatch(form, {}, [3])).toEqual({});
+  });
+
+  it("ignores ordering when deciding whether membership changed", () => {
+    const reordered: PersonFormValues = { ...form, teamIds: [7, 3] };
+    expect(personFormToPatch(reordered, {}, [3, 7])).toEqual({});
+  });
+
+  it("sends the full replacement set when a team is added", () => {
+    const added: PersonFormValues = { ...form, teamIds: [3, 7] };
+    expect(personFormToPatch(added, {}, [3])).toEqual({
+      teams: [{ id: 3 }, { id: 7 }],
+    });
+  });
+
+  it("sends an empty array when every team is removed", () => {
+    // The critical case: dirtyFields would report an empty array as CLEAN,
+    // so relying on it here would silently drop the change.
+    const cleared: PersonFormValues = { ...form, teamIds: [] };
+    expect(personFormToPatch(cleared, {}, [3])).toEqual({ teams: [] });
+  });
+
+  it("sends teams alongside dirty scalars", () => {
+    const changed: PersonFormValues = { ...form, teamIds: [9] };
+    expect(personFormToPatch(changed, { email: true }, [3])).toEqual({
+      email: "ivanov@example.com",
+      teams: [{ id: 9 }],
+    });
   });
 });

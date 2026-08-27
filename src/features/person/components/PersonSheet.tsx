@@ -80,7 +80,11 @@ export function PersonSheet({
   const mutation = useMutation({
     mutationFn: async (data: PersonFormValues) => {
       if (variant === "update" && person) {
-        const patch = personFormToPatch(data, form.formState.dirtyFields);
+        const patch = personFormToPatch(
+          data,
+          form.formState.dirtyFields,
+          person?.teams?.map((t) => t.id) ?? [],
+        );
         return personApi.patch(person.id, patch);
       }
       return personApi.create(personFormToCreate(data));
