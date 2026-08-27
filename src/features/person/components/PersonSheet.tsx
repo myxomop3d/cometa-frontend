@@ -1,9 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import * as React from "react";
-import { useForm, type Path } from "react-hook-form";
+import { useForm, Controller, type Path } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { PersonDto, AppMessage } from "@/types/api";
+import { RelationPicker } from "@/components/relation-picker";
+import { teamsFilteredQueryOptions } from "@/features/team/api";
+import type { PersonDto, AppMessage, TeamDto } from "@/types/api";
 
 import { personApi } from "../api";
 import {
@@ -36,6 +39,14 @@ const PERSON_FORM_FIELDS: readonly (keyof PersonFormValues)[] = [
   "lastName",
   "firstName",
   "middleName",
+  "teamIds",
+];
+
+// Mirrors `teamRelationColumns` in `src/features/person/columns.tsx` so the
+// picker in this sheet and the picker in the toolbar filter look identical.
+const teamRelationColumns: ColumnDef<TeamDto, unknown>[] = [
+  { accessorKey: "id", header: "ID", size: 80 },
+  { accessorKey: "name", header: "Name" },
 ];
 
 function isPersonField(target: string): target is keyof PersonFormValues {
@@ -69,8 +80,9 @@ export function PersonSheet({
     let hadFieldError = false;
     for (const m of messages) {
       if (m.semantic !== "E") continue;
-      if (m.target && isPersonField(m.target)) {
-        form.setError(m.target as Path<PersonFormValues>, {
+      const target = m.target === "teams" ? "teamIds" : m.target;
+      if (target && isPersonField(target)) {
+        form.setError(target as Path<PersonFormValues>, {
           message: m.message,
         });
         hadFieldError = true;
@@ -169,6 +181,42 @@ export function PersonSheet({
             {form.formState.errors.middleName && (
               <p className="text-sm text-destructive">
                 {form.formState.errors.middleName.message}
+              </p>
+            )}
+          </div>
+
+          {/* Teams (optional) */}
+          <div className="flex flex-col gap-2">
+            <Label>Teams</Label>
+            <Controller
+              control={form.control}
+              name="teamIds"
+              render={({ field }) => (
+                <RelationPicker
+                  multi
+                  variant="field"
+                  value={field.value}
+                  // RelationPicker emits `undefined` when the selection is
+                  // cleared, not []. Without this normalisation the zod array
+                  // schema breaks and "remove from every team" is lost.
+                  onChange={(v) =>
+                    field.onChange(
+                      Array.isArray(v) ? v : v === undefined ? [] : [v],
+                    )
+                  }
+                  queryOptionsFn={(filters: Record<string, unknown>) =>
+                    teamsFilteredQueryOptions(filters)
+                  }
+                  columns={teamRelationColumns}
+                  getLabel={(team: TeamDto) => team.name ?? String(team.id)}
+                  getId={(team: TeamDto) => team.id}
+                  placeholder="Select teams"
+                />
+              )}
+            />
+            {form.formState.errors.teamIds && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.teamIds.message}
               </p>
             )}
           </div>
