@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { personsFilteredQueryOptions } from "@/features/person/api";
 import { personLabel } from "@/features/person/label";
-import type { PersonDto, TeamDto } from "@/types/api";
+import type { PersonDto, PersonFlatDto, TeamDto } from "@/types/api";
 import type { TeamRowAction } from "./row-action";
 
 interface GetTeamColumnsProps {
@@ -128,7 +128,7 @@ export function getTeamColumns({
         <DataTableColumnHeader column={column} label="Leader" />
       ),
       cell: ({ cell }) => {
-        const leader = cell.getValue<PersonDto | null>();
+        const leader = cell.getValue<PersonFlatDto | null>();
         return leader ? personLabel(leader) : "—";
       },
       meta: {

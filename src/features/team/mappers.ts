@@ -6,10 +6,10 @@ export function teamDtoToForm(dto: TeamDto): TeamFormValues {
     name: dto.name,
     code: dto.code,
     type: dto.type,
-    // Prefer the scalar; fall back to the nested object for responses that
-    // carried ?fields=leader but predate the scalar. 0 is never a valid id,
-    // so the required-positive rule in teamFormSchema rejects it.
-    leaderId: dto.leaderId ?? dto.leader?.id ?? 0,
+    // The leader id now arrives only inside the nested ref, which is present
+    // only on reads that requested $fields=leader. 0 is never a valid id, so
+    // the required-positive rule in teamFormSchema rejects it.
+    leaderId: dto.leader?.id ?? 0,
     leaderRole: dto.leaderRole,
     structure: dto.structure,
   };
@@ -20,7 +20,7 @@ export function teamFormToCreate(v: TeamFormValues): TeamWritePayload {
     name: v.name,
     code: v.code,
     type: v.type,
-    leaderId: v.leaderId,
+    leader: { id: v.leaderId },
     leaderRole: v.leaderRole,
     structure: v.structure,
   };
@@ -42,7 +42,7 @@ export function teamFormToPatch(
   if (isDirty(dirty.name)) out.name = v.name;
   if (isDirty(dirty.code)) out.code = v.code;
   if (isDirty(dirty.type)) out.type = v.type;
-  if (isDirty(dirty.leaderId)) out.leaderId = v.leaderId;
+  if (isDirty(dirty.leaderId)) out.leader = { id: v.leaderId };
   if (isDirty(dirty.leaderRole)) out.leaderRole = v.leaderRole;
   if (isDirty(dirty.structure)) out.structure = v.structure;
   return out;

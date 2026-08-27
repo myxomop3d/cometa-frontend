@@ -32,7 +32,8 @@ export interface TeamWritePayload {
   name: string | null;
   code: number | null;
   type: string | null;
-  leaderId: number;
+  /** Relation ref: only `id` is honoured by the server. */
+  leader: { id: number };
   leaderRole: string | null;
   structure: string | null;
 }

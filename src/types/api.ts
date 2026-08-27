@@ -196,12 +196,11 @@ export interface UserProfile {
 // Registration
 // ────────────────────────────────────────────────────────────
 
-export interface TeamSummaryDto {
-  id: number;
-  name: string;
-}
-
-export interface PersonDto {
+/** Flat = every scalar of the entity, none of its relations. This is the shape
+ *  a parent uses to reference a child. On write only `id` is read; every other
+ *  field is ignored, because a parent may never modify a child's fields.
+ *  See docs/superpowers/specs/2026-08-27-nested-relation-write-standard-design.md */
+export interface PersonFlatDto {
   id: number;
   insertedAt: string | null;
   updatedAt: string | null;
@@ -209,8 +208,13 @@ export interface PersonDto {
   lastName: string;
   firstName: string;
   middleName: string;
-  /** Read-only; populated only on /api/v1/person/graph?$fields=teams. */
-  teams?: TeamSummaryDto[];
+}
+
+export interface PersonDto extends PersonFlatDto {
+  /** Read: populated only on /api/v1/person/graph?$fields=teams.
+   *  Write: only each element's `id` is honoured. Absent = unchanged,
+   *  [] = clear all, non-empty = full replace. */
+  teams?: TeamFlatDto[];
 }
 
 export interface PersonFilters extends Partial<PaginationParams> {
@@ -220,17 +224,21 @@ export interface PersonFilters extends Partial<PaginationParams> {
   middleName?: string;
 }
 
-export interface TeamDto {
+export interface TeamFlatDto {
   id: number;
   insertedAt: string | null;
   updatedAt: string | null;
   name: string | null;
   code: number | null;
   type: string | null;
-  leaderId: number | null;
-  leader: PersonDto | null;
   leaderRole: string | null;
   structure: string | null;
+}
+
+export interface TeamDto extends TeamFlatDto {
+  /** Read: populated only with ?$fields=leader — which is why the leader's id
+   *  is no longer available on requests that omit it. Write: only `id`. */
+  leader: PersonFlatDto | null;
 }
 
 export interface TeamFilters extends Partial<PaginationParams> {
@@ -238,6 +246,7 @@ export interface TeamFilters extends Partial<PaginationParams> {
   codeMin?: number;
   codeMax?: number;
   type?: string;
+  /** URL search-param name, not a DTO field. Unaffected by the leaderId removal. */
   leaderId?: number;
   leaderRole?: string;
   structure?: string;

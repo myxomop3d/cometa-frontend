@@ -10,7 +10,6 @@ const dto: TeamDto = {
   name: "Платформа",
   code: 1234,
   type: "CHANGE",
-  leaderId: 7,
   leader: {
     id: 99,
     insertedAt: null,
@@ -28,34 +27,30 @@ const form: TeamFormValues = {
   name: "Платформа",
   code: 1234,
   type: "CHANGE",
-  leaderId: 7,
+  leaderId: 99,
   leaderRole: "lead",
   structure: "core",
 };
 
 describe("teamDtoToForm", () => {
-  it("takes leaderId from the scalar, not the nested object", () => {
+  it("takes leaderId from the nested leader ref", () => {
     expect(teamDtoToForm(dto)).toEqual(form);
   });
 
-  it("falls back to the nested leader id when the scalar is null", () => {
-    const withoutScalar: TeamDto = { ...dto, leaderId: null };
-    expect(teamDtoToForm(withoutScalar).leaderId).toBe(99);
-  });
-
-  it("yields leaderId 0 when neither is present, so the form flags it required", () => {
-    const bare: TeamDto = { ...dto, leaderId: null, leader: null };
+  it("yields leaderId 0 when leader is absent, so the form flags it required", () => {
+    // Happens on any read that omitted $fields=leader.
+    const bare: TeamDto = { ...dto, leader: null };
     expect(teamDtoToForm(bare).leaderId).toBe(0);
   });
 });
 
 describe("teamFormToCreate", () => {
-  it("returns the full write payload", () => {
+  it("writes the leader as a ref, not a scalar", () => {
     expect(teamFormToCreate(form)).toEqual({
       name: "Платформа",
       code: 1234,
       type: "CHANGE",
-      leaderId: 7,
+      leader: { id: 99 },
       leaderRole: "lead",
       structure: "core",
     });
@@ -63,8 +58,10 @@ describe("teamFormToCreate", () => {
 });
 
 describe("teamFormToPatch", () => {
-  it("returns only dirty fields", () => {
-    expect(teamFormToPatch(form, { leaderId: true })).toEqual({ leaderId: 7 });
+  it("returns only dirty fields, with the leader as a ref", () => {
+    expect(teamFormToPatch(form, { leaderId: true })).toEqual({
+      leader: { id: 99 },
+    });
   });
 
   it("returns an empty object when nothing is dirty", () => {
