@@ -46,7 +46,12 @@
       "mcp__plugin_playwright_playwright__browser_click",
       "mcp__plugin_playwright_playwright__browser_snapshot",
       "mcp__plugin_playwright_playwright__browser_console_messages",
-      "mcp__plugin_playwright_playwright__browser_close"
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Read(//c/Users/myxom/.m2/repository/ru/sber/cs/core/odata/**)",
+      "Read(//tmp/**)",
+      "Bash(pwd -W)",
+      "PowerShell($CP = \\(Get-Content C:/Users/myxom/AppData/Local/Temp/odata220/cp.txt -Raw\\).Trim\\(\\); & javac -encoding UTF-8 -cp $CP -d C:/Users/myxom/AppData/Local/Temp/odata220/out C:/Users/myxom/AppData/Local/Temp/odata220/Probe.java; if \\($?\\) { Write-Output \"########## LENIENT ##########\"; & java -Dfile.encoding=UTF-8 -cp \"C:/Users/myxom/AppData/Local/Temp/odata220/out;$CP\" Probe 2>$null; Write-Output \"########## STRICT ##########\"; & java -Dfile.encoding=UTF-8 -cp \"C:/Users/myxom/AppData/Local/Temp/odata220/out;$CP\" Probe strict 2>$null })",
+      "PowerShell($CP = \\(Get-Content C:/Users/myxom/AppData/Local/Temp/odata220/cp.txt -Raw\\).Trim\\(\\); $RUN=\"C:/Users/myxom/AppData/Local/Temp/odata220/out;$CP\"; Write-Output \"########## LENIENT ##########\"; & java -Dfile.encoding=UTF-8 -cp $RUN Probe; Write-Output \"########## STRICT ##########\"; & java -Dfile.encoding=UTF-8 -cp $RUN Probe strict)"
     ],
     "additionalDirectories": [
       "F:\\programming\\cometa"
