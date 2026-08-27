@@ -33,17 +33,24 @@ The warning fired on **every** paginated request that included `$fields=teams` �
 three out of three during the verification run.
 
 This was a **performance** defect, not a correctness one — the answer was
-always right. It was verified once more, live, after the fix landed
+always right. The table below mixes two runs, noted per row: checks re-run
+live *after* the fix landed
 (`.superpowers/sdd/2026-08-27-entity-graph-collection-pagination/task-4-report.md`
-has the full transcript):
+has the full transcript), and checks carried over unchanged from the
+2026-08-26 pre-fix run
+(`.superpowers/sdd/2026-08-26-odata-relation-filter-sort/task-3-report.md`)
+because the fix does not touch what they exercise. The one exception was the
+`$top=200` teamless check: it *is* exactly the case this change alters
+(`$top=200` takes the two-query path), so it has been re-run live for this
+correction, on 2026-08-28, rather than carried over.
 
 | Check | Result |
 |---|---|
-| `teams` populated with the right shape (`{id, name}`, no `leader` nesting) | PASS |
-| `count` correct on a later page (`$top=20&$skip=20`) — 222, 20 rows returned | PASS |
-| Persons in no team still appear (`$top=200`) — 200 returned, 198 teamless | PASS |
-| `HHH90003004` in-memory-pagination warning count across the whole matrix | **0 (PASS)** |
-| Page query for `$top=20&$skip=20&$fields=teams` reaches Postgres as SQL paging | `select ... from gmsb.person p1_0 order by p1_0.id offset 20 rows fetch first 20 rows only`, followed by a separate `where p1_0.id in (83,84,...,102)` fetch for the teams graph — **PASS** |
+| `teams` populated with the right shape (`{id, name}`, no `leader` nesting) — pre-fix, 2026-08-26, carried over (shape is independent of the pagination fix) | PASS |
+| `count` correct on a later page (`$top=20&$skip=20`) — 222, 20 rows returned — pre-fix, 2026-08-26, carried over; re-confirmed post-fix with explicit ids in `task-4-report.md` (count 222, 20 rows, ids 83–102) | PASS |
+| Persons in no team still appear (`$top=200`) — re-run live post-fix on 2026-08-28: **200 returned, 199 teamless** (was 198 teamless in the 2026-08-26 pre-fix run; the dev dataset has shifted by one team membership since) | PASS |
+| `HHH90003004` in-memory-pagination warning count across the whole matrix — post-fix, `task-4-report.md` | **0 (PASS)** |
+| Page query for `$top=20&$skip=20&$fields=teams` reaches Postgres as SQL paging — post-fix, `task-4-report.md` | `select ... from gmsb.person p1_0 order by p1_0.id offset 20 rows fetch first 20 rows only`, followed by a separate `where p1_0.id in (83,84,...,102)` fetch for the teams graph — **PASS** |
 
 At the current dataset (222 persons) the fix means each page request pages
 20 root rows in SQL and then fetches the graph for exactly those 20 ids,

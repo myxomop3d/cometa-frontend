@@ -196,19 +196,32 @@ private List<MODEL> sortAsIn(List<MODEL> models, List<Long> ids) {
 }
 ```
 
-### 3. `PersonCrudRepository` reverts to empty
+### 3. `PersonCrudRepository` stays empty
 
-The prototype override — including its hardcoded `"Person"` alias, which worked
-only because `ODataOrderby` aliases on `modelClass.getSimpleName()` — is deleted
-in favour of the base-class implementation.
+A prototype override — including a hardcoded `"Person"` alias, which worked
+only because `ODataOrderby` aliases on `modelClass.getSimpleName()` — existed
+briefly as uncommitted working-tree scratch work while exploring this problem.
+It was never committed, so there is nothing to revert: `PersonCrudRepository`
+has been an empty subclass of `EntityGraphBaseCrudRepository` since it was
+introduced in `dc18cfd`, and this design leaves it that way, relying entirely
+on the base-class implementation.
 
 ### 4. `EntityGraphBaseCrudService.getAll` becomes `@Transactional(readOnly = true)`
 
 `getAll` issues `count` and the page read as separate autocommit transactions
-today; the two-query path adds a third. A concurrent write between them can
-return fewer rows than `count` reports. `readOnly = true` puts all of them in
-one read transaction, closing a window that predates this change and that this
-change would otherwise widen.
+today; the two-query path adds a third. Nothing in the repo sets a transaction
+isolation level, so this runs at PostgreSQL's default READ COMMITTED, where
+every statement takes its own fresh snapshot — `readOnly = true` does **not**
+close the window between `count` and the page read (or, on the two-query path,
+the second query): a commit landing in that window is still visible to the
+later query, and `count` can still disagree with what comes back. Closing that
+window would require REPEATABLE READ, which this change does not adopt.
+
+The actual reason for the annotation is cheaper but real: it puts `count` and
+the page read (and, on the two-query path, the second query) in one
+persistence context, one connection, and one commit instead of two or three
+autocommit round trips. Live evidence shows exactly one `|commit|` per
+request.
 
 Use `org.springframework.transaction.annotation.Transactional`, matching the
 `create`/`update`/`patch` overrides already on this class. `getById` is left
@@ -230,6 +243,15 @@ No DTO in this codebase carries `@ODataMappings`, so `ODataParams.fetchTablesSet
 is always empty and query 1 emits no `JOIN FETCH` of its own. If a to-many
 mapping is ever added there, query 1 would produce `HHH90003004` again and this
 gate would not catch it — the fetch-tables set is not part of `CometaEntityGraph`.
+
+The same gap exists on the second query. `readAllPagedThenFetch`'s
+`SELECT … WHERE id IN :ids` carries only the `CometaEntityGraph` fetch-graph
+hint; it never consults `oDataParams.getFetchTablesSet()`, unlike
+`readAllSingleQuery`, which does emit `JOIN FETCH` for it. This is dormant
+today for the same reason — no DTO carries `@ODataMappings` — but it means the
+first `@ODataMappings` entry would silently lose its `JOIN FETCH` on the
+two-query path even after the query-1 limitation above is addressed, and
+would need its own fix here.
 
 ## Testing
 
@@ -257,7 +279,7 @@ prototype was found — `tsc`-style static checks cannot see any of them:
 | `/team/graph?$top=5&$skip=10&$fields=leader` | 1 query, unchanged from today |
 | teams payload vs `/person/graph/{id}` (untouched `readById`) | identical membership |
 
-Full suite: `mvnw test` — persistence 4, service 22, web 5.
+Full suite: `mvnw test` — persistence 14, service 22, web 5.
 
 ## Risks
 
