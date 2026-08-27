@@ -82,10 +82,11 @@ export const operatorsByVariant: Record<FilterVariant, FilterOperator[]> = {
   relation:      ["eq", "ne", "isEmpty", "isNotEmpty"],
   // No isEmpty/isNotEmpty here: `multiRelation` is a JPA collection, and
   // comparing a collection to null (`teams eq null`) raises a JPQL
-  // SemanticException -> HTTP 500. Unlike `relation` (a nullable scalar FK
-  // column, where `leaderId eq null` is legitimate), there is no verified
-  // any()-based spelling for "collection is empty" against this backend, so
-  // the operator is withheld rather than guessed at.
+  // SemanticException -> HTTP 500. Unlike `relation` (a to-one nav path,
+  // e.g. `leader/id` — still single-valued, so `leader/id eq null` is the
+  // legitimate spelling and was live-verified to return cleanly), there is
+  // no verified any()-based spelling for "collection is empty" against this
+  // backend, so the operator is withheld rather than guessed at.
   multiRelation: ["inArray", "notInArray"],
 };
 

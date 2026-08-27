@@ -82,8 +82,12 @@ export function TeamSheet({
     let hadFieldError = false;
     for (const m of messages) {
       if (m.semantic !== "E") continue;
-      if (m.target && isTeamField(m.target)) {
-        form.setError(m.target as Path<TeamFormValues>, { message: m.message });
+      // The DTO field is `leader`; the form field is `leaderId`. Inert given
+      // `getReference` (see docs/superpowers/specs/2026-08-27-nested-relation-write-standard-design.md
+      // §6) — the backend sets no field targets today — but one line.
+      const target = m.target === "leader" ? "leaderId" : m.target;
+      if (target && isTeamField(target)) {
+        form.setError(target as Path<TeamFormValues>, { message: m.message });
         hadFieldError = true;
       }
     }

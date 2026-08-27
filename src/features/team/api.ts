@@ -39,11 +39,14 @@ function comboboxQueryOptions(search: string) {
 /**
  * Resolve a selected team's label by id (may fall outside the top-20 set).
  *
- * This is now behaviourally identical to the `detailQueryOptions` that
- * `createCrudApi` generates on `baseApi` (same query key, same URL). It is
- * kept — and placed after `...baseApi` in the exported `teamApi` below so it
- * wins — because the user-registration flow pins its resolution to this
- * local implementation. Do not delete this as dead duplication.
+ * Kept — and placed after `...baseApi` in the exported `teamApi` below so it
+ * wins — for two reasons. (a) The user-registration flow pins its resolution
+ * to this local implementation. (b) It is now load-bearing: this is the only
+ * `detailQueryOptions` that appends `$fields=leader`. Since `TeamDto.leaderId`
+ * was removed, that param is the sole source of the leader's id on this path —
+ * without it `teamDtoToForm` yields `leaderId: 0` and the sheet reports
+ * "Leader is required". Do not delete this as dead duplication; if it is ever
+ * merged back into `baseApi`, the `$fields=leader` param must go with it.
  */
 function detailQueryOptions(id: number) {
   return queryOptions({

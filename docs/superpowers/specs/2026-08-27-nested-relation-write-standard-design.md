@@ -376,6 +376,17 @@ regardless of how filters are spelled. Only the entity column and the `field`
 spelling ride on this gate, and both are separable from everything else in this
 document.
 
+### Known hole: a nullable to-one cannot be cleared
+
+Under `NullValuePropertyMappingStrategy.IGNORE`, a client sending `leader: null`
+is indistinguishable from `leader` being absent from the body — both leave the
+association unchanged, so there is no way to clear a nullable to-one relation
+through this standard as written. Moot for `Team.leader`, since
+`leader_person_id` is `optional = false, nullable = false` and clearing is not
+a legal state. It must be solved — a sentinel, a separate "unset" wrapper, or
+patching to a distinct DTO shape — before a nullable to-one relation adopts
+this standard.
+
 ## 8. Testing
 
 Frontend:

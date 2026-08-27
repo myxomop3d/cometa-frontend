@@ -4,6 +4,17 @@
 **Status:** design approved; behaviour verified against a live backend
 **Supersedes:** the analysis in `issue/relationSorting.md` (see §8)
 
+> **Partially superseded (2026-08-27).** This document was written while
+> `Team.leaderId` — both the flat `TeamDto.leaderId` field and the read-only
+> entity scalar — still existed. Both were subsequently removed. Every
+> mention below of the to-one **filter** using the flat `leaderId` scalar, or
+> of that filter being "untouched" by the §4 changes, is stale: to-one
+> filtering now goes exclusively through the `leader/id` navigation path (the
+> §7 gate in `2026-08-27-nested-relation-write-standard-design.md` verified
+> `leader/id eq`, `leader/id in (...)`, and `leader/id eq null` all return
+> cleanly). The verification matrix below is left intact as historical
+> evidence; read it with that substitution in mind.
+
 ## Problem
 
 Cometa's data tables need to filter and sort by fields of *related* objects —

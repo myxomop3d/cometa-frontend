@@ -152,8 +152,9 @@ function clauseFor(
           .map((v) => (isRelationValue(v) ? v.id : Number(v)))
           .filter((n) => !Number.isNaN(n));
         if (ids.length === 0) return null;
-        // A to-one relation is a scalar FK column: `leaderId/any(...)` is
-        // meaningless. Only a real collection gets the lambda.
+        // A to-one relation is addressed by a single-valued nav path (e.g.
+        // `leader/id`), not a collection: `leader/any(...)` is meaningless.
+        // Only a real to-many collection gets the `any()` lambda.
         inner =
           variant === "multiRelation"
             ? `${field}/any(x: x/id in (${ids.join(",")}))`

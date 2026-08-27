@@ -77,4 +77,14 @@ src/
   for every clause after an `any()`. Requires
   `odata.mini.repo.throw-on-field-not-found: false` on the backend. Full record:
   `docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md`.
+- **Relation writes**: DTOs come in Flat/Full pairs — Flat carries every scalar
+  of its entity and none of its relations; Full extends Flat and adds
+  relations, each typed as the *child's Flat* DTO. Relations are written as
+  refs (`{ id }`) where only `id` is honoured; other fields on the ref are
+  silently dropped. PATCH semantics: field absent or `null` leaves membership
+  unchanged, `[]` clears it, a non-empty array is a full replace. A mapper
+  must never `uses` a service — it closes a constructor-injection bean cycle
+  that Spring Boot 4 rejects at startup; ref resolution stays in the mapper
+  layer against `EntityManager` only. Full record:
+  `docs/superpowers/specs/2026-08-27-nested-relation-write-standard-design.md`.
 - TS config: strict, `noUnusedLocals`/`noUnusedParameters`, ES2023 target, bundler resolution, `jsx: react-jsx`
