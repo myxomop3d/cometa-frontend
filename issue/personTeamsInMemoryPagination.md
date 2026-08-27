@@ -46,7 +46,7 @@ correction, on 2026-08-28, rather than carried over.
 
 | Check | Result |
 |---|---|
-| `teams` populated with the right shape (`{id, name}`, no `leader` nesting) — pre-fix, 2026-08-26, carried over (shape is independent of the pagination fix) | PASS |
+| `teams` populated with the right shape (`{id, name}`, no `leader` nesting) — pre-fix, 2026-08-26, carried over (shape is independent of the pagination fix) | **PASS, but stale as of 2026-08-28.** A live re-run that day found `PersonDto.teams` serializing as a full `TeamFlatDto` — `id`, `name`, plus `code`, `leaderRole`, `structure`, `type`, and `updatedAt`, not the `{id, name}` shape this row asserts. This is not a regression in the pagination work this file tracks: a separate, earlier refactor (the nested-relation-write standard, `docs/superpowers/specs/2026-08-27-nested-relation-write-standard-design.md`) replaced `TeamSummaryDto` with `TeamFlatDto` across the codebase, and `TeamSummaryDto` no longer exists. |
 | `count` correct on a later page (`$top=20&$skip=20`) — 222, 20 rows returned — pre-fix, 2026-08-26, carried over; re-confirmed post-fix with explicit ids in `task-4-report.md` (count 222, 20 rows, ids 83–102) | PASS |
 | Persons in no team still appear (`$top=200`) — re-run live post-fix on 2026-08-28: **200 returned, 199 teamless** (was 198 teamless in the 2026-08-26 pre-fix run; the dev dataset has shifted by one team membership since) | PASS |
 | `HHH90003004` in-memory-pagination warning count across the whole matrix — post-fix, `task-4-report.md` | **0 (PASS)** |
