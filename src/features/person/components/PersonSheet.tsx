@@ -19,7 +19,11 @@ import {
 import type { PersonDto, AppMessage } from "@/types/api";
 
 import { personApi } from "../api";
-import { personFormSchema, type PersonFormValues } from "../schema";
+import {
+  personFormSchema,
+  EMPTY_PERSON_FORM,
+  type PersonFormValues,
+} from "../schema";
 import {
   personDtoToForm,
   personFormToCreate,
@@ -58,9 +62,7 @@ export function PersonSheet({
 
   const form = useForm<PersonFormValues>({
     resolver: zodResolver(personFormSchema),
-    defaultValues: person
-      ? personDtoToForm(person)
-      : { email: "", lastName: "", firstName: "", middleName: "" },
+    defaultValues: person ? personDtoToForm(person) : EMPTY_PERSON_FORM,
   });
 
   function applyServerErrors(messages: AppMessage[]): boolean {
@@ -83,7 +85,7 @@ export function PersonSheet({
         const patch = personFormToPatch(
           data,
           form.formState.dirtyFields,
-          person?.teams?.map((t) => t.id) ?? [],
+          person.teams?.map((t) => t.id) ?? [],
         );
         return personApi.patch(person.id, patch);
       }

@@ -5,7 +5,11 @@ import {
   personFormToCreate,
   personFormToPatch,
 } from "./mappers";
-import type { PersonFormValues } from "./schema";
+import {
+  personFormSchema,
+  EMPTY_PERSON_FORM,
+  type PersonFormValues,
+} from "./schema";
 
 const dto: PersonDto = {
   id: 7,
@@ -122,5 +126,42 @@ describe("personFormToPatch team membership", () => {
       email: "ivanov@example.com",
       teams: [{ id: 9 }],
     });
+  });
+});
+
+describe("EMPTY_PERSON_FORM", () => {
+  // Regression guard: PersonSheet's "create" variant seeds useForm with
+  // EMPTY_PERSON_FORM. email/lastName/firstName/middleName are required
+  // *text inputs* the user is expected to fill in before submitting — those
+  // fields legitimately fail schema validation while blank, and the sheet
+  // renders a visible error under each one, so that's normal, expected UX.
+  //
+  // teamIds is different: PersonSheet renders no input for it (yet), so it
+  // can never become "dirty" and there is nowhere to show a validation
+  // error for it. If a required field like this is ever added to the
+  // schema without a valid default in EMPTY_PERSON_FORM, submitting a
+  // freshly-opened "Add Person" form fails validation silently — the exact
+  // bug this guards against (teamIds was previously absent from the
+  // create-variant defaults, so zodResolver rejected with an invisible
+  // invalid_type error and the Create button appeared dead).
+  //
+  // So: assert the *only* fields allowed to fail against EMPTY_PERSON_FORM
+  // are the ones with visible inputs and visible errors. Any other field
+  // failing here — teamIds today, or a new field added later — must go red.
+  const FIELDS_WITH_VISIBLE_REQUIRED_VALIDATION = [
+    "email",
+    "lastName",
+    "firstName",
+    "middleName",
+  ];
+
+  it("fails validation only on the fields PersonSheet shows inputs and errors for", () => {
+    const result = personFormSchema.safeParse(EMPTY_PERSON_FORM);
+    const failingPaths = result.success
+      ? []
+      : [...new Set(result.error.issues.map((i) => String(i.path[0])))];
+    expect(failingPaths.sort()).toEqual(
+      [...FIELDS_WITH_VISIBLE_REQUIRED_VALIDATION].sort(),
+    );
   });
 });

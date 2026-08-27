@@ -11,6 +11,18 @@ export const personFormSchema = z.object({
 
 export type PersonFormValues = z.infer<typeof personFormSchema>;
 
+/** Defaults for the "create" form variant. Kept beside the schema so the two
+ *  cannot drift: if a required field is ever added to `personFormSchema`
+ *  without extending this, `mappers.test.ts` catches it via a failing
+ *  `safeParse`. */
+export const EMPTY_PERSON_FORM: PersonFormValues = {
+  email: "",
+  lastName: "",
+  firstName: "",
+  middleName: "",
+  teamIds: [],
+};
+
 export interface PersonWritePayload {
   email: string;
   lastName: string;
