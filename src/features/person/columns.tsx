@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { teamsFilteredQueryOptions } from "@/features/team/api";
 import type { PersonDto, TeamDto } from "@/types/api";
+import { formatTeamNames } from "./mappers";
 import type { PersonRowAction } from "./row-action";
 
 interface GetPersonColumnsProps {
@@ -140,12 +141,7 @@ export function getPersonColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Teams" />
       ),
-      cell: ({ row }) => {
-        const teams = row.original.teams;
-        return teams && teams.length > 0
-          ? teams.map((t) => t.name).join(", ")
-          : "—";
-      },
+      cell: ({ row }) => formatTeamNames(row.original.teams),
       meta: {
         label: "Teams",
         variant: "multiRelation",

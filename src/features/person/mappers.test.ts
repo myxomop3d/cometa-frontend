@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { PersonDto } from "@/types/api";
+import type { PersonDto, TeamFlatDto } from "@/types/api";
 import {
+  formatTeamNames,
   personDtoToForm,
   personFormToCreate,
   personFormToPatch,
@@ -126,6 +127,42 @@ describe("personFormToPatch team membership", () => {
       email: "ivanov@example.com",
       teams: [{ id: 9 }],
     });
+  });
+});
+
+describe("formatTeamNames", () => {
+  const team = (overrides: Partial<TeamFlatDto>): TeamFlatDto => ({
+    id: 1,
+    insertedAt: null,
+    updatedAt: null,
+    name: "Платформа",
+    code: null,
+    type: null,
+    leaderRole: null,
+    structure: null,
+    ...overrides,
+  });
+
+  it("returns an em dash when teams is absent", () => {
+    expect(formatTeamNames(undefined)).toBe("—");
+  });
+
+  it("returns an em dash when teams is empty", () => {
+    expect(formatTeamNames([])).toBe("—");
+  });
+
+  it("joins team names with a comma", () => {
+    expect(
+      formatTeamNames([team({ id: 1, name: "A" }), team({ id: 2, name: "B" })]),
+    ).toBe("A, B");
+  });
+
+  it("falls back to the id when a team has no name", () => {
+    // name is nullable on the entity; a naive join would render an empty
+    // segment between commas instead of a visible placeholder.
+    expect(
+      formatTeamNames([team({ id: 5, name: null }), team({ id: 6, name: "B" })]),
+    ).toBe("5, B");
   });
 });
 

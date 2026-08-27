@@ -1,4 +1,4 @@
-import type { PersonDto } from "@/types/api";
+import type { PersonDto, TeamFlatDto } from "@/types/api";
 import type { PersonFormValues, PersonWritePayload } from "./schema";
 
 export function personDtoToForm(dto: PersonDto): PersonFormValues {
@@ -11,6 +11,16 @@ export function personDtoToForm(dto: PersonDto): PersonFormValues {
     // relation and an empty relation both mean "nothing to preselect".
     teamIds: dto.teams?.map((t) => t.id) ?? [],
   };
+}
+
+/** `name` is nullable on the entity (the column is nullable), where the
+ *  DTO it replaced had `name: string`. Fall back to the id so a nameless
+ *  team still renders as a visible segment instead of an empty one between
+ *  commas. Matches the `?? String(id)` fallback the relation pickers' own
+ *  `getLabel` already uses. */
+export function formatTeamNames(teams: TeamFlatDto[] | undefined): string {
+  if (!teams || teams.length === 0) return "—";
+  return teams.map((t) => t.name ?? String(t.id)).join(", ");
 }
 
 export function personFormToCreate(v: PersonFormValues): PersonWritePayload {
