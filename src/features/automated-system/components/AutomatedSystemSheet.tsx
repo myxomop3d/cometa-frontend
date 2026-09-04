@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import * as React from "react";
 import { useForm, Controller, type Control, type Path } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -128,15 +128,22 @@ function NullableTextRow({
       <Controller
         control={control}
         name={name}
-        render={({ field }) => (
-          <Input
-            id={name}
-            value={field.value ?? ""}
-            onChange={(e) =>
-              field.onChange(e.target.value === "" ? null : e.target.value)
-            }
-            onBlur={field.onBlur}
-          />
+        render={({ field, fieldState }) => (
+          <>
+            <Input
+              id={name}
+              value={field.value ?? ""}
+              onChange={(e) =>
+                field.onChange(e.target.value === "" ? null : e.target.value)
+              }
+              onBlur={field.onBlur}
+            />
+            {fieldState.error && (
+              <p className="text-sm text-destructive">
+                {fieldState.error.message}
+              </p>
+            )}
+          </>
         )}
       />
     </div>
@@ -156,8 +163,6 @@ export function AutomatedSystemSheet({
   onSuccess,
   ...props
 }: AutomatedSystemSheetProps) {
-  const queryClient = useQueryClient();
-
   const closeSheet = React.useCallback(() => {
     (props.onOpenChange as ((open: boolean) => void) | undefined)?.(false);
   }, [props.onOpenChange]);
@@ -193,12 +198,12 @@ export function AutomatedSystemSheet({
       }
       return automatedSystemApi.create(automatedSystemFormToCreate(data));
     },
-    onSuccess: (res) => {
+    onSuccess: () => {
       if (variant === "update" && automatedSystem) {
-        queryClient.setQueryData(
-          ["automated-systems", "detail", automatedSystem.id],
-          res,
-        );
+        // The PATCH response comes from the plain `{id}` path, which does not
+        // honour `$fields` and so always carries `leader: null` (see ../api.ts).
+        // Caching it would seed the detail key with a leader-less DTO; the page
+        // invalidates the whole ["automated-systems"] key on success instead.
         toast.success("Automated system updated");
       } else {
         toast.success("Automated system created");
@@ -316,6 +321,11 @@ export function AutomatedSystemSheet({
                 </Select>
               )}
             />
+            {form.formState.errors.status && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.status.message}
+              </p>
+            )}
           </div>
 
           {SUPPORT_TEXT_FIELDS.map((f) => (
