@@ -276,7 +276,14 @@ today's sticky `name`; `guid` stays hidden by default.
 | `leaderComment` | text | `leaderComment` | `contains_ignoring_case(leaderComment, …)` |
 | `leader` | relation | `leaderId` | `leader/id eq N`, sort `leader/lastName` |
 
-The remaining nine columns are visible and sortable but not filterable.
+The remaining nine columns are visible and not filterable. Eight of them are
+also sortable; `guid` is the exception — it is visible, not filterable and
+**not sortable**. Live verification on 2026-09-05 found `$orderby=guid asc`
+answers 500: `guid` is a reserved literal token in odata-mini's `$orderby`
+ANTLR grammar (case-insensitively), so the request fails in the parser before
+any field lookup and `throw-on-field-not-found: false` cannot rescue it. The
+column carries `enableSorting: false`, and the route's `validateSearch` drops a
+`sort` param naming it so a bookmarked URL cannot reach `$orderby` either.
 
 `leader` follows the to-one rules from the relation-filter standard: a navigation
 path with `/`, never a dot. It is filterable *and* sortable — the `any()`

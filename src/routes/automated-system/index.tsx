@@ -13,11 +13,16 @@ import type { SwitchableSearchBase } from "@/lib/data-table/switchable-search";
 import { makeSwitchableLoader } from "@/lib/data-table/switchable-page";
 import { useSwitchableTablePage } from "@/hooks/use-switchable-table-page";
 import { automatedSystemSwitchableConfig } from "@/features/automated-system/switchable-config";
-import { validateAutomatedSystemSimpleFields } from "./-simple-search";
+import { validateAutomatedSystemSearchFields } from "./-simple-search";
 import { AutomatedSystemSheet } from "@/features/automated-system/components/AutomatedSystemSheet";
 
 export const Route = createFileRoute("/automated-system/")({
-  validateSearch: makeSwitchableSearch(validateAutomatedSystemSimpleFields),
+  // `validateAutomatedSystemSearchFields` carries the simple filter fields plus
+  // the guard that keeps an unsortable column (`guid`) out of `$orderby` even
+  // when it arrives from a hand-edited or bookmarked URL. The generic call must
+  // stay inline: binding or wrapping it changes what TanStack infers as this
+  // route's required search params — see the note on that function.
+  validateSearch: makeSwitchableSearch(validateAutomatedSystemSearchFields),
   loaderDeps: ({ search }) => search,
   loader: makeSwitchableLoader(automatedSystemSwitchableConfig),
   component: AutomatedSystemPage,
