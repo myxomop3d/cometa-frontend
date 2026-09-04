@@ -25,13 +25,13 @@ src/
   routes/                # TanStack Router file-based routes
     __root.tsx           # SidebarProvider + AppSidebar + devtools
     index.tsx            # redirect → /automated-system
-    automated-system/    # RHF + zod form example
+    automated-system/    # switchable DataTable + sheet (see features/automated-system)
     box/
     box-dice/            # -box-table-columns.tsx, -box-sheet.tsx
     flow-graph/
     components/          # component showcase
   api/                   # TanStack Query queryOptions per resource
-                         # automated-system.ts, box.ts, item.ts, thing.ts
+                         # box.ts, item.ts, thing.ts
                          # OData-style filter helpers (contains_ignoring_case, tags/any())
   components/
     ui/                  # shadcn primitives

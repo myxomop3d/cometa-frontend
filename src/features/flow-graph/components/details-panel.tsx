@@ -105,7 +105,7 @@ function NodeDetails({
           <FieldRow label="Block">{node.automatedSystem.block}</FieldRow>
           <FieldRow label="Tribe">{node.automatedSystem.tribe}</FieldRow>
           <FieldRow label="Cluster">{node.automatedSystem.cluster}</FieldRow>
-          <FieldRow label="Leader">{node.automatedSystem.leader}</FieldRow>
+          <FieldRow label="Leader">{node.automatedSystem.leaderComment ?? "—"}</FieldRow>
         </Section>
       )}
       <DataSection data={node.data} />

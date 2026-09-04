@@ -46,14 +46,22 @@ export interface ThingDto {
 }
 
 // AutomatedSystem
-export interface AutomatedSystemDto {
+/** Flat = every scalar of the entity, none of its relations. On day one no
+ *  field is typed as this: it is the interface holding the 16 scalars, which
+ *  AutomatedSystemDto extends. Not dead code — see the "Rejected" section of
+ *  docs/superpowers/specs/2026-09-04-automated-system-leader-relation-design.md */
+export interface AutomatedSystemFlatDto {
   id: number;
+  insertedAt: string | null;
+  updatedAt: string | null;
   name: string;
   objectCode: string | null;
   fullName: string;
   ci: string;
   nameHpsm: string | null;
-  leader: string;
+  /** Historical free-text lead. The DB column is still named `leader`;
+   *  only the Java field and this DTO field were renamed. */
+  leaderComment: string | null;
   leaderSapId: string | null;
   block: string;
   tribe: string;
@@ -66,6 +74,12 @@ export interface AutomatedSystemDto {
   guid: string | null;
 }
 
+export interface AutomatedSystemDto extends AutomatedSystemFlatDto {
+  /** Read: populated only with ?$fields=leader. Write: only `id`.
+   *  NOT NULL in the DB, yet null on any read that omits $fields. */
+  leader: PersonFlatDto | null;
+}
+
 // Pagination & generic filters
 export interface PaginationParams {
   page: number;
@@ -76,11 +90,23 @@ export interface SortByParams {
   sortBy?: string; // comma-separated: "name.asc,num.desc"
 }
 
-export type Filters<T> = Partial<T & PaginationParams>;
-export type AutomatedSystemFilters = Filters<AutomatedSystemDto>;
+/** URL search-param names, not DTO fields — the generic `Filters<AutomatedSystemDto>`
+ *  form could not survive `leader` becoming an object, and filter keys are URL
+ *  contract. Same shape as `TeamFilters` below. */
+export interface AutomatedSystemFilters extends Partial<PaginationParams> {
+  name?: string;
+  ci?: string;
+  block?: string;
+  tribe?: string;
+  cluster?: string;
+  status?: string;
+  leaderComment?: string;
+  /** URL search-param name, not a DTO field. */
+  leaderId?: number;
+}
 
 // Box filters — standalone interface because filter params (ranges, relation IDs)
-// don't map 1:1 to BoxDto fields, unlike AutomatedSystemFilters.
+// don't map 1:1 to BoxDto fields, unlike a DTO-derived filter type.
 export interface BoxFilters extends Partial<PaginationParams> {
   // String contains
   name?: string;
