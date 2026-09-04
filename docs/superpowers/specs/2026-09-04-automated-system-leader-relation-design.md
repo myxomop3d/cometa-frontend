@@ -92,6 +92,15 @@ against the same target, proven in this codebase.
 (`automated_system_leader_person_id_fkey`) already exist, and the DB accepted
 `NOT NULL`, so every existing row is already populated. No backfill.
 
+Observed on the live DB (2026-09-04), not merely inferred from the constraint:
+
+```
+total rows                200
+leader_person_id set      200      -- no backfill needed
+leader (text) set         198      -- so leaderComment is genuinely nullable
+distinct leaders           33
+```
+
 ## 2. DTOs
 
 ```
@@ -274,8 +283,22 @@ path with `/`, never a dot. It is filterable *and* sortable — the `any()`
 restrictions apply only to to-many relations, and this is to-one. Requires
 `odata.mini.repo.throw-on-field-not-found: false`, already set.
 
-`status` keeps its two known values, `"Находится в эксплуатации"` and
-`"Выведен из эксплуатации"`.
+`status` keeps its two known values. Verified against the live DB — these are
+the only values that occur across all 200 rows:
+
+| status | rows |
+|---|---|
+| `Находится в эксплуатации` | 181 |
+| `Выведен из эксплуатации` | 17 |
+| *null* | 2 |
+
+### Why `block`, `tribe` and `cluster` stay text filters
+
+Their distinct-value counts are 16, 32 and 45 respectively, so `block` in
+particular could plausibly be a faceted select like `status`. Deliberately left
+as free text: the counts are unbounded in principle (nothing constrains the
+column), and a select would silently hide any value added later. Recorded so the
+option is not rediscovered as an oversight.
 
 ### Form validation mirrors the DB
 
@@ -287,9 +310,23 @@ requires only:
 - `leader` — `NOT NULL`, enforced with the `leaderId: 0` sentinel plus a
   `positive()` rule, exactly as `TeamSheet` does
 
-Everything else is optional. The old rules would have refused to create a system
-the backend accepts; they appear to be inline-editing-demo artefacts rather than
-a business rule.
+Everything else is optional.
+
+The old rules are not merely stricter than the schema — they are stricter than
+the **data**. Counted on the live DB across 200 rows:
+
+```
+full_name IS NULL          2
+ci IS NULL                 2
+block IS NULL              2
+tribe IS NULL              3
+cluster IS NULL            2
+length(ci) < 5             5     <-- violates the old `ci: min(5)` rule
+```
+
+So five existing systems cannot be opened and saved in today's inline editor at
+all: the form rejects a value the database already holds. That settles it as an
+inline-editing-demo artefact rather than a business rule.
 
 ## 7. Flow-graph and mocks fallout
 
@@ -385,20 +422,35 @@ failure: write it up as an issue doc rather than guessing at a fix.
 
 ## 9. Environment note: reading the live schema
 
-The `mcp__cometa-postgres__*` tools connect to the right database
-(`192.168.0.60:5432/cometa`) but as role `as_admin`, which owns only the seven
-auth tables. The other twelve — `automated_system` among them — are owned by
-`GMBUS`, and `as_admin` has no `SELECT`.
+The `mcp__cometa-postgres__*` tools connect to `192.168.0.60:5432/cometa`. They
+originally did so as role `as_admin`, which owns only the seven auth tables; the
+other twelve — `automated_system` among them — are owned by `GMBUS`, and
+`as_admin` has no `SELECT`.
 
-Because `information_schema` filters by privilege, those tables look
-**nonexistent rather than forbidden**: `information_schema.columns` returns zero
-rows for `automated_system`.
+Because `information_schema` filters by privilege, those tables looked
+**nonexistent rather than forbidden**: `information_schema.columns` returned zero
+rows for `automated_system`. This cost real time while writing sections 1–6 and
+is the reason every schema fact here was established through `pg_catalog`.
+
+**Resolved 2026-09-04**: the MCP was repointed at the `GMBUS` role, so all 19
+`gmsb` tables including row data are now readable. Two operational notes:
+
+- Change it with `claude mcp remove cometa-postgres -s user` then
+  `claude mcp add cometa-postgres -s user -- npx -y @henkey/postgres-mcp-server
+  --connection-string "..."`. Use the CLI rather than hand-editing
+  `~/.claude.json`, which Claude Code writes to during sessions.
+- **The change only lands in a new session.** Each session spawns its MCP child
+  process at startup and that process keeps its connection string for its
+  lifetime. Forking a session does respawn it (verified). `SELECT current_user`
+  is the one-line check.
 
 Read DDL through `pg_catalog` instead, which is not privilege-filtered:
 `pg_class` + `pg_namespace` to list tables, `pg_attribute` with
 `format_type(atttypid, atttypmod)` and `attnotnull` for columns, `pg_constraint`
 with `pg_get_constraintdef` for FKs. Every schema fact in this document was
-established that way. Row data still needs the `GMBUS` role.
+established that way, and it remains the more reliable habit regardless of which
+role is connected. The row counts quoted in sections 1 and 6 were read
+afterwards, as `GMBUS`.
 
 ## Out of scope
 
