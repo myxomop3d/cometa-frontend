@@ -316,7 +316,14 @@ export function getAutomatedSystemColumns({
       // Hidden by default via switchable-config's initialColumnVisibility.
       meta: { label: "GUID" },
       enableColumnFilter: false,
-      enableSorting: true,
+      // NOT sortable: `guid` is a reserved literal token in odata-mini's
+      // $orderby grammar (case-insensitively — `guid`, `Guid` and `GUID` all
+      // hit it), so `$orderby=guid asc` is an ANTLR parse error, not a
+      // field lookup. The backend answers 500 and the route's error boundary
+      // replaces the whole table. Unlike an unknown field, no
+      // `throw-on-field-not-found` setting can rescue it. Verified live
+      // 2026-09-05 against odata-mini 2.2.0.
+      enableSorting: false,
       size: 280,
     },
     {
