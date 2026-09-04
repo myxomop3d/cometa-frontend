@@ -90,7 +90,10 @@ describe("automatedSystemFormToPatch", () => {
     expect(automatedSystemFormToPatch(form, {})).toEqual({});
   });
 
-  it("includes explicit nulls for cleared nullable fields", () => {
+  it("emits null rather than '' for a cleared field", () => {
+    // Pins the payload shape only. The server ignores this null on PATCH
+    // (NullValuePropertyMappingStrategy.IGNORE), so this is not coverage of
+    // an end-to-end clear — see the comment on nullableText() in schema.ts.
     const cleared: AutomatedSystemFormValues = { ...form, leaderComment: null };
     expect(automatedSystemFormToPatch(cleared, { leaderComment: true })).toEqual({
       leaderComment: null,

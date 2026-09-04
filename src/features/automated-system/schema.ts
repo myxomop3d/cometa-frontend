@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 /** Every optional text field behaves the same: "" from an emptied input
- *  becomes null, so a cleared field patches as an explicit null. */
+ *  becomes null in the payload. The server currently ignores that null on
+ *  PATCH (MapStruct's `NullValuePropertyMappingStrategy.IGNORE`), so clearing
+ *  a field is a no-op server-side — the old value reappears on refetch. */
 const nullableText = () =>
   z
     .string()

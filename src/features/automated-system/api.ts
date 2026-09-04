@@ -28,6 +28,13 @@ const baseApi = createCrudApi<
  * Overrides the base `detailQueryOptions`, which would hit `/{id}` — the
  * library's own handler, which ignores `$fields` and so would return
  * `leader: null`. `graph/{id}` is the path that honours it.
+ *
+ * No consumer today: the sheet seeds its form from `rowAction.row`, which
+ * already comes from the `/graph?$fields=leader` list read. Kept per the
+ * design spec (§6) as the correct override for any future consumer that
+ * fetches a single row directly — do not delete as dead code, and do not
+ * "fix" it back onto the base `{id}` path. (Team's equivalent override does
+ * have a consumer today: `src/features/team/api.ts` → `team-combobox.tsx`.)
  */
 function detailQueryOptions(id: number) {
   return queryOptions({

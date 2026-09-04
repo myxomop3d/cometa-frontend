@@ -38,13 +38,21 @@ src/
     data-table/          # data-table, toolbar, pagination, column-header,
                          # view-options, faceted-filter, date-filter,
                          # slider-filter, skeleton
-    filters/             # CheckboxFilter, DateRangeFilter, NumberRangeFilter,
-                         # SelectFilter, TextFilter, RelationFilterDropdown,
-                         # RelationFilterModal
-    app-sidebar.tsx, relation-picker.tsx, DebouncedInput.tsx, SimpleTable.tsx
+    filters/             # UNUSED since /automated-system moved to the switchable
+                         # DataTable — zero references in src/. Kept pending a
+                         # deliberate removal. CheckboxFilter, DateRangeFilter,
+                         # NumberRangeFilter, SelectFilter, TextFilter,
+                         # RelationFilterDropdown, RelationFilterModal
+    app-sidebar.tsx, relation-picker.tsx, DebouncedInput.tsx
+    SimpleTable.tsx      # UNUSED since /automated-system moved to the switchable
+                         # DataTable — zero references in src/. Kept pending a
+                         # deliberate removal.
   hooks/
     use-data-table.ts    # central table state (sorting, pagination, filters, visibility, pinning)
-    useFilters.ts, use-mobile.ts
+    useFilters.ts        # UNUSED since /automated-system moved to the switchable
+                         # DataTable — zero references in src/. Kept pending a
+                         # deliberate removal.
+    use-mobile.ts
   config/
     data-table.ts        # filter operators (iLike, eq, ne, …) and filterVariants
                          # (text, number, range, date, boolean, select,
@@ -55,7 +63,9 @@ src/
     cleanEmptyParams.ts, format.ts
   types/
     api.ts               # ApiResponse<T> envelope + DTOs (BoxDto, ItemDto, ThingDto, …)
-    data-table.ts, table.ts
+    data-table.ts, table.ts  # table.ts's EditConfig is UNUSED (zero references
+                         # in src/) since /automated-system moved to the
+                         # switchable DataTable — kept pending a deliberate removal.
   mocks/                 # MSW handlers + fixtures
   main.tsx               # QueryClient + Router bootstrap
   index.css              # Tailwind v4 + shadcn tokens
@@ -67,7 +77,7 @@ src/
 - `src/routeTree.gen.ts` is auto-generated — never edit
 - Add shadcn components with: `npx shadcn@latest add <component>`
 - `.npmrc` has `legacy-peer-deps=true` (Vite 8 peer dep compat)
-- **New tables**: define columns, drive state via `useDataTable`, compose with `components/data-table/*`; pick filters from `components/filters/*` and operator/variant config from `config/data-table.ts`.
+- **New tables**: define columns, drive state via `useDataTable`, compose with `components/data-table/*`; pick filter variants from `config/data-table.ts` the way the Team/Person/Box pages do. (`components/filters/*`, `SimpleTable.tsx`, and `useFilters.ts` are the pre-unification table stack — unused, do not build on them.)
 - **New API resources**: add a file under `src/api/` exporting `queryOptions(...)` factories; reuse the OData filter helpers.
 - **Relation filters/sorts** (OData): a **to-one** relation uses a navigation
   path with `/` — `sortField: "leader/lastName"`, `contains_ignoring_case(leader/lastName, 'x')`.
