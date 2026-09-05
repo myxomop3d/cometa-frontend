@@ -77,6 +77,21 @@ four text fields. `RelationPicker` is not a labelable native input, so this is
 not a one-line fix; it needs an `aria-labelledby` on the picker's trigger.
 Accessibility follow-up.
 
+## Related, raised later
+
+`issue/scalarClearIsANoOp.md` — the standard's `NullValuePropertyMappingStrategy.IGNORE`
+means a PATCH carrying `"field": null` is discarded, so clearing a nullable
+**scalar** silently reverts. The standard already names the to-one half of
+this hole; the scalar half was only noticed once the AutomatedSystem sheet
+raised the count of user-clearable fields from 4 to 18. Affects `TeamSheet`
+equally. `JsonNullable` — already listed in `CometaCommonMapperConfig`'s
+`uses` and currently unused — is the candidate fix for both halves at once.
+
+`issue/automatedSystemLeaderFollowUps.md` — deferred items from the
+AutomatedSystem leader relation, which was built on this standard. Several
+are the same shape as the ones above, notably a second verbatim duplication
+of a relation-picker column block at two copies.
+
 ## Related, now fixed
 
 `issue/personTeamsInMemoryPagination.md` — requesting `$fields=teams`
