@@ -13,7 +13,7 @@ interface TeamComboboxProps {
 }
 
 function teamLabel(team: TeamDto): string {
-  return team.name ?? `Team #${team.id}`;
+  return team.name || `Team #${team.id}`;
 }
 
 export function TeamCombobox({ value, onChange }: TeamComboboxProps) {

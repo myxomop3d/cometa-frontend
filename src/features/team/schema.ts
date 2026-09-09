@@ -6,7 +6,7 @@ import { z } from "zod";
 const emptyText = () => z.string().trim();
 
 export const teamFormSchema = z.object({
-  name: emptyText(),
+  name: z.string().min(1, "Name is required"),
   code: emptyText(),
   /** NOT emptyText: team.type is @Enumerated(STRING) TeamType over a nullable
    *  text column, and "" breaks reads. Settable, never clearable — §4.2 of the

@@ -159,6 +159,11 @@ export function TeamSheet({
                 />
               )}
             />
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.name.message}
+              </p>
+            )}
           </div>
 
           {/* Code */}
