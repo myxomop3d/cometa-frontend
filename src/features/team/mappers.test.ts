@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { TeamDto } from "@/types/api";
 import { teamDtoToForm, teamFormToCreate, teamFormToPatch } from "./mappers";
-import type { TeamFormValues } from "./schema";
+import { teamFormSchema, type TeamFormValues } from "./schema";
 
 const dto: TeamDto = {
   id: 3,
@@ -68,10 +68,26 @@ describe("teamFormToPatch", () => {
     expect(teamFormToPatch(form, {})).toEqual({});
   });
 
-  it("includes explicit nulls for cleared nullable fields", () => {
-    const cleared: TeamFormValues = { ...form, structure: null };
+  it("emits '' for a cleared field, never null", () => {
+    // Standard: docs/superpowers/specs/2026-09-09-no-null-write-standard-design.md
+    const cleared: TeamFormValues = { ...form, structure: "" };
     expect(teamFormToPatch(cleared, { structure: true })).toEqual({
-      structure: null,
+      structure: "",
     });
+  });
+
+  it("maps a null from the server to '' so the form value is always a string", () => {
+    const bare: TeamDto = { ...dto, structure: null, leaderRole: null };
+    expect(teamDtoToForm(bare).structure).toBe("");
+    expect(teamDtoToForm(bare).leaderRole).toBe("");
+  });
+});
+
+describe("teamFormSchema", () => {
+  it("refuses an empty type, which the backend cannot store", () => {
+    // team.type is @Enumerated(STRING) TeamType over a nullable text column;
+    // "" breaks reads, so the form must never produce one. See §4.2 of the spec.
+    const result = teamFormSchema.safeParse({ ...form, type: "" });
+    expect(result.success).toBe(false);
   });
 });

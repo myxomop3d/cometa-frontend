@@ -67,14 +67,14 @@ export function TeamSheet({
     defaultValues: team
       ? teamDtoToForm(team)
       : {
-          name: null,
+          name: "",
           code: null,
-          type: null,
+          type: "",
           // 0 is never a valid id, so the schema's positive() rule reports
           // "Leader is required" if the user submits without picking one.
           leaderId: 0,
-          leaderRole: null,
-          structure: null,
+          leaderRole: "",
+          structure: "",
         },
   });
 
@@ -153,10 +153,8 @@ export function TeamSheet({
               render={({ field }) => (
                 <Input
                   id="name"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(e.target.value === "" ? null : e.target.value)
-                  }
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
                   onBlur={field.onBlur}
                 />
               )}
@@ -198,8 +196,8 @@ export function TeamSheet({
               name="type"
               render={({ field }) => (
                 <Select
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v === "" ? null : v)}
+                  value={field.value}
+                  onValueChange={(v) => field.onChange(v)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type..." />
@@ -242,10 +240,8 @@ export function TeamSheet({
               render={({ field }) => (
                 <Input
                   id="leaderRole"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(e.target.value === "" ? null : e.target.value)
-                  }
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
                   onBlur={field.onBlur}
                 />
               )}
@@ -261,10 +257,8 @@ export function TeamSheet({
               render={({ field }) => (
                 <Input
                   id="structure"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(e.target.value === "" ? null : e.target.value)
-                  }
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
                   onBlur={field.onBlur}
                 />
               )}
