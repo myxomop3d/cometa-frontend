@@ -38,14 +38,14 @@ import {
 } from "../mappers";
 import { ApiError } from "@/lib/api/create-crud-api";
 
-/** Every nullable free-text field, i.e. all form fields except `name`
- *  (required), `leaderId` (combobox) and `status` (select). */
-type NullableTextField = Exclude<
+/** Every plain empty-clearable free-text field, i.e. all form fields except
+ *  `name` (required), `leaderId` (combobox) and `status` (select). */
+type EmptyTextField = Exclude<
   keyof AutomatedSystemFormValues,
   "name" | "leaderId" | "status"
 >;
 
-const PRIMARY_TEXT_FIELDS: { name: NullableTextField; label: string }[] = [
+const PRIMARY_TEXT_FIELDS: { name: EmptyTextField; label: string }[] = [
   { name: "fullName", label: "Full Name" },
   { name: "objectCode", label: "Object Code" },
   { name: "ci", label: "CI" },
@@ -58,7 +58,7 @@ const PRIMARY_TEXT_FIELDS: { name: NullableTextField; label: string }[] = [
   { name: "clusterHpsmId", label: "Cluster HPSM ID" },
 ];
 
-const SUPPORT_TEXT_FIELDS: { name: NullableTextField; label: string }[] = [
+const SUPPORT_TEXT_FIELDS: { name: EmptyTextField; label: string }[] = [
   { name: "iftMailSupport", label: "IFT Mail Support" },
   { name: "uatMailSupport", label: "UAT Mail Support" },
   { name: "prodMailSupport", label: "Prod Mail Support" },
@@ -113,13 +113,13 @@ const EMPTY_FORM: AutomatedSystemFormValues = {
   guid: "",
 };
 
-function NullableTextRow({
+function TextRow({
   control,
   name,
   label,
 }: {
   control: Control<AutomatedSystemFormValues>;
-  name: NullableTextField;
+  name: EmptyTextField;
   label: string;
 }) {
   return (
@@ -286,7 +286,7 @@ export function AutomatedSystemSheet({
           </div>
 
           {PRIMARY_TEXT_FIELDS.map((f) => (
-            <NullableTextRow
+            <TextRow
               key={f.name}
               control={form.control}
               name={f.name}
@@ -327,7 +327,7 @@ export function AutomatedSystemSheet({
           </div>
 
           {SUPPORT_TEXT_FIELDS.map((f) => (
-            <NullableTextRow
+            <TextRow
               key={f.name}
               control={form.control}
               name={f.name}
