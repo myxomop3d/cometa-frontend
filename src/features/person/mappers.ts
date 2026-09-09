@@ -17,8 +17,8 @@ export function personDtoToForm(dto: PersonDto): PersonFormValues {
  *  migration backfilled every NULL to `""`, it didn't require a name). Fall
  *  back to the id so a nameless team still renders as a visible segment
  *  instead of an empty one between commas. `||`, not `??`, because `""` must
- *  hit the fallback too — unlike `person/columns.tsx`'s and `PersonSheet`'s
- *  own `team.name ?? String(team.id)` `getLabel`s, which still miss `""`. */
+ *  hit the fallback too — `??` only catches `null`. Matches the treatment
+ *  in `person/columns.tsx`'s and `PersonSheet`'s own `getLabel`s. */
 export function formatTeamNames(teams: TeamFlatDto[] | undefined): string {
   if (!teams || teams.length === 0) return "—";
   return teams.map((t) => t.name || String(t.id)).join(", ");
