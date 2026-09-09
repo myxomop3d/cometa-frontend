@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { dash } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { personsFilteredQueryOptions } from "@/features/person/api";
 import { personLabel } from "@/features/person/label";
@@ -73,7 +74,7 @@ export function getTeamColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Name" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Name",
         placeholder: "Search names...",
@@ -90,7 +91,7 @@ export function getTeamColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Code" />
       ),
-      cell: ({ cell }) => cell.getValue<number | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<number | null>()),
       meta: {
         label: "Code",
         variant: "range",
@@ -107,7 +108,7 @@ export function getTeamColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Type" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Type",
         variant: "select",
@@ -153,7 +154,7 @@ export function getTeamColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Leader Role" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Leader Role",
         placeholder: "Search leader roles...",
@@ -170,7 +171,7 @@ export function getTeamColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Structure" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Structure",
         placeholder: "Search structures...",

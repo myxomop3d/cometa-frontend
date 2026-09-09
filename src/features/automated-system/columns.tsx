@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { dash } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { personsFilteredQueryOptions } from "@/features/person/api";
 import { personLabel } from "@/features/person/label";
@@ -70,7 +71,7 @@ export function getAutomatedSystemColumns({
       id: "name",
       accessorKey: "name",
       header: ({ column }) => <DataTableColumnHeader column={column} label="Name" />,
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Name",
         placeholder: "Search names...",
@@ -87,7 +88,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Object Code" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "Object Code" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -99,7 +100,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Full Name" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "Full Name" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -109,7 +110,7 @@ export function getAutomatedSystemColumns({
       id: "ci",
       accessorKey: "ci",
       header: ({ column }) => <DataTableColumnHeader column={column} label="CI" />,
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "CI",
         placeholder: "Search CIs...",
@@ -126,7 +127,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="HPSM Name" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "HPSM Name" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -164,7 +165,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Leader (text)" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Leader (text)",
         placeholder: "Search leader text...",
@@ -181,7 +182,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Leader SAP ID" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "Leader SAP ID" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -193,7 +194,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Block" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Block",
         placeholder: "Search blocks...",
@@ -210,7 +211,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Tribe" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Tribe",
         placeholder: "Search tribes...",
@@ -227,7 +228,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Cluster" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Cluster",
         placeholder: "Search clusters...",
@@ -244,7 +245,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Cluster HPSM ID" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "Cluster HPSM ID" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -256,7 +257,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Status" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Status",
         variant: "select",
@@ -278,7 +279,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="IFT Mail" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "IFT Mail" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -290,7 +291,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="UAT Mail" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "UAT Mail" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -302,7 +303,7 @@ export function getAutomatedSystemColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Prod Mail" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: { label: "Prod Mail" },
       enableColumnFilter: false,
       enableSorting: true,
@@ -312,7 +313,7 @@ export function getAutomatedSystemColumns({
       id: "guid",
       accessorKey: "guid",
       header: ({ column }) => <DataTableColumnHeader column={column} label="GUID" />,
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       // Hidden by default via switchable-config's initialColumnVisibility.
       meta: { label: "GUID" },
       enableColumnFilter: false,
