@@ -42,13 +42,13 @@ export function FlowGraphHeader({
       <div className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1">
         {flow ? (
           <>
-            <h1 className="truncate text-lg font-semibold">{flow.caption}</h1>
+            <h1 className="truncate text-lg font-semibold">{dash(flow.caption)}</h1>
             <Meta label="Key" value={flow.key} />
             <Meta label="Integrity" value={dash(flow.integrity)} />
             <Meta label="Confidentiality" value={dash(flow.confidentiality)} />
             <Meta label="Secret class" value={dash(flow.secretClass)} />
-            <Meta label="Data class" value={flow.dataClass} />
-            <Meta label="Data type" value={flow.dataType} />
+            <Meta label="Data class" value={dash(flow.dataClass)} />
+            <Meta label="Data type" value={dash(flow.dataType)} />
           </>
         ) : (
           <h1 className="truncate text-lg font-semibold text-muted-foreground">

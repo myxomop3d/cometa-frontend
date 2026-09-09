@@ -102,10 +102,10 @@ function NodeDetails({
         <Section title="Automated system">
           <FieldRow label="Name">{node.automatedSystem.name}</FieldRow>
           <FieldRow label="Object code">{dash(node.automatedSystem.objectCode)}</FieldRow>
-          <FieldRow label="CI">{node.automatedSystem.ci}</FieldRow>
-          <FieldRow label="Block">{node.automatedSystem.block}</FieldRow>
-          <FieldRow label="Tribe">{node.automatedSystem.tribe}</FieldRow>
-          <FieldRow label="Cluster">{node.automatedSystem.cluster}</FieldRow>
+          <FieldRow label="CI">{dash(node.automatedSystem.ci)}</FieldRow>
+          <FieldRow label="Block">{dash(node.automatedSystem.block)}</FieldRow>
+          <FieldRow label="Tribe">{dash(node.automatedSystem.tribe)}</FieldRow>
+          <FieldRow label="Cluster">{dash(node.automatedSystem.cluster)}</FieldRow>
           <FieldRow label="Leader">{dash(node.automatedSystem.leaderComment)}</FieldRow>
         </Section>
       )}
