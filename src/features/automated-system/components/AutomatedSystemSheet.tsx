@@ -132,10 +132,8 @@ function NullableTextRow({
           <>
             <Input
               id={name}
-              value={field.value ?? ""}
-              onChange={(e) =>
-                field.onChange(e.target.value === "" ? null : e.target.value)
-              }
+              value={field.value}
+              onChange={(e) => field.onChange(e.target.value)}
               onBlur={field.onBlur}
             />
             {fieldState.error && (
@@ -304,8 +302,8 @@ export function AutomatedSystemSheet({
               name="status"
               render={({ field }) => (
                 <Select
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v === "" ? null : v)}
+                  value={field.value}
+                  onValueChange={(v) => field.onChange(v)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status..." />
