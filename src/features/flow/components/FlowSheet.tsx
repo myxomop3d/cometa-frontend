@@ -71,12 +71,12 @@ export function FlowSheet({
       : {
           key: "",
           caption: "",
-          integrity: null,
-          confidentiality: null,
-          secretClass: null,
+          integrity: "",
+          confidentiality: "",
+          secretClass: "",
           dataClass: "",
           dataType: "",
-          description: null,
+          description: "",
         },
   });
 
@@ -174,8 +174,8 @@ export function FlowSheet({
               name="integrity"
               render={({ field }) => (
                 <Select
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v === "" ? null : v)}
+                  value={field.value}
+                  onValueChange={(v) => field.onChange(v)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select integrity..." />
@@ -199,8 +199,8 @@ export function FlowSheet({
               name="confidentiality"
               render={({ field }) => (
                 <Select
-                  value={field.value ?? ""}
-                  onValueChange={(v) => field.onChange(v === "" ? null : v)}
+                  value={field.value}
+                  onValueChange={(v) => field.onChange(v)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select confidentiality..." />
@@ -225,10 +225,8 @@ export function FlowSheet({
               render={({ field }) => (
                 <Input
                   id="secretClass"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(e.target.value === "" ? null : e.target.value)
-                  }
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
                   onBlur={field.onBlur}
                 />
               )}
@@ -267,12 +265,8 @@ export function FlowSheet({
                 <Textarea
                   id="description"
                   rows={4}
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value === "" ? null : e.target.value,
-                    )
-                  }
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
                   onBlur={field.onBlur}
                 />
               )}

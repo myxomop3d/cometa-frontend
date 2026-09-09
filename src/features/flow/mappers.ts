@@ -5,12 +5,12 @@ export function flowDtoToForm(dto: FlowDto): FlowFormValues {
   return {
     key: dto.key,
     caption: dto.caption,
-    integrity: dto.integrity,
-    confidentiality: dto.confidentiality,
-    secretClass: dto.secretClass,
+    integrity: dto.integrity ?? "",
+    confidentiality: dto.confidentiality ?? "",
+    secretClass: dto.secretClass ?? "",
     dataClass: dto.dataClass,
     dataType: dto.dataType,
-    description: dto.description,
+    description: dto.description ?? "",
   };
 }
 

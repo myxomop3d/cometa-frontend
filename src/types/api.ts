@@ -180,18 +180,21 @@ export interface FlowGraphDto {
 }
 
 // Flow
+/** Every text field is non-null: `flow.integrity`, `flow.confidentiality`,
+ *  `flow.secret_class` and `flow.description` are NOT NULL DEFAULT ''.
+ *  Standard: docs/superpowers/specs/2026-09-09-no-null-write-standard-design.md */
 export interface FlowDto {
   id: number;
   insertedAt: string | null;
   updatedAt: string | null;
   key: string;
   caption: string;
-  integrity: string | null;
-  confidentiality: string | null;
-  secretClass: string | null;
+  integrity: string;
+  confidentiality: string;
+  secretClass: string;
   dataClass: string;
   dataType: string;
-  description: string | null;
+  description: string;
 }
 
 export interface FlowFilters extends Partial<PaginationParams> {

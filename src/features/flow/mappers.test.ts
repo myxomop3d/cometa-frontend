@@ -11,10 +11,10 @@ const baseDto: FlowDto = {
   caption: "Поток Non Trade Orders из Quik PAO",
   integrity: "I_2",
   confidentiality: "K_3",
-  secretClass: null,
+  secretClass: "",
   dataClass: "Client Data",
   dataType: "Non Trade Orders",
-  description: null,
+  description: "",
 };
 
 const baseForm: FlowFormValues = {
@@ -22,10 +22,10 @@ const baseForm: FlowFormValues = {
   caption: "Поток Non Trade Orders из Quik PAO",
   integrity: "I_2",
   confidentiality: "K_3",
-  secretClass: null,
+  secretClass: "",
   dataClass: "Client Data",
   dataType: "Non Trade Orders",
-  description: null,
+  description: "",
 };
 
 describe("flowDtoToForm", () => {
@@ -33,11 +33,11 @@ describe("flowDtoToForm", () => {
     expect(flowDtoToForm(baseDto)).toEqual(baseForm);
   });
 
-  it("preserves null integrity and confidentiality", () => {
-    const dto: FlowDto = { ...baseDto, integrity: null, confidentiality: null };
+  it("preserves empty-string integrity and confidentiality, never emitting null", () => {
+    const dto: FlowDto = { ...baseDto, integrity: "", confidentiality: "" };
     const form = flowDtoToForm(dto);
-    expect(form.integrity).toBeNull();
-    expect(form.confidentiality).toBeNull();
+    expect(form.integrity).toBe("");
+    expect(form.confidentiality).toBe("");
   });
 });
 
@@ -49,10 +49,10 @@ describe("flowFormToCreate", () => {
       caption: "Поток Non Trade Orders из Quik PAO",
       integrity: "I_2",
       confidentiality: "K_3",
-      secretClass: null,
+      secretClass: "",
       dataClass: "Client Data",
       dataType: "Non Trade Orders",
-      description: null,
+      description: "",
     });
   });
 });
