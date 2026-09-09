@@ -79,14 +79,6 @@ Accessibility follow-up.
 
 ## Related, raised later
 
-`issue/scalarClearIsANoOp.md` — the standard's `NullValuePropertyMappingStrategy.IGNORE`
-means a PATCH carrying `"field": null` is discarded, so clearing a nullable
-**scalar** silently reverts. The standard already names the to-one half of
-this hole; the scalar half was only noticed once the AutomatedSystem sheet
-raised the count of user-clearable fields from 4 to 18. Affects `TeamSheet`
-equally. `JsonNullable` — already listed in `CometaCommonMapperConfig`'s
-`uses` and currently unused — is the candidate fix for both halves at once.
-
 `issue/automatedSystemLeaderFollowUps.md` — deferred items from the
 AutomatedSystem leader relation, which was built on this standard. Several
 are the same shape as the ones above, notably a second verbatim duplication
@@ -103,3 +95,13 @@ per `docs/superpowers/specs/2026-08-27-entity-graph-collection-pagination-design
 `$fields=teams` is still unconditional — that part of the picture is
 unchanged — but the fetch it triggers is cheap now, which is worth knowing
 before adding another unconditional relation fetch.
+
+`issue/scalarClearIsANoOp.md` (deleted) — the standard's
+`NullValuePropertyMappingStrategy.IGNORE` meant a PATCH carrying
+`"field": null` was discarded, so clearing a nullable **scalar** silently
+reverted. This is now fixed: per
+`docs/superpowers/specs/2026-09-09-no-null-write-standard-design.md`, every
+clearable nullable scalar was retyped `NOT NULL DEFAULT ''`, so the frontend
+sends `""` instead of `null` and the IGNORE guard never triggers. `team.type`
+remains the one exception — an `@Enumerated` column that is settable but not
+clearable.

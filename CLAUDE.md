@@ -97,4 +97,14 @@ src/
   that Spring Boot 4 rejects at startup; ref resolution stays in the mapper
   layer against `EntityManager` only. Full record:
   `docs/superpowers/specs/2026-08-27-nested-relation-write-standard-design.md`.
+- **Scalar writes (no-null standard)**: the frontend never sends `null`. A key
+  absent means "leave unchanged"; a value — including `""` — sets the field.
+  Every type carries its own empty value: `""` for text, an explicit enum
+  member, a sentinel row for a to-one, `[]` for a to-many. 33 columns are
+  `NOT NULL DEFAULT ''` (`db-scripts/ddl/014`, `015`), so this is a schema
+  invariant, not a convention. Use `emptyText()` in a form schema, never a
+  `"" → null` transform, and `dash()` from `@/lib/format` to render a cell.
+  Known exception: `team.type` is `@Enumerated` over a nullable column and is
+  settable but not clearable. Full record:
+  `docs/superpowers/specs/2026-09-09-no-null-write-standard-design.md`.
 - TS config: strict, `noUnusedLocals`/`noUnusedParameters`, ES2023 target, bundler resolution, `jsx: react-jsx`
