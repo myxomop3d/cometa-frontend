@@ -209,6 +209,11 @@ export function TeamSheet({
                 </Select>
               )}
             />
+            {form.formState.errors.type && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.type.message}
+              </p>
+            )}
           </div>
 
           {/* Leader (required) */}

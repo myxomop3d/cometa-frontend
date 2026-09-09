@@ -12,7 +12,7 @@ export const teamFormSchema = z.object({
     .nullable(),
   /** NOT emptyText: team.type is @Enumerated(STRING) TeamType over a nullable
    *  text column, and "" breaks reads. Settable, never clearable — §4.2 of the
-   *  spec. All 112 live rows carry a value, so requiring one blocks no row. */
+   *  spec. */
   type: z.string().min(1, "Type is required"),
   leaderId: z
     .number({ error: "Leader is required" })
