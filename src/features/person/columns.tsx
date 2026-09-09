@@ -150,7 +150,7 @@ export function getPersonColumns({
           queryOptionsFn: (filters: Record<string, unknown>) =>
             teamsFilteredQueryOptions(filters),
           columns: teamRelationColumns,
-          getLabel: (team: TeamDto) => team.name ?? String(team.id),
+          getLabel: (team: TeamDto) => team.name || String(team.id),
           getId: (team: TeamDto) => team.id,
         },
       },
