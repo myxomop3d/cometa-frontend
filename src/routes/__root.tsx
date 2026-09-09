@@ -8,6 +8,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { QueryClient } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { getSidebarStateCookie } from "@/lib/sidebar-cookie";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/lib/auth/auth-context";
@@ -63,7 +64,7 @@ function RootLayout() {
     router.state.location.pathname === "/auth/cert/callback";
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={getSidebarStateCookie()}>
       {!isAuthPage && <AppSidebar />}
       <main className={`flex-1 overflow-auto ${!isAuthPage ? "p-6" : ""}`}>
         <Outlet />

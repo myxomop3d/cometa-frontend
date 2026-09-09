@@ -1,6 +1,19 @@
 import { forwardRef, useState } from "react";
 import { createLink, useMatchRoute } from "@tanstack/react-router";
-import { Moon, Sun, LogOut } from "lucide-react";
+import {
+  Boxes,
+  Component,
+  Cpu,
+  LogOut,
+  Moon,
+  Network,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+  User,
+  Users,
+  Workflow,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,8 +24,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth-context";
 
 // Create a type-safe router link from SidebarMenuButton
@@ -39,14 +53,35 @@ const SidebarMenuButtonLink = createLink(
 );
 
 const navItems = [
-  { to: "/automated-system", label: "Automated Systems" },
-  { to: "/box-dice", label: "Boxes (Dice)" },
-  { to: "/flow-graph", label: "Flow Graph" },
-  { to: "/flow", label: "Flows" },
-  { to: "/person", label: "Persons" },
-  { to: "/team", label: "Teams" },
-  { to: "/components", label: "Components" },
+  { to: "/automated-system", label: "Automated Systems", icon: Cpu },
+  { to: "/box-dice", label: "Boxes (Dice)", icon: Boxes },
+  { to: "/flow-graph", label: "Flow Graph", icon: Network },
+  { to: "/flow", label: "Flows", icon: Workflow },
+  { to: "/person", label: "Persons", icon: User },
+  { to: "/team", label: "Teams", icon: Users },
+  { to: "/components", label: "Components", icon: Component },
 ] as const;
+
+/**
+ * Pin/unpin the sidebar. Unlike the stock SidebarTrigger the icon reflects
+ * `open` — the pinned state — not the transient hover peek.
+ */
+function SidebarToggle() {
+  const { open, toggleSidebar } = useSidebar();
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      className="shrink-0"
+      onClick={toggleSidebar}
+      aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
+      title={open ? "Collapse sidebar" : "Expand sidebar"}
+    >
+      {open ? <PanelLeftClose /> : <PanelLeftOpen />}
+    </Button>
+  );
+}
 
 export function AppSidebar() {
   const matchRoute = useMatchRoute();
@@ -68,9 +103,12 @@ export function AppSidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <Sidebar>
-      <SidebarHeader className="p-4 font-semibold text-lg border-b border-sidebar-border">
-        Cometa
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="flex-row items-center gap-2 border-b border-sidebar-border p-2">
+        <SidebarToggle />
+        <span className="truncate text-lg font-semibold group-data-[collapsible=icon]:hidden">
+          Cometa
+        </span>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -83,6 +121,7 @@ export function AppSidebar() {
                     isActive={!!matchRoute({ to: item.to, fuzzy: true })}
                     tooltip={item.label}
                   >
+                    <item.icon />
                     <span>{item.label}</span>
                   </SidebarMenuButtonLink>
                 </SidebarMenuItem>
@@ -93,13 +132,19 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         {user && (
-          <div className="px-3 py-1.5 text-xs text-muted-foreground" title={user.sigmaLogin}>
+          <div
+            className="truncate px-3 py-1.5 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"
+            title={user.sigmaLogin}
+          >
             {user.sigmaLogin}
           </div>
         )}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={toggleTheme}>
+            <SidebarMenuButton
+              onClick={toggleTheme}
+              tooltip={isDark ? "Light Mode" : "Dark Mode"}
+            >
               {isDark ? (
                 <Sun className="size-4" />
               ) : (
@@ -110,7 +155,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           {user && (
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={logout}>
+              <SidebarMenuButton onClick={logout} tooltip="Sign out">
                 <LogOut className="size-4" />
                 <span>Sign out</span>
               </SidebarMenuButton>
@@ -118,7 +163,6 @@ export function AppSidebar() {
           )}
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }

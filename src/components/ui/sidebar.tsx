@@ -22,13 +22,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { PanelLeftIcon } from "lucide-react"
+import {
+  SIDEBAR_COOKIE_MAX_AGE,
+  SIDEBAR_COOKIE_NAME,
+} from "@/lib/sidebar-cookie"
 
-const SIDEBAR_COOKIE_NAME = "sidebar_state"
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+const SIDEBAR_PEEK_CLOSE_DELAY = 200
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed"
@@ -38,6 +41,9 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  /** True while a collapsed sidebar is temporarily expanded by hover/focus. */
+  peek: boolean
+  setHovered: (hovered: boolean) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -107,9 +113,40 @@ function SidebarProvider({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [toggleSidebar])
 
+  // A collapsed sidebar expands temporarily while the pointer (or keyboard
+  // focus) is inside it, then collapses again — like Chrome's vertical tabs.
+  const [hovered, _setHovered] = React.useState(false)
+  const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const setHovered = React.useCallback((next: boolean) => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+    if (next) {
+      _setHovered(true)
+    } else {
+      // Delay the close so a diagonal exit across the panel edge doesn't flicker.
+      closeTimer.current = setTimeout(
+        () => _setHovered(false),
+        SIDEBAR_PEEK_CLOSE_DELAY
+      )
+    }
+  }, [])
+
+  React.useEffect(
+    () => () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    },
+    []
+  )
+
+  const peek = hovered && !open && !isMobile
+
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? "expanded" : "collapsed"
+  // A peek counts as expanded, so every child renders its expanded form.
+  const state = open || peek ? "expanded" : "collapsed"
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
@@ -120,8 +157,20 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      peek,
+      setHovered,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      peek,
+      setHovered,
+    ]
   )
 
   return (
@@ -160,7 +209,8 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, openMobile, setOpenMobile, peek, setHovered } =
+    useSidebar()
 
   if (collapsible === "none") {
     return (
@@ -210,6 +260,7 @@ function Sidebar({
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
       data-side={side}
+      data-peek={peek ? "true" : undefined}
       data-slot="sidebar"
     >
       {/* This is what handles the sidebar gap on desktop */}
@@ -221,18 +272,33 @@ function Sidebar({
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
             ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
+            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
+          // While peeking the panel floats above the page, so the gap stays
+          // pinned at the rail width and no content reflows.
+          variant === "floating" || variant === "inset"
+            ? "group-data-[peek]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]!"
+            : "group-data-[peek]:w-(--sidebar-width-icon)!"
         )}
       />
       <div
         data-slot="sidebar-container"
         data-side={side}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onFocusCapture={() => setHovered(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setHovered(false)
+          }
+        }}
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+          // A peeking panel is a layer over the page, so give it a shadow.
+          "group-data-[peek]:z-30 group-data-[peek]:shadow-xl",
           className
         )}
         {...props}
