@@ -1,8 +1,7 @@
 # The no-null write standard
 
 **Date:** 2026-09-09
-**Status:** implemented on `feature/gm` (2026-09-09). Frontend, both migrations and the
-docs all landed; verified end to end against a running backend.
+**Status:** implemented on `feature/gm` 2026-09-09; verified end to end against a live backend
 **Replaces:** the patch-DTO design committed at `7d1b0d0` and deleted in the same
 commit as this file — rejected because it put per-entity ceremony (a patch DTO,
 a mapper method, a generic type parameter) in the way of every new entity.
