@@ -71,8 +71,10 @@ The whole `gmsb` schema has 41 nullable columns (live, 2026-09-09):
 Of the 8, exactly one — `team.code` — is reachable from an edit form. The FKs
 and the jsonb columns appear in no sheet.
 
-After this work every field a user can edit is clearable, with one exception:
-`team.type` (§4.2).
+After this work every field a user can edit is clearable, with two exceptions:
+`team.type` (§4.2), a storage constraint, and `automated_system.status`, a UI
+affordance — `AutomatedSystemSheet.tsx` renders it as a two-item `Select` with
+no clear affordance, even though the migrated column itself would accept `""`.
 
 ## 4. Database migration
 
