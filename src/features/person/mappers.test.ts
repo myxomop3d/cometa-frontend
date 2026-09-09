@@ -28,8 +28,8 @@ const dto: PersonDto = {
       name: "Платформа",
       code: 1234,
       type: "CHANGE",
-      leaderRole: null,
-      structure: null,
+      leaderRole: "",
+      structure: "",
     },
   ],
 };
@@ -138,8 +138,8 @@ describe("formatTeamNames", () => {
     name: "Платформа",
     code: null,
     type: null,
-    leaderRole: null,
-    structure: null,
+    leaderRole: "",
+    structure: "",
     ...overrides,
   });
 
@@ -158,10 +158,11 @@ describe("formatTeamNames", () => {
   });
 
   it("falls back to the id when a team has no name", () => {
-    // name is nullable on the entity; a naive join would render an empty
+    // name is a non-null string, but the migration backfilled every NULL to
+    // "" rather than requiring a name; a naive join would render an empty
     // segment between commas instead of a visible placeholder.
     expect(
-      formatTeamNames([team({ id: 5, name: null }), team({ id: 6, name: "B" })]),
+      formatTeamNames([team({ id: 5, name: "" }), team({ id: 6, name: "B" })]),
     ).toBe("5, B");
   });
 });

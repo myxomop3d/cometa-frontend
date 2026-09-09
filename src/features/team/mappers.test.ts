@@ -76,10 +76,14 @@ describe("teamFormToPatch", () => {
     });
   });
 
-  it("maps a null from the server to '' so the form value is always a string", () => {
-    const bare: TeamDto = { ...dto, structure: null, leaderRole: null };
-    expect(teamDtoToForm(bare).structure).toBe("");
-    expect(teamDtoToForm(bare).leaderRole).toBe("");
+  it("still copes with a null from a server that predates the migration", () => {
+    const legacy = {
+      ...dto,
+      structure: null,
+      leaderRole: null,
+    } as unknown as TeamDto;
+    expect(teamDtoToForm(legacy).structure).toBe("");
+    expect(teamDtoToForm(legacy).leaderRole).toBe("");
   });
 });
 

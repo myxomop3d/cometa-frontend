@@ -50,28 +50,31 @@ export interface ThingDto {
  *  field is typed as this: it is the interface holding the 16 scalars, which
  *  AutomatedSystemDto extends. Not dead code — see the "Rejected" section of
  *  docs/superpowers/specs/2026-09-04-automated-system-leader-relation-design.md */
+/** Every text field is non-null: `014_no_null_text_columns.sql` made these
+ *  columns NOT NULL DEFAULT ''. Empty is "", never null.
+ *  Standard: docs/superpowers/specs/2026-09-09-no-null-write-standard-design.md */
 export interface AutomatedSystemFlatDto {
   id: number;
   insertedAt: string | null;
   updatedAt: string | null;
   name: string;
-  objectCode: string | null;
+  objectCode: string;
   fullName: string;
   ci: string;
-  nameHpsm: string | null;
+  nameHpsm: string;
   /** Historical free-text lead. The DB column is still named `leader`;
    *  only the Java field and this DTO field were renamed. */
-  leaderComment: string | null;
-  leaderSapId: string | null;
+  leaderComment: string;
+  leaderSapId: string;
   block: string;
   tribe: string;
   cluster: string;
-  clusterHpsmId: string | null;
-  status: string | null;
-  iftMailSupport: string | null;
-  uatMailSupport: string | null;
-  prodMailSupport: string | null;
-  guid: string | null;
+  clusterHpsmId: string;
+  status: string;
+  iftMailSupport: string;
+  uatMailSupport: string;
+  prodMailSupport: string;
+  guid: string;
 }
 
 export interface AutomatedSystemDto extends AutomatedSystemFlatDto {
@@ -254,11 +257,11 @@ export interface TeamFlatDto {
   id: number;
   insertedAt: string | null;
   updatedAt: string | null;
-  name: string | null;
+  name: string;
   code: number | null;
   type: string | null;
-  leaderRole: string | null;
-  structure: string | null;
+  leaderRole: string;
+  structure: string;
 }
 
 export interface TeamDto extends TeamFlatDto {

@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { dash } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { FlowDto } from "@/types/api";
 import type { FlowRowAction } from "./row-action";
@@ -97,7 +98,7 @@ export function getFlowColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Integrity" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Integrity",
         variant: "select",
@@ -119,7 +120,7 @@ export function getFlowColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Confidentiality" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       meta: {
         label: "Confidentiality",
         variant: "select",
@@ -183,7 +184,7 @@ export function getFlowColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Secret Class" />
       ),
-      cell: ({ cell }) => cell.getValue<string | null>() ?? "—",
+      cell: ({ cell }) => dash(cell.getValue<string | null>()),
       enableSorting: true,
       size: 120,
     },

@@ -1,5 +1,6 @@
 import { ChevronsUpDown } from "lucide-react";
 import { stringify } from "yaml";
+import { dash } from "@/lib/format";
 import type { NodeDto, LinkDto } from "@/types/api";
 import {
   Collapsible,
@@ -100,12 +101,12 @@ function NodeDetails({
       {node.automatedSystem && (
         <Section title="Automated system">
           <FieldRow label="Name">{node.automatedSystem.name}</FieldRow>
-          <FieldRow label="Object code">{node.automatedSystem.objectCode ?? "—"}</FieldRow>
+          <FieldRow label="Object code">{dash(node.automatedSystem.objectCode)}</FieldRow>
           <FieldRow label="CI">{node.automatedSystem.ci}</FieldRow>
           <FieldRow label="Block">{node.automatedSystem.block}</FieldRow>
           <FieldRow label="Tribe">{node.automatedSystem.tribe}</FieldRow>
           <FieldRow label="Cluster">{node.automatedSystem.cluster}</FieldRow>
-          <FieldRow label="Leader">{node.automatedSystem.leaderComment ?? "—"}</FieldRow>
+          <FieldRow label="Leader">{dash(node.automatedSystem.leaderComment)}</FieldRow>
         </Section>
       )}
       <DataSection data={node.data} />

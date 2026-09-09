@@ -17,16 +17,16 @@ const dto: AutomatedSystemDto = {
   ci: "CI01776490",
   nameHpsm: "Учёт сделок с физическими товарами Commodity Trading (Aspect)",
   leaderComment: "Берестов Р. В. (801690)",
-  leaderSapId: null,
+  leaderSapId: "",
   block: "Финансы",
   tribe: "Digital Accounting",
   cluster: "Департамент финансов (115147)",
-  clusterHpsmId: null,
+  clusterHpsmId: "",
   status: "Находится в эксплуатации",
-  iftMailSupport: null,
-  uatMailSupport: null,
-  prodMailSupport: null,
-  guid: null,
+  iftMailSupport: "",
+  uatMailSupport: "",
+  prodMailSupport: "",
+  guid: "",
   leader: {
     id: 99,
     insertedAt: null,
@@ -69,8 +69,9 @@ describe("automatedSystemDtoToForm", () => {
     expect(automatedSystemDtoToForm(bare).leaderId).toBe(0);
   });
 
-  it("maps a null from the server to '' so the form value is always a string", () => {
-    expect(automatedSystemDtoToForm(dto).leaderSapId).toBe("");
+  it("still copes with a null from a server that predates the migration", () => {
+    const legacy = { ...dto, leaderSapId: null } as unknown as AutomatedSystemDto;
+    expect(automatedSystemDtoToForm(legacy).leaderSapId).toBe("");
   });
 });
 

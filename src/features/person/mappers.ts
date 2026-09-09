@@ -13,14 +13,15 @@ export function personDtoToForm(dto: PersonDto): PersonFormValues {
   };
 }
 
-/** `name` is nullable on the entity (the column is nullable), where the
- *  DTO it replaced had `name: string`. Fall back to the id so a nameless
- *  team still renders as a visible segment instead of an empty one between
- *  commas. Matches the `?? String(id)` fallback the relation pickers' own
- *  `getLabel` already uses. */
+/** `name` is a non-null `string` post-migration, but can still be `""` (the
+ *  migration backfilled every NULL to `""`, it didn't require a name). Fall
+ *  back to the id so a nameless team still renders as a visible segment
+ *  instead of an empty one between commas. `||`, not `??`, because `""` must
+ *  hit the fallback too — unlike `person/columns.tsx`'s and `PersonSheet`'s
+ *  own `team.name ?? String(team.id)` `getLabel`s, which still miss `""`. */
 export function formatTeamNames(teams: TeamFlatDto[] | undefined): string {
   if (!teams || teams.length === 0) return "—";
-  return teams.map((t) => t.name ?? String(t.id)).join(", ");
+  return teams.map((t) => t.name || String(t.id)).join(", ");
 }
 
 export function personFormToCreate(v: PersonFormValues): PersonWritePayload {
