@@ -93,24 +93,24 @@ function isAutomatedSystemField(
 
 const EMPTY_FORM: AutomatedSystemFormValues = {
   name: "",
-  objectCode: null,
-  fullName: null,
-  ci: null,
-  nameHpsm: null,
+  objectCode: "",
+  fullName: "",
+  ci: "",
+  nameHpsm: "",
   // 0 is never a valid id, so the schema's positive() rule reports
   // "Leader is required" if the user submits without picking one.
   leaderId: 0,
-  leaderComment: null,
-  leaderSapId: null,
-  block: null,
-  tribe: null,
-  cluster: null,
-  clusterHpsmId: null,
-  status: null,
-  iftMailSupport: null,
-  uatMailSupport: null,
-  prodMailSupport: null,
-  guid: null,
+  leaderComment: "",
+  leaderSapId: "",
+  block: "",
+  tribe: "",
+  cluster: "",
+  clusterHpsmId: "",
+  status: "",
+  iftMailSupport: "",
+  uatMailSupport: "",
+  prodMailSupport: "",
+  guid: "",
 };
 
 function NullableTextRow({

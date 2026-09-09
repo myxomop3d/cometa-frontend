@@ -5,7 +5,7 @@ import {
   automatedSystemFormToCreate,
   automatedSystemFormToPatch,
 } from "./mappers";
-import type { AutomatedSystemFormValues } from "./schema";
+import { automatedSystemFormSchema, type AutomatedSystemFormValues } from "./schema";
 
 const dto: AutomatedSystemDto = {
   id: 1451,
@@ -46,16 +46,16 @@ const form: AutomatedSystemFormValues = {
   nameHpsm: "Учёт сделок с физическими товарами Commodity Trading (Aspect)",
   leaderId: 99,
   leaderComment: "Берестов Р. В. (801690)",
-  leaderSapId: null,
+  leaderSapId: "",
   block: "Финансы",
   tribe: "Digital Accounting",
   cluster: "Департамент финансов (115147)",
-  clusterHpsmId: null,
+  clusterHpsmId: "",
   status: "Находится в эксплуатации",
-  iftMailSupport: null,
-  uatMailSupport: null,
-  prodMailSupport: null,
-  guid: null,
+  iftMailSupport: "",
+  uatMailSupport: "",
+  prodMailSupport: "",
+  guid: "",
 };
 
 describe("automatedSystemDtoToForm", () => {
@@ -67,6 +67,17 @@ describe("automatedSystemDtoToForm", () => {
     // Happens on any read that omitted $fields=leader.
     const bare: AutomatedSystemDto = { ...dto, leader: null };
     expect(automatedSystemDtoToForm(bare).leaderId).toBe(0);
+  });
+
+  it("maps a null from the server to '' so the form value is always a string", () => {
+    expect(automatedSystemDtoToForm(dto).leaderSapId).toBe("");
+  });
+});
+
+describe("automatedSystemFormSchema", () => {
+  it("trims a whitespace-only value to '' so it is not a third empty spelling", () => {
+    const parsed = automatedSystemFormSchema.parse({ ...form, block: "   " });
+    expect(parsed.block).toBe("");
   });
 });
 
@@ -90,13 +101,13 @@ describe("automatedSystemFormToPatch", () => {
     expect(automatedSystemFormToPatch(form, {})).toEqual({});
   });
 
-  it("emits null rather than '' for a cleared field", () => {
-    // Pins the payload shape only. The server ignores this null on PATCH
-    // (NullValuePropertyMappingStrategy.IGNORE), so this is not coverage of
-    // an end-to-end clear — see the comment on nullableText() in schema.ts.
-    const cleared: AutomatedSystemFormValues = { ...form, leaderComment: null };
+  it("emits '' for a cleared field, never null", () => {
+    // "" is the only spelling the server acts on: null means "leave unchanged"
+    // (MapStruct's NullValuePropertyMappingStrategy.IGNORE).
+    // Standard: docs/superpowers/specs/2026-09-09-no-null-write-standard-design.md
+    const cleared: AutomatedSystemFormValues = { ...form, leaderComment: "" };
     expect(automatedSystemFormToPatch(cleared, { leaderComment: true })).toEqual({
-      leaderComment: null,
+      leaderComment: "",
     });
   });
 

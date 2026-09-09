@@ -9,25 +9,25 @@ export function automatedSystemDtoToForm(
 ): AutomatedSystemFormValues {
   return {
     name: dto.name,
-    objectCode: dto.objectCode,
-    fullName: dto.fullName,
-    ci: dto.ci,
-    nameHpsm: dto.nameHpsm,
+    objectCode: dto.objectCode ?? "",
+    fullName: dto.fullName ?? "",
+    ci: dto.ci ?? "",
+    nameHpsm: dto.nameHpsm ?? "",
     // The leader's id arrives only inside the nested ref, present only on
     // reads that requested $fields=leader. 0 is never a valid id, so the
     // required-positive rule in the schema rejects it.
     leaderId: dto.leader?.id ?? 0,
-    leaderComment: dto.leaderComment,
-    leaderSapId: dto.leaderSapId,
-    block: dto.block,
-    tribe: dto.tribe,
-    cluster: dto.cluster,
-    clusterHpsmId: dto.clusterHpsmId,
-    status: dto.status,
-    iftMailSupport: dto.iftMailSupport,
-    uatMailSupport: dto.uatMailSupport,
-    prodMailSupport: dto.prodMailSupport,
-    guid: dto.guid,
+    leaderComment: dto.leaderComment ?? "",
+    leaderSapId: dto.leaderSapId ?? "",
+    block: dto.block ?? "",
+    tribe: dto.tribe ?? "",
+    cluster: dto.cluster ?? "",
+    clusterHpsmId: dto.clusterHpsmId ?? "",
+    status: dto.status ?? "",
+    iftMailSupport: dto.iftMailSupport ?? "",
+    uatMailSupport: dto.uatMailSupport ?? "",
+    prodMailSupport: dto.prodMailSupport ?? "",
+    guid: dto.guid ?? "",
   };
 }
 
