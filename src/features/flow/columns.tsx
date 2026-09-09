@@ -1,5 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, ExternalLink } from "lucide-react";
 import * as React from "react";
 
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -81,6 +82,20 @@ export function getFlowColumns({
       accessorKey: "caption",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Caption" />
+      ),
+      cell: ({ row }) => (
+        <span className="inline-flex items-center gap-1.5">
+          {row.original.caption}
+          <Link
+            to="/flow-graph"
+            search={{ flowId: row.original.id, env: "PROD" }}
+            title="Open in flow graph (PROD)"
+            aria-label={`Open "${row.original.caption}" in the flow graph on PROD`}
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            <ExternalLink className="size-3.5" />
+          </Link>
+        </span>
       ),
       meta: {
         label: "Caption",
