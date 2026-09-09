@@ -14,16 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PAGE_SIZE_STEPS } from "@/lib/data-table";
 import { cn } from "@/lib/utils";
 
 interface DataTablePaginationProps<TData> extends React.ComponentProps<"div"> {
   table: Table<TData>;
-  pageSizeOptions?: number[];
+  pageSizeOptions?: readonly number[];
 }
 
 export function DataTablePagination<TData>({
   table,
-  pageSizeOptions = [10, 20, 30, 40, 50],
+  pageSizeOptions = PAGE_SIZE_STEPS,
   className,
   ...props
 }: DataTablePaginationProps<TData>) {

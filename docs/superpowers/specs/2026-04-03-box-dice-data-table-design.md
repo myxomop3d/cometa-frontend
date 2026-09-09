@@ -13,7 +13,7 @@ New `/box-dice/` page displaying `BoxDto` data using a reusable data-table compo
 - **Filtering:** Phase 1 uses basic DataTableToolbar; Phase 2 adds Notion/Airtable-style FilterList (no Linear command-palette)
 - **Edit/Add UI:** Sheet (slide-out panel) with react-hook-form + zod
 - **Relation filter modals:** Use the same data-table components recursively
-- **Page size:** Calculated on mount, snapped to discrete steps (10, 20, 30, 40, 50)
+- **Page size:** Calculated on mount, snapped down to discrete steps (10, 15, 20, … 50)
 - **Existing box page:** Unchanged
 
 ## File Structure
@@ -168,22 +168,43 @@ function useDataTable<TData>(opts: {
 - Filter/sort changes debounced 300ms before URL write
 - Creates TanStack Table instance internally (manual mode)
 - Column visibility is local state (not URL-persisted)
-- Default page size calculated on mount from window height, snapped to [10, 20, 30, 40, 50]
+- Default page size calculated on mount from window height, snapped down to [10, 15, 20, … 50]
 
 ## Dynamic Page Size
 
 ```typescript
-function calculatePageSize(): number {
-  const available = window.innerHeight - 280
-  const ideal = Math.floor(available / 40)
-  const steps = [10, 20, 30, 40, 50]
-  return steps.reduce((prev, curr) =>
-    Math.abs(curr - ideal) < Math.abs(prev - ideal) ? curr : prev
-  )
+const TABLE_ROW_HEIGHT_PX = 49
+const TABLE_CHROME_PX = 313
+const PAGE_SIZE_STEPS = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+function calculatePageSize(viewportHeight = window.innerHeight): number {
+  const fits = Math.floor((viewportHeight - TABLE_CHROME_PX) / TABLE_ROW_HEIGHT_PX)
+  let size = PAGE_SIZE_STEPS[0]
+  for (const step of PAGE_SIZE_STEPS) if (step <= fits) size = step
+  return size
 }
 ```
 
-Runs once on mount. The 280px offset is tunable via parameter.
+Runs once on mount. The chrome offset is tunable via parameter.
+
+**Revised 2026-09-09.** The original formula (40px rows, a 280px offset, and a
+snap to the *nearest* step) rendered up to 5 rows more than the window could
+show — e.g. 20 rows on a 1080px viewport where 15 fit. Three corrections, all
+measured in the browser rather than assumed:
+
+- **Row height is 49px**, not 40px. 40px is the height of the *header* row; a
+  body row is a `TableCell`'s `p-2` around one line of text.
+- **Chrome is 313px**, not 280px. It is `main`'s `p-6`, the page heading, the
+  toolbar, the table header, the gap, the pagination bar, and the horizontal
+  scrollbar a wide table adds. Measured at 313px on `/automated-system` (its
+  toolbar wraps to two lines and its table scrolls horizontally) and 258px on
+  `/team` and `/person`. The worst case is used so no page spills below the
+  fold; the cost is an unused row where the toolbar fits on one line.
+- **Snap down, never to the nearest.** Nearest rounds up whenever the ideal
+  count sits above a step's midpoint, which is what put rows below the fold.
+
+Steps changed from 10s to 5s at the same time, so `PAGE_SIZE_STEPS` is also the
+default option list of the pagination "Rows per page" select.
 
 ## RelationPicker Component
 
