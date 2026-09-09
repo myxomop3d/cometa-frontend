@@ -4,7 +4,7 @@ import type { TeamFormValues, TeamWritePayload } from "./schema";
 export function teamDtoToForm(dto: TeamDto): TeamFormValues {
   return {
     name: dto.name ?? "",
-    code: dto.code,
+    code: dto.code ?? "",
     type: dto.type ?? "",
     // The leader id now arrives only inside the nested ref, which is present
     // only on reads that requested $fields=leader. 0 is never a valid id, so

@@ -10,7 +10,7 @@ import { notifyLambdaCapped } from "@/lib/odata/notify-lambda-capped";
 
 export const teamFieldByColumnId: Record<string, FieldEntry> = {
   name:       { field: "name",       variant: "text" },
-  code:       { field: "code",       variant: "range" },
+  code:       { field: "code",       variant: "text" },
   type:       { field: "type",       variant: "select" },
   leader:     { field: "leader/id",  variant: "relation", sortField: "leader/lastName" },
   leaderRole: { field: "leaderRole", variant: "text" },

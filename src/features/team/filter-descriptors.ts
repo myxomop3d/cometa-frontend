@@ -7,7 +7,9 @@ export interface TeamFilterDescriptor extends FilterDescriptor {
 
 export const teamFilterDescriptors: readonly TeamFilterDescriptor[] = [
   { id: "name", variant: "text", filterKey: "name" },
-  { id: "code", variant: "range", filterKeys: ["codeMin", "codeMax"] },
+  // Was a codeMin/codeMax range while `code` was an integer. Bookmarked URLs
+  // carrying the old keys are ignored rather than erroring — see spec §7.
+  { id: "code", variant: "text", filterKey: "code" },
   { id: "type", variant: "select", filterKey: "type" },
   {
     id: "leader",

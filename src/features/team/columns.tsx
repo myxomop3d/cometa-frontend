@@ -91,12 +91,11 @@ export function getTeamColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} label="Code" />
       ),
-      cell: ({ cell }) => dash(cell.getValue<number | null>()),
+      cell: ({ cell }) => dash(cell.getValue<string>()),
       meta: {
         label: "Code",
-        variant: "range",
-        range: [0, 10000],
-        filterKeys: ["codeMin", "codeMax"],
+        variant: "text",
+        filterKey: "code",
       },
       enableColumnFilter: true,
       enableSorting: true,

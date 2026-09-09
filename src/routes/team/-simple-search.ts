@@ -18,8 +18,7 @@ function asStrArray(v: unknown): string[] | undefined {
 export function validateTeamSimpleFields(search: Record<string, unknown>) {
   return {
     name: asStr(search.name),
-    codeMin: asNum(search.codeMin),
-    codeMax: asNum(search.codeMax),
+    code: asStr(search.code),
     type: asStrArray(search.type),
     leaderId: asNum(search.leaderId),
     leaderRole: asStr(search.leaderRole),

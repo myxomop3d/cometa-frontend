@@ -7,9 +7,7 @@ const emptyText = () => z.string().trim();
 
 export const teamFormSchema = z.object({
   name: emptyText(),
-  code: z
-    .number({ error: "Code must be a number" })
-    .nullable(),
+  code: emptyText(),
   /** NOT emptyText: team.type is @Enumerated(STRING) TeamType over a nullable
    *  text column, and "" breaks reads. Settable, never clearable — §4.2 of the
    *  spec. */
@@ -26,7 +24,7 @@ export type TeamFormValues = z.infer<typeof teamFormSchema>;
 
 export interface TeamWritePayload {
   name: string;
-  code: number | null;
+  code: string;
   type: string;
   /** Relation ref: only `id` is honoured by the server. */
   leader: { id: number };

@@ -258,7 +258,7 @@ export interface TeamFlatDto {
   insertedAt: string | null;
   updatedAt: string | null;
   name: string;
-  code: number | null;
+  code: string;
   type: string | null;
   leaderRole: string;
   structure: string;
@@ -272,8 +272,7 @@ export interface TeamDto extends TeamFlatDto {
 
 export interface TeamFilters extends Partial<PaginationParams> {
   name?: string;
-  codeMin?: number;
-  codeMax?: number;
+  code?: string;
   type?: string;
   /** URL search-param name, not a DTO field. Unaffected by the leaderId removal. */
   leaderId?: number;

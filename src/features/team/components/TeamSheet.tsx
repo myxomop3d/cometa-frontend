@@ -68,7 +68,7 @@ export function TeamSheet({
       ? teamDtoToForm(team)
       : {
           name: "",
-          code: null,
+          code: "",
           type: "",
           // 0 is never a valid id, so the schema's positive() rule reports
           // "Leader is required" if the user submits without picking one.
@@ -170,13 +170,8 @@ export function TeamSheet({
               render={({ field }) => (
                 <Input
                   id="code"
-                  type="number"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value === "" ? null : Number(e.target.value),
-                    )
-                  }
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
                   onBlur={field.onBlur}
                 />
               )}

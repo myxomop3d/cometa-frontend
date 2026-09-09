@@ -8,8 +8,7 @@ import type { SwitchableTableConfig } from "@/lib/data-table/switchable-page";
 /** Simple-mode URL param keys cleared on mode toggle. */
 export const teamSimpleFilterKeys = [
   "name",
-  "codeMin",
-  "codeMax",
+  "code",
   "type",
   "leaderId",
   "leaderRole",

@@ -97,7 +97,7 @@ export function TeamCombobox({ value, onChange }: TeamComboboxProps) {
               >
                 <div className="truncate font-medium">{teamLabel(team)}</div>
                 <div className="truncate text-xs text-muted-foreground">
-                  {[team.code != null ? `#${team.code}` : null, team.type]
+                  {[team.code ? `#${team.code}` : null, team.type]
                     .filter(Boolean)
                     .join(" · ")}
                 </div>

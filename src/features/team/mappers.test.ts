@@ -8,7 +8,7 @@ const dto: TeamDto = {
   insertedAt: "2026-01-01T00:00:00Z",
   updatedAt: null,
   name: "Платформа",
-  code: 1234,
+  code: "1234",
   type: "CHANGE",
   leader: {
     id: 99,
@@ -25,7 +25,7 @@ const dto: TeamDto = {
 
 const form: TeamFormValues = {
   name: "Платформа",
-  code: 1234,
+  code: "1234",
   type: "CHANGE",
   leaderId: 99,
   leaderRole: "lead",
@@ -48,7 +48,7 @@ describe("teamFormToCreate", () => {
   it("writes the leader as a ref, not a scalar", () => {
     expect(teamFormToCreate(form)).toEqual({
       name: "Платформа",
-      code: 1234,
+      code: "1234",
       type: "CHANGE",
       leader: { id: 99 },
       leaderRole: "lead",
@@ -74,6 +74,11 @@ describe("teamFormToPatch", () => {
     expect(teamFormToPatch(cleared, { structure: true })).toEqual({
       structure: "",
     });
+  });
+
+  it("clears the code with \"\", the same spelling as every other field", () => {
+    const cleared: TeamFormValues = { ...form, code: "" };
+    expect(teamFormToPatch(cleared, { code: true })).toEqual({ code: "" });
   });
 
   it("still copes with a null from a server that predates the migration", () => {
