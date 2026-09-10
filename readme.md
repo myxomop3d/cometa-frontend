@@ -20,12 +20,6 @@ npm install
 npm run dev              # start dev server at http://localhost:5173
 ```
 
-### With mock API (no backend required)
-
-```bash
-VITE_MOCK_API=true npm run dev
-```
-
 ## Scripts
 
 | Command             | Description                            |
@@ -43,23 +37,20 @@ VITE_MOCK_API=true npm run dev
 src/
   routes/                  # TanStack Router file-based routes
     __root.tsx             #   layout: sidebar + devtools
-    automated-system/      #   form example (RHF + Zod)
-    box/                   #   basic CRUD table
-    box-dice/              #   data table with simple filters
-    box-dice-advanced/     #   data table with advanced filtering
+    automated-system/      #   data table with simple + advanced filtering
+    flow/                  #   data table
     flow-graph/            #   @xyflow/react visualization
-    components/            #   component showcase
+    person/, team/         #   data tables
+    login, register, ...   #   auth screens
   features/
-    box/                   # Box domain: api, columns, sheet, schema, mappers
+    <domain>/              # per-domain api, columns, sheet, schema, mappers
   components/
     ui/                    # shadcn primitives
     data-table/            # reusable table components (toolbar, pagination, filters)
-    filters/               # filter input components (text, date, number, select, relation)
-  hooks/                   # useDataTable, useFilters, useMobile
+  hooks/                   # useDataTable, useMobile
   config/                  # filter operators, variants
   lib/                     # utilities (cn, OData builders, sorting helpers)
   types/                   # ApiResponse envelope, DTOs, filter types
-  mocks/                   # MSW handlers + fixtures
 ```
 
 ## Developer Guides

@@ -25,14 +25,9 @@ export async function getMe(): Promise<UserProfile> {
 /**
  * Начать вход по сертификату: полная навигация браузера на mTLS-шлюз. Браузер
  * запросит клиентский сертификат, бэкенд проверит его и вернёт 302 на
- * /auth/cert/callback с токеном во фрагменте URL. В mock-режиме сразу переходим
- * на callback (MSW не перехватывает навигации между origin-ами).
+ * /auth/cert/callback с токеном во фрагменте URL.
  */
 export function startCertLogin(): void {
-  if (import.meta.env.VITE_MOCK_API === "true") {
-    window.location.href = "/auth/cert/callback#token=mock-jwt-token";
-    return;
-  }
   const override = (window as unknown as { __ENV__?: { MTLS_ORIGIN?: string } })
     .__ENV__?.MTLS_ORIGIN;
   const origin = deriveMtlsOrigin(

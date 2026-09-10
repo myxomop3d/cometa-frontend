@@ -17,8 +17,6 @@ import { Route as TeamIndexRouteImport } from './routes/team/index'
 import { Route as PersonIndexRouteImport } from './routes/person/index'
 import { Route as FlowIndexRouteImport } from './routes/flow/index'
 import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
-import { Route as ComponentsIndexRouteImport } from './routes/components/index'
-import { Route as BoxDiceIndexRouteImport } from './routes/box-dice/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
 import { Route as AuthCertCallbackRouteImport } from './routes/auth.cert.callback'
 
@@ -62,16 +60,6 @@ const FlowGraphIndexRoute = FlowGraphIndexRouteImport.update({
   path: '/flow-graph/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
-  id: '/components/',
-  path: '/components/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BoxDiceIndexRoute = BoxDiceIndexRouteImport.update({
-  id: '/box-dice/',
-  path: '/box-dice/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AutomatedSystemIndexRoute = AutomatedSystemIndexRouteImport.update({
   id: '/automated-system/',
   path: '/automated-system/',
@@ -89,8 +77,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
-  '/box-dice/': typeof BoxDiceIndexRoute
-  '/components/': typeof ComponentsIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
   '/person/': typeof PersonIndexRoute
@@ -103,8 +89,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/automated-system': typeof AutomatedSystemIndexRoute
-  '/box-dice': typeof BoxDiceIndexRoute
-  '/components': typeof ComponentsIndexRoute
   '/flow-graph': typeof FlowGraphIndexRoute
   '/flow': typeof FlowIndexRoute
   '/person': typeof PersonIndexRoute
@@ -118,8 +102,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/automated-system/': typeof AutomatedSystemIndexRoute
-  '/box-dice/': typeof BoxDiceIndexRoute
-  '/components/': typeof ComponentsIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
   '/person/': typeof PersonIndexRoute
@@ -134,8 +116,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/automated-system/'
-    | '/box-dice/'
-    | '/components/'
     | '/flow-graph/'
     | '/flow/'
     | '/person/'
@@ -148,8 +128,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/automated-system'
-    | '/box-dice'
-    | '/components'
     | '/flow-graph'
     | '/flow'
     | '/person'
@@ -162,8 +140,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/automated-system/'
-    | '/box-dice/'
-    | '/components/'
     | '/flow-graph/'
     | '/flow/'
     | '/person/'
@@ -177,8 +153,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   AutomatedSystemIndexRoute: typeof AutomatedSystemIndexRoute
-  BoxDiceIndexRoute: typeof BoxDiceIndexRoute
-  ComponentsIndexRoute: typeof ComponentsIndexRoute
   FlowGraphIndexRoute: typeof FlowGraphIndexRoute
   FlowIndexRoute: typeof FlowIndexRoute
   PersonIndexRoute: typeof PersonIndexRoute
@@ -244,20 +218,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlowGraphIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/components/': {
-      id: '/components/'
-      path: '/components'
-      fullPath: '/components/'
-      preLoaderRoute: typeof ComponentsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/box-dice/': {
-      id: '/box-dice/'
-      path: '/box-dice'
-      fullPath: '/box-dice/'
-      preLoaderRoute: typeof BoxDiceIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/automated-system/': {
       id: '/automated-system/'
       path: '/automated-system'
@@ -281,8 +241,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   AutomatedSystemIndexRoute: AutomatedSystemIndexRoute,
-  BoxDiceIndexRoute: BoxDiceIndexRoute,
-  ComponentsIndexRoute: ComponentsIndexRoute,
   FlowGraphIndexRoute: FlowGraphIndexRoute,
   FlowIndexRoute: FlowIndexRoute,
   PersonIndexRoute: PersonIndexRoute,

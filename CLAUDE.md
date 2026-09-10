@@ -2,7 +2,6 @@
 
 ## Commands
 - `npm run dev` — start dev server (http://localhost:5173)
-- `VITE_MOCK_API=true npm run dev` — dev server with MSW-mocked API
 - `npm run build` — production build (runs `tsc -b` then `vite build`, so it type-checks)
 - `npm run lint` — ESLint
 - `npm run preview` — preview production build
@@ -17,7 +16,6 @@
 - **Forms**: `react-hook-form` + `zod` + `@hookform/resolvers`
 - **@xyflow/react** — flow graph visualization
 - **Utils**: `date-fns`, `clsx` + `tailwind-merge` (via `cn()`)
-- **MSW 2** — optional mock API (`src/mocks/`), enabled via `VITE_MOCK_API=true`
 
 ## Project Structure
 ```
@@ -25,33 +23,27 @@ src/
   routes/                # TanStack Router file-based routes
     __root.tsx           # SidebarProvider + AppSidebar + devtools
     index.tsx            # redirect → /automated-system
-    automated-system/    # switchable DataTable + sheet (see features/automated-system)
-    box/
-    box-dice/            # -box-table-columns.tsx, -box-sheet.tsx
-    flow-graph/
-    components/          # component showcase
-  api/                   # TanStack Query queryOptions per resource
-                         # box.ts, item.ts, thing.ts
-                         # OData-style filter helpers (contains_ignoring_case, tags/any())
+    automated-system/    # switchable DataTable + sheet
+    flow/, person/, team/  # switchable DataTable pages
+    flow-graph/          # @xyflow/react visualization
+    login.tsx, register.tsx, forbidden.tsx, auth.cert.callback.tsx
+  features/              # per-domain logic, one dir per resource:
+                         # automated-system, flow, flow-graph, person,
+                         # register, team — each with api.ts,
+                         # advanced-api.ts, columns.tsx, schema.ts,
+                         # mappers.ts, filter-descriptors.ts,
+                         # switchable-config.ts, components/
+  api/
+    auth.ts              # login, getMe, cert login, register
   components/
     ui/                  # shadcn primitives
-    data-table/          # data-table, toolbar, pagination, column-header,
-                         # view-options, faceted-filter, date-filter,
-                         # slider-filter, skeleton
-    filters/             # UNUSED since /automated-system moved to the switchable
-                         # DataTable — zero references in src/. Kept pending a
-                         # deliberate removal. CheckboxFilter, DateRangeFilter,
-                         # NumberRangeFilter, SelectFilter, TextFilter,
-                         # RelationFilterDropdown, RelationFilterModal
+    data-table/          # data-table, toolbar, advanced-toolbar, pagination,
+                         # column-header, view-options, faceted-filter,
+                         # date-filter, slider-filter, filter-list, skeleton
     app-sidebar.tsx, relation-picker.tsx, DebouncedInput.tsx
-    SimpleTable.tsx      # UNUSED since /automated-system moved to the switchable
-                         # DataTable — zero references in src/. Kept pending a
-                         # deliberate removal.
   hooks/
     use-data-table.ts    # central table state (sorting, pagination, filters, visibility, pinning)
-    useFilters.ts        # UNUSED since /automated-system moved to the switchable
-                         # DataTable — zero references in src/. Kept pending a
-                         # deliberate removal.
+    use-switchable-table-page.ts  # simple/advanced switchable page wiring
     use-mobile.ts
   config/
     data-table.ts        # filter operators (iLike, eq, ne, …) and filterVariants
@@ -60,13 +52,14 @@ src/
   lib/
     utils.ts             # cn()
     data-table.ts        # calculatePageSize, parseSorting, serializeSorting
-    cleanEmptyParams.ts, format.ts
+    data-table/          # switchable-search, switchable-page
+    odata/               # build-filter-params, build-advanced-filter-params
+    api/                 # create-crud-api, apiFetch
+    auth/                # auth-context, mtls-origin, cert-callback
+    cleanEmptyParams.ts, format.ts, sidebar-cookie.ts
   types/
-    api.ts               # ApiResponse<T> envelope + DTOs (BoxDto, ItemDto, ThingDto, …)
-    data-table.ts, table.ts  # table.ts's EditConfig is UNUSED (zero references
-                         # in src/) since /automated-system moved to the
-                         # switchable DataTable — kept pending a deliberate removal.
-  mocks/                 # MSW handlers + fixtures
+    api.ts               # ApiResponse<T> envelope + DTOs
+    data-table.ts
   main.tsx               # QueryClient + Router bootstrap
   index.css              # Tailwind v4 + shadcn tokens
 ```
@@ -77,8 +70,8 @@ src/
 - `src/routeTree.gen.ts` is auto-generated — never edit
 - Add shadcn components with: `npx shadcn@latest add <component>`
 - `.npmrc` has `legacy-peer-deps=true` (Vite 8 peer dep compat)
-- **New tables**: define columns, drive state via `useDataTable`, compose with `components/data-table/*`; pick filter variants from `config/data-table.ts` the way the Team/Person/Box pages do. (`components/filters/*`, `SimpleTable.tsx`, and `useFilters.ts` are the pre-unification table stack — unused, do not build on them.)
-- **New API resources**: add a file under `src/api/` exporting `queryOptions(...)` factories; reuse the OData filter helpers.
+- **New tables**: define columns, drive state via `useDataTable`, compose with `components/data-table/*`; pick filter variants from `config/data-table.ts` the way the Team/Person pages do.
+- **New API resources**: add `src/features/<domain>/api.ts` (plus `advanced-api.ts` where the page has an advanced filter) exporting `queryOptions(...)` factories; reuse the OData builders in `lib/odata/`. `src/api/` holds only cross-cutting auth calls.
 - **Relation filters/sorts** (OData): a **to-one** relation uses a navigation
   path with `/` — `sortField: "leader/lastName"`, `contains_ignoring_case(leader/lastName, 'x')`.
   A dot is a parse error. A **to-many** relation uses `field/any(x: x/id in (…))`,

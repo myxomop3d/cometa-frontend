@@ -1,8 +1,6 @@
 import { forwardRef, useState } from "react";
 import { createLink, useMatchRoute } from "@tanstack/react-router";
 import {
-  Boxes,
-  Component,
   Cpu,
   LogOut,
   Moon,
@@ -54,12 +52,10 @@ const SidebarMenuButtonLink = createLink(
 
 const navItems = [
   { to: "/automated-system", label: "Automated Systems", icon: Cpu },
-  { to: "/box-dice", label: "Boxes (Dice)", icon: Boxes },
   { to: "/flow-graph", label: "Flow Graph", icon: Network },
   { to: "/flow", label: "Flows", icon: Workflow },
   { to: "/person", label: "Persons", icon: User },
   { to: "/team", label: "Teams", icon: Users },
-  { to: "/components", label: "Components", icon: Component },
 ] as const;
 
 /**

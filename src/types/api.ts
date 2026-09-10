@@ -12,39 +12,6 @@ export interface AppMessage {
   description: string | null;
 }
 
-export interface BoxDto {
-  id: number;
-  name: string;
-  objectCode: string | null;
-  shape: "O" | "X";
-  num: number;
-  item: ItemDto | null;
-  itemId: number | null;
-  things: ThingDto[] | null;
-  oldItem: ItemDto | null;
-  oldItemId: number | null;
-  oldThings: ThingDto[] | null;
-  dateStr: string;
-  checkbox: boolean;
-  tags: string[];
-}
-
-export interface ItemDto {
-  id: number;
-  name: string;
-  status: "ON" | "OFF";
-  date: string;
-  count: number;
-}
-
-export interface ThingDto {
-  id: number;
-  name: string;
-  status: "ON" | "OFF";
-  date: string;
-  count: number;
-}
-
 // AutomatedSystem
 /** Flat = every scalar of the entity, none of its relations. On day one no
  *  field is typed as this: it is the interface holding the 16 scalars, which
@@ -106,30 +73,6 @@ export interface AutomatedSystemFilters extends Partial<PaginationParams> {
   leaderComment?: string;
   /** URL search-param name, not a DTO field. */
   leaderId?: number;
-}
-
-// Box filters — standalone interface because filter params (ranges, relation IDs)
-// don't map 1:1 to BoxDto fields, unlike a DTO-derived filter type.
-export interface BoxFilters extends Partial<PaginationParams> {
-  // String contains
-  name?: string;
-  objectCode?: string;
-  tags?: string;
-  // Literal/enum
-  shape?: "O" | "X";
-  // Number range
-  numMin?: number;
-  numMax?: number;
-  // Boolean
-  checkbox?: boolean;
-  // Date range
-  dateStrFrom?: string;
-  dateStrTo?: string;
-  // Relations (store IDs)
-  itemId?: number;
-  thingIds?: number[];
-  oldItemId?: number;
-  oldThingIds?: number[];
 }
 
 // Node

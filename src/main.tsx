@@ -90,21 +90,10 @@ window.fetch = async (input, init) => {
   return res;
 };
 
-async function bootstrap() {
-  if (import.meta.env.VITE_MOCK_API === "true") {
-    const { worker } = await import("./mocks/browser");
-    await worker.start({
-      onUnhandledRequest: "bypass",
-    });
-  }
-
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </StrictMode>,
-  );
-}
-
-bootstrap();
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  </StrictMode>,
+);
