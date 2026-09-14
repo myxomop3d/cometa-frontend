@@ -112,9 +112,19 @@ an annotation suffices.
 For `private boolean isNeedAT`, Lombok generates `isNeedAT()` / `setNeedAT()`,
 from which Jackson derives the property name **`needAT`**. Since this class is
 persisted as jsonb, that name is not merely an API detail — it is the stored
-key, and changing it later means migrating rows. The field therefore carries
-`@JsonProperty("isNeedAT")`, so the stored key and the API key both match the
-field name.
+key, and changing it later means migrating rows.
+
+Annotating the field alone does not fix it. Jackson merges a field with its
+accessors only when their implicit names agree, and here they do not: the
+field's implicit name is `isNeedAT`, the `is`-prefixed accessors' is `needAT`.
+A lone `@JsonProperty("isNeedAT")` on the field would leave the accessors as a
+second, unannotated property and emit **both** keys. So the accessors are
+declared by hand and each carries `@JsonProperty("isNeedAT")`, which collapses
+them into one property. `@Data` stays on the class — Lombok skips generating an
+accessor that already exists — so `equals`/`hashCode`/`toString` are unaffected.
+
+This is a general trap for any `is`-prefixed boolean in a jsonb payload, not a
+quirk of this one field.
 
 ### 2.5 Uniqueness: `(name, node_aggr_type)`
 
@@ -221,11 +231,21 @@ despite `Microservice.data` and `Topic.data` both declaring `nullable = false`.
 @Data
 public class MicroserviceNameAggrData {
 
-    @JsonProperty("isNeedAT")
     private boolean isNeedAT;
+
+    @JsonProperty("isNeedAT")
+    public boolean isNeedAT() {
+        return isNeedAT;
+    }
+
+    @JsonProperty("isNeedAT")
+    public void setNeedAT(boolean isNeedAT) {
+        this.isNeedAT = isNeedAT;
+    }
 }
 ```
 
+See 2.4 for why both accessors are written out rather than annotating the field.
 Used directly in the DTO, with no mapper — the same arrangement as
 `MicroserviceData` in `MicroserviceDto`. MapStruct assigns identical types by
 reference.

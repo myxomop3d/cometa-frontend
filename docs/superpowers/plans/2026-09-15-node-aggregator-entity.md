@@ -172,18 +172,36 @@ import lombok.Data;
 /**
  * Данные агрегатора микросервисов по имени.
  *
- * @JsonProperty обязателен: без него Lombok-геттер isNeedAT() дал бы Jackson
- * имя свойства "needAT", и именно оно попало бы в jsonb-колонку.
+ * Аксессоры объявлены вручную и оба помечены @JsonProperty намеренно.
+ * Jackson объединяет поле с его аксессорами только если их неявные имена
+ * совпадают. У поля неявное имя "isNeedAT", а у is-префиксных аксессоров
+ * isNeedAT()/setNeedAT() — "needAT". Одного @JsonProperty на поле поэтому
+ * НЕ хватает: аксессоры остались бы вторым, неаннотированным свойством, и
+ * в jsonb уехали бы ОБА ключа. Явное имя на обоих аксессорах схлопывает их
+ * в одно свойство.
+ *
+ * @Data при этом сохраняется: Lombok не генерирует аксессор, объявленный
+ * вручную, поэтому равенство/hashCode/toString остаются как у соседнего
+ * MicroserviceData.
  */
 @Data
 public class MicroserviceNameAggrData {
 
-    @JsonProperty("isNeedAT")
     private boolean isNeedAT;
+
+    @JsonProperty("isNeedAT")
+    public boolean isNeedAT() {
+        return isNeedAT;
+    }
+
+    @JsonProperty("isNeedAT")
+    public void setNeedAT(boolean isNeedAT) {
+        this.isNeedAT = isNeedAT;
+    }
 }
 ```
 
-Note the import package: Jackson 3's databind moved to `tools.jackson.databind`, but the **annotations** stayed in `com.fasterxml.jackson.annotation` — the same import `MicroserviceData` already uses.
+Two things to get right here. The import package: Jackson 3's databind moved to `tools.jackson.databind`, but the **annotations** stayed in `com.fasterxml.jackson.annotation` — the same import `MicroserviceData` already uses. And the hand-written accessors: `MicroserviceData` gets away with `@Data` plus a bare field annotation because each of its fields has an implicit name matching its getter's. An `is`-prefixed boolean field does not, which is the whole trap this task exists to close.
 
 - [ ] **Step 5: Run the test and verify it passes**
 
