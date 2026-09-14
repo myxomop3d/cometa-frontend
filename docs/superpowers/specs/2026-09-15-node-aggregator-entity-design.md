@@ -265,11 +265,16 @@ CREATE TABLE gmsb.node_aggr_node_link (
 ALTER TABLE gmsb.node_aggr OWNER TO "GMBUS";
 ALTER TABLE gmsb.node_aggr_node_link OWNER TO "GMBUS";
 
-GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
-    ON TABLE gmsb.node_aggr, gmsb.node_aggr_node_link TO as_admin;
+GRANT ALL ON TABLE gmsb.node_aggr, gmsb.node_aggr_node_link TO "GMBUS";
+GRANT ALL ON TABLE gmsb.node_aggr, gmsb.node_aggr_node_link TO as_admin;
 ```
 
 Plus `COMMENT ON` for every table and column, matching the sibling migrations.
+
+The grant to `GMBUS` is redundant with ownership — an owner already holds every
+privilege — but it is written out anyway so the table's full privilege set is
+readable from the migration alone, and so the file survives a future change of
+owner without silently dropping the application's access.
 
 The `DEFAULT clock_timestamp()` on `node_aggr`'s two timestamp columns is
 belt-and-braces only — the trigger sets them on every insert and update. It
