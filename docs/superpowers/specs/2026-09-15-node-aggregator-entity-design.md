@@ -79,13 +79,24 @@ both sides removes that separation: `NodeDto → Node` has two candidate methods
 
 MapStruct fails the build with "Ambiguous mapping methods found" rather than
 picking one, so this cannot ship silently broken — but the fix has to be
-explicit. Every write-direction method pins the collection:
+explicit. `NodeRefMapper` tags its inherited `toRef` with `@Named("nodeRef")`,
+the mapper declares one qualified iterable method over it, and every
+write-direction method pins the collection to that method by name:
 
 ```java
-@Mapping(target = "nodes", qualifiedByName = "nodeRef")
+@Named("nodeRefList")
+@IterableMapping(qualifiedByName = "nodeRef")
+Set<Node> toNodeRefs(List<NodeDto> nodes);
+
+// on fromDto, update, updateMicroserviceNameAggr:
+@Mapping(target = "nodes", qualifiedByName = "nodeRefList")
 ```
 
-and `NodeRefMapper` tags its inherited `toRef` with `@Named("nodeRef")`.
+The extra hop through `toNodeRefs` is deliberate. Qualifying the *elements* of a
+collection from a bean-level `@Mapping` is version-sensitive in MapStruct,
+whereas `@IterableMapping(qualifiedByName = ...)` on a dedicated method is not.
+`@Named("nodeRefList")` also removes the method from automatic selection, so it
+can never be picked up for some other property by accident.
 
 The read direction needs no qualifier: nothing other than `NodeMapper.toDto`
 produces a `NodeDto` from a `Node`, so it resolves on its own and brings its
@@ -356,18 +367,22 @@ public interface NodeAggregatorMapper extends BaseCrudMapper<NodeAggregator, Nod
     @SubclassMapping(source = MicroserviceNameAggr.class, target = MicroserviceNameAggrDto.class)
     NodeAggregatorDto toDto(NodeAggregator source);
 
+    @Named("nodeRefList")
+    @IterableMapping(qualifiedByName = "nodeRef")
+    Set<Node> toNodeRefs(List<NodeDto> nodes);
+
     @Override
     @SubclassMapping(source = MicroserviceNameAggrDto.class, target = MicroserviceNameAggr.class)
-    @Mapping(target = "nodes", qualifiedByName = "nodeRef")
+    @Mapping(target = "nodes", qualifiedByName = "nodeRefList")
     NodeAggregator fromDto(NodeAggregatorDto dto);
 
     @Override
     @IgnoreIdField
-    @Mapping(target = "nodes", qualifiedByName = "nodeRef")
+    @Mapping(target = "nodes", qualifiedByName = "nodeRefList")
     @BeanMapping(qualifiedByName = "update")
     void update(NodeAggregatorDto source, @MappingTarget NodeAggregator target);
 
-    @Mapping(target = "nodes", qualifiedByName = "nodeRef")
+    @Mapping(target = "nodes", qualifiedByName = "nodeRefList")
     void updateMicroserviceNameAggr(MicroserviceNameAggrDto source, @MappingTarget MicroserviceNameAggr target);
 
     @AfterMapping
