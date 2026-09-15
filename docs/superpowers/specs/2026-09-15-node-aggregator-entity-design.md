@@ -95,8 +95,13 @@ Set<Node> toNodeRefs(List<NodeDto> nodes);
 The extra hop through `toNodeRefs` is deliberate. Qualifying the *elements* of a
 collection from a bean-level `@Mapping` is version-sensitive in MapStruct,
 whereas `@IterableMapping(qualifiedByName = ...)` on a dedicated method is not.
-`@Named("nodeRefList")` also removes the method from automatic selection, so it
-can never be picked up for some other property by accident.
+
+What actually prevents the wrong method being chosen is the compiler, not the
+`@Named`: with `NodeRefMapper` in `uses`, an unqualified element mapping is an
+"Ambiguous mapping methods found" build error. `@Named("nodeRefList")` narrows
+*qualified* lookups elsewhere; it does **not** exclude the method from
+unqualified selection — MapStruct's qualifier selector leaves the candidate list
+unfiltered when the mapping site names no qualifier.
 
 The read direction needs no qualifier: nothing other than `NodeMapper.toDto`
 produces a `NodeDto` from a `Node`, so it resolves on its own and brings its

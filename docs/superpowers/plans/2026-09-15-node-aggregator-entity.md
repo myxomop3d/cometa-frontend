@@ -1200,8 +1200,13 @@ public interface NodeAggregatorMapper extends BaseCrudMapper<NodeAggregator, Nod
      *
      * Отдельный метод, а не qualifiedByName прямо на элементах @Mapping:
      * квалификация элементов коллекции из bean-level @Mapping зависит от
-     * версии MapStruct, а @IterableMapping — нет. @Named к тому же убирает
-     * метод из автоматического подбора, так что случайно он не применится.
+     * версии MapStruct, а @IterableMapping — нет.
+     *
+     * От выбора НЕ ТОГО метода защищает компилятор, а не @Named: пока
+     * NodeRefMapper указан в uses, неквалифицированный маппинг элемента —
+     * это ошибка сборки "Ambiguous mapping methods found". @Named сужает
+     * КВАЛИФИЦИРОВАННЫЙ поиск в других местах и НЕ убирает метод из
+     * автоматического подбора.
      */
     @Named("nodeRefList")
     @IterableMapping(qualifiedByName = "nodeRef")
