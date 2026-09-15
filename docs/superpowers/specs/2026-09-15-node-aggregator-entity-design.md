@@ -1,7 +1,7 @@
 # NodeAggregator: a second single-table hierarchy over Node
 
 **Date:** 2026-09-15
-**Status:** approved design, not yet implemented
+**Status:** implemented on `feature/gm` 2026-09-15; verified end to end against a live backend and database
 **Builds on:** `docs/superpowers/specs/2026-08-27-nested-relation-write-standard-design.md`, `docs/superpowers/specs/2026-09-09-no-null-write-standard-design.md`, `docs/superpowers/specs/2026-08-26-odata-relation-filter-sort-design.md`
 **Scope:** backend only (`F:\programming\cometa`). No frontend page; the UI gets its own spec once this API is settled.
 
@@ -42,7 +42,7 @@ This mirrors `Person.teams`, the codebase's only existing many-to-many, where
 aggregator endpoint:
 
 ```
-GET /api/v1/node-aggregator?$filter=nodes/any(n: n/id in (12))
+GET /api/v1/node-aggregator?$filter=nodes/any(x: x/id in (12))
 ```
 
 Adding the inverse later is possible but not free: `NodeDto` would need a
@@ -545,11 +545,18 @@ route, and writes are gated by the `CREATE` / `UPDATE` / `DELETE` authorities on
 | Query | Supported |
 |---|---|
 | `$filter=nodeAggrType eq 'MICROSERVICE_NAME_AGGR'` | Yes, via the read-only discriminator attribute |
-| `$filter=nodes/any(n: n/id in (12,13))` | Yes, with constraints below |
+| `$filter=nodes/any(x: x/id in (12,13))` | Yes, with constraints below |
 | `$orderby=nodes/...` | No — to-many relations are never sortable |
 | `$fields=nodes` | Yes, routes through the two-query paged-then-fetch path |
 
-The `any()` constraints are odata-mini 2.2.0's, not this design's: the clause
+**The lambda alias must be `x` or a multi-character name.** Verified live: `x`,
+`it`, `item` and `node` all parse; `y`, `n` and `e` each fail with
+`ParseCancellationException: mismatched input … expecting {')', OdataIdentifier}`,
+surfacing as a 500. Single letters other than `x` collide with lexer tokens in
+`odata-parser` 1.2.2. An earlier draft of this spec wrote `any(n: n/id …)` and
+was wrong; `x` is the form CLAUDE.md and the 2026-08-26 OData spec already use.
+
+The remaining `any()` constraints are odata-mini 2.2.0's, not this design's: the clause
 must be **last** in the `$filter` and there may be **at most one** per request,
 because the library corrupts the root alias for every clause following an
 `any()`. Both forms also require `odata.mini.repo.throw-on-field-not-found:
@@ -593,6 +600,42 @@ by those ids.
      `node_aggr_node_link` rows and that no new `node` rows appear;
    - both `$filter` forms from section 8;
    - `POST` a duplicate `(name, nodeAggrType)` and confirm the constraint fires.
+
+## 9a. Live verification results (2026-09-15)
+
+Migration `016` applied; backend started on the `local` profile; all twelve calls
+run against Postgres 16.9. Everything in section 9 passed, with `gmsb.node`
+finishing at 3363 rows — exactly where it started, which is the assertion the
+whole `toNodeRefs` qualifier chain exists to guarantee.
+
+Confirmed working: both subtypes create; the stored jsonb key really is
+`isNeedAT` (`jsonb_object_keys` on the live row); the `set_timestamps` trigger
+populates both timestamps; `?$fields=nodes` returns nodes with the correct
+subtype `nodeType` and subtype `data` via the `@SubclassMapping` chain; omitting
+`$fields` returns `nodes: null` with **no** `LazyInitializationException`,
+settling section 7; all three collection semantics (absent → unchanged, `[]` →
+cleared, non-empty → replaced) behave as specified; the paged-then-fetch path
+serves `$fields=nodes&$top=5`; the discriminator filter returns only the subtype;
+and `node_aggr_unique` fires on a duplicate `(name, node_aggr_type)`.
+
+Three things the pass exposed that were not known before:
+
+1. **`as_admin` needed `REFERENCES` on `gmsb.node`.** The first apply failed with
+   `permission denied for table node`: `gmsb.node` is owned by `GMBUS`, and under
+   2.6 the FK is now created by `as_admin`. The grant is issued by the owner
+   before `SET ROLE`, and is a standing requirement for any future `as_admin`
+   table referencing a `GMBUS`-owned one.
+2. **A write-path response misreports the nested subtype.** `POST`/`PATCH` echo
+   the just-written entity, whose `nodes` are un-narrowed `em.getReference`
+   proxies of the base `Node` class, so each element serializes as
+   `nodeType: "NODE"` with no subtype `data` — even for a row that is really a
+   `TOPIC`. A subsequent `GET /graph/{id}?$fields=nodes` reports it correctly.
+   The persisted link rows are right either way, since only `id` is used. Cosmetic
+   but misleading; a client should re-read rather than trust the write echo.
+3. **A unique-constraint violation surfaces as HTTP 500**, not 409/400. The
+   constraint does its job — no duplicate row is created — but the error escapes
+   the CRUD base unmapped. Pre-existing behaviour of `BaseCrudController`, not
+   specific to this resource.
 
 ## 10. Out of scope
 
