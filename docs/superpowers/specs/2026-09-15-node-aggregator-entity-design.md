@@ -157,29 +157,53 @@ The closest analogue to `node`'s `UNIQUE (name, node_type, automated_system_id,
 environment)` using the columns that exist. Two subtypes may share a name;
 within a subtype the name identifies the row, which is what a picker needs.
 
-### 2.6 New tables are owned by `GMBUS`
+### 2.6 Tables are created — and owned — by `as_admin`, via `SET ROLE`
 
-`ALTER TABLE gmsb.node_aggr OWNER TO "GMBUS";`
+```sql
+SET ROLE as_admin;
+-- CREATE TABLE …
+RESET ROLE;
+```
 
-New tables are owned by `GMBUS`, the role the application connects as, with
-`as_admin` retained as a grantee. Existing tables are not re-owned by this spec.
+The migration runs as `GMBUS` — the role the application connects as — and
+switches to `as_admin` to create the objects. A table is owned by whichever role
+created it, so both tables end up owned by `as_admin`, with `GMBUS` given full
+DML through `GRANT ALL`. That is the same ownership arrangement as `001`–`015`.
 
-An earlier draft justified this as "changing the convention", claiming `001`–
-`015` left ownership with `as_admin`. That was wrong: the live database has **15
-of 19** `gmsb` tables already owned by `GMBUS` and only 4 by `as_admin`
-(`person`, `person_team_link`, `role_right_link`, `user_account`). So this
-follows the majority of the schema rather than departing from it. The decision
-is unchanged; only its stated reason was inaccurate.
+**This reverses an earlier decision in this spec, deliberately.** The first draft
+had `GRANT CREATE ON SCHEMA gmsb TO "GMBUS"` followed by
+`ALTER TABLE … OWNER TO "GMBUS"`, justified as "changing the convention" because
+`001`–`015` supposedly left ownership with `as_admin`. Two things were wrong
+with that:
 
-**Applying it needs two roles, which is new.** `GRANT CREATE ON SCHEMA gmsb`
-requires the schema owner `db_admin`; `ALTER TABLE … OWNER TO "GMBUS"`
-additionally requires the runner to be a *member of* `GMBUS`, and no role
-currently is (`pg_auth_members` is empty for it, and `db_admin` is not a
-superuser). A superuser must therefore run `GRANT "GMBUS" TO db_admin;` once
-before the migration, or run the migration itself. Because migration `016` is the
-first in the series whose statements need two different roles, it is also the
-first to set `\set ON_ERROR_STOP on` — without it a missing prerequisite leaves
-tables that exist but are owned by the wrong role, with the errors scrolled past.
+- The premise was false. The live database has **15 of 19** `gmsb` tables owned
+  by `GMBUS` and only 4 by `as_admin` (`person`, `person_team_link`,
+  `role_right_link`, `user_account`), so there was no single prior convention to
+  depart from.
+- It needed *two* privileged bootstrap steps rather than one — a `GRANT CREATE`
+  from the schema owner, and a `GRANT "GMBUS" TO db_admin` from a superuser,
+  because reassigning ownership requires membership in the target role.
+
+`SET ROLE` needs exactly one, and it permanently widens nothing:
+
+```sql
+GRANT as_admin TO "GMBUS" WITH INHERIT FALSE, SET TRUE;   -- once, as postgres
+```
+
+`INHERIT FALSE` is the point of the form. `GMBUS` does not acquire `as_admin`'s
+privileges during ordinary application work; they apply only after an explicit
+`SET ROLE`. That guards against *accidental* privilege use — a migration or an
+ORM call silently succeeding as `as_admin` — and not against anyone who already
+controls a `GMBUS` session, who can issue the `SET ROLE` themselves. It is a
+blast-radius reduction, not a security boundary.
+
+At the time of writing `as_admin` has no members and `postgres` is the only
+superuser, so that one grant must come from `postgres`. After it, `016` and every
+later migration apply as `GMBUS` with no human step.
+
+`\set ON_ERROR_STOP on` stays: if the grant has not been made, `SET ROLE` fails
+and the script stops, rather than continuing as `GMBUS` and failing table by
+table.
 
 ## 3. Persistence layer
 
@@ -305,6 +329,10 @@ migration is hand-written and applied by hand, following
 grants.
 
 ```sql
+\set ON_ERROR_STOP on
+
+SET ROLE as_admin;
+
 CREATE TABLE gmsb.node_aggr (
     id int8 GENERATED ALWAYS AS IDENTITY (INCREMENT BY 1 MINVALUE 1
         MAXVALUE 9223372036854775807 START 1 CACHE 1 NO CYCLE) NOT NULL,
@@ -332,19 +360,21 @@ CREATE TABLE gmsb.node_aggr_node_link (
     CONSTRAINT node_aggr_node_link_node_fk FOREIGN KEY (node_id) REFERENCES gmsb.node(id)
 );
 
-ALTER TABLE gmsb.node_aggr OWNER TO "GMBUS";
-ALTER TABLE gmsb.node_aggr_node_link OWNER TO "GMBUS";
-
-GRANT ALL ON TABLE gmsb.node_aggr, gmsb.node_aggr_node_link TO "GMBUS";
 GRANT ALL ON TABLE gmsb.node_aggr, gmsb.node_aggr_node_link TO as_admin;
+GRANT ALL ON TABLE gmsb.node_aggr, gmsb.node_aggr_node_link TO "GMBUS";
+
+RESET ROLE;
 ```
 
 Plus `COMMENT ON` for every table and column, matching the sibling migrations.
 
-The grant to `GMBUS` is redundant with ownership — an owner already holds every
-privilege — but it is written out anyway so the table's full privilege set is
-readable from the migration alone, and so the file survives a future change of
-owner without silently dropping the application's access.
+There is no `ALTER TABLE … OWNER TO` at all: `SET ROLE as_admin` makes `as_admin`
+the creator, and therefore the owner, of both tables — see 2.6. The grant to
+`as_admin` is consequently redundant with ownership, but `011` writes the same
+redundant grant and the convention is worth keeping: the file states the table's
+full privilege set on its own, and survives a later change of owner without
+silently dropping anyone's access. The grant to `GMBUS` is **not** redundant —
+it is the application's only access to these tables.
 
 The `DEFAULT clock_timestamp()` on `node_aggr`'s two timestamp columns is
 belt-and-braces only — the trigger sets them on every insert and update. It
