@@ -58,12 +58,32 @@ and `Node` has no flat DTO. The alternative — inventing `NodeFlatDto` with
 identifiable from those fields: `node` is unique on
 `(name, node_type, automated_system_id, environment)`, so a flat read would show
 `payments-api / MICROSERVICE / PROD` without saying which automated system owns
-it. Nested reads therefore carry the full polymorphic `NodeDto`, including
-`automatedSystem` and the subtype `data`.
+it.
 
-The cost is that the nested object *looks* writable when it is not. Section 2.3
-is the mechanism that keeps it read-only, and `NodeAggregatorDto.nodes` carries
-a javadoc saying so.
+**This justification did not survive implementation, and the decision should be
+revisited.** `NodeMapper` carries `@Condition isEntityLoaded(AutomatedSystem)`,
+which skips an uninitialized lazy proxy. Under `?$fields=nodes` the entity graph
+initializes the `nodes` collection but not each node's `automatedSystem`, so the
+condition is false for every element and the field is skipped. A nested element
+therefore arrives as `{id, nodeType, name, environment, data?}` — the rejected
+`NodeFlatDto` shape plus `id` — and the owning automated system is exactly as
+invisible as it would have been with a flat DTO.
+
+Two costs were incurred for a benefit that is not delivered:
+
+- Write ambiguity: the nested object *looks* writable when only `id` is read.
+  Section 2.3 is the mechanism that keeps it read-only.
+- **Every element must carry `nodeType` on the wire.** `NodeDto`'s
+  `@JsonTypeInfo` has no `defaultImpl`, so `{"id": 12}` fails deserialization
+  with `InvalidTypeIdException` before reaching the mapper. A write ref is
+  `{"id": 12, "nodeType": "MICROSERVICE"}`, and the subtype must be the node's
+  real one.
+
+Before revisiting, establish whether `$fields=nodes,nodes.automatedSystem`
+resolves through `CometaEntityGraph.fromAttributePaths` — untested. If it does,
+the decision stands and only the javadoc was wrong. If it does not, `NodeFlatDto`
+becomes the better choice and would also remove the `nodeType`-on-the-wire
+requirement.
 
 ### 2.3 Write disambiguation: `@Named("nodeRef")` qualifiers
 
@@ -141,11 +161,25 @@ within a subtype the name identifies the row, which is what a picker needs.
 
 `ALTER TABLE gmsb.node_aggr OWNER TO "GMBUS";`
 
-This changes the convention. Migrations `001`–`015` set `OWNER TO as_admin` and
-then granted `GMBUS` the DML it needs; the application connects as `GMBUS`, so
-ownership sat with a role that never uses the table. New tables are owned by
-`GMBUS` from here on, with `as_admin` retained as a grantee. Existing tables are
-not re-owned by this spec.
+New tables are owned by `GMBUS`, the role the application connects as, with
+`as_admin` retained as a grantee. Existing tables are not re-owned by this spec.
+
+An earlier draft justified this as "changing the convention", claiming `001`–
+`015` left ownership with `as_admin`. That was wrong: the live database has **15
+of 19** `gmsb` tables already owned by `GMBUS` and only 4 by `as_admin`
+(`person`, `person_team_link`, `role_right_link`, `user_account`). So this
+follows the majority of the schema rather than departing from it. The decision
+is unchanged; only its stated reason was inaccurate.
+
+**Applying it needs two roles, which is new.** `GRANT CREATE ON SCHEMA gmsb`
+requires the schema owner `db_admin`; `ALTER TABLE … OWNER TO "GMBUS"`
+additionally requires the runner to be a *member of* `GMBUS`, and no role
+currently is (`pg_auth_members` is empty for it, and `db_admin` is not a
+superuser). A superuser must therefore run `GRANT "GMBUS" TO db_admin;` once
+before the migration, or run the migration itself. Because migration `016` is the
+first in the series whose statements need two different roles, it is also the
+first to set `\set ON_ERROR_STOP on` — without it a missing prerequisite leaves
+tables that exist but are owned by the wrong role, with the errors scrolled past.
 
 ## 3. Persistence layer
 
@@ -457,8 +491,14 @@ generated `target.getNodes().clear()` throws `LazyInitializationException` under
 No class-level `@Transactional` on the controller, mirroring
 `PersonRestController`, which has the analogous lazy many-to-many and works.
 `NodeRestController` carries one, but a transactional controller is an
-anti-pattern not worth propagating. Section 9 exercises the read path that would
-expose this if the reasoning is wrong; if it throws, the fix is to add it.
+anti-pattern not worth propagating.
+
+The whole-branch review established why this is safe, which this section
+originally only guessed at: `nodes` is pre-initialized by the entity graph, and
+the one lazy to-one behind it (`Node.automatedSystem`) is shielded by
+`NodeMapper`'s `@Condition isEntityLoaded`. Nothing on the read path touches an
+uninitialized proxy, so no `LazyInitializationException` is reachable here. The
+same guard is why `automatedSystem` comes back null — see 2.2.
 
 `MicroserviceNameAggr` gets **no** service or controller of its own. It is
 reachable polymorphically through `/node-aggregator`, discriminated by
