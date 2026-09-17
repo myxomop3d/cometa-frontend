@@ -159,6 +159,15 @@ within a subtype the name identifies the row, which is what a picker needs.
 
 ### 2.6 Tables are created — and owned — by `as_admin`, via `SET ROLE`
 
+> **Superseded 2026-09-17.** The `SET ROLE` model described in this section was
+> replaced two days later. `GMBUS` is no longer a member of `as_admin`; migrations
+> are applied by connecting *as* `as_admin`, and `as_admin` now owns every object in
+> `gmsb` (migration `017_normalize_gmsb_ownership.sql` moved the 15 tables that were
+> still `GMBUS`-owned). `016_create_node_aggr.sql` was rewritten accordingly and no
+> longer contains `SET ROLE` or the `REFERENCES` grant. See
+> `cometa/docs/superpowers/specs/2026-09-17-gmsb-role-ownership-model-design.md`.
+> The analysis below is kept as the record of why 016 was written the way it was.
+
 ```sql
 SET ROLE as_admin;
 -- CREATE TABLE …
@@ -624,7 +633,9 @@ Three things the pass exposed that were not known before:
    `permission denied for table node`: `gmsb.node` is owned by `GMBUS`, and under
    2.6 the FK is now created by `as_admin`. The grant is issued by the owner
    before `SET ROLE`, and is a standing requirement for any future `as_admin`
-   table referencing a `GMBUS`-owned one.
+   table referencing a `GMBUS`-owned one. **Resolved 2026-09-17:** migration 017
+   gave `as_admin` ownership of the whole schema, so cross-owner `REFERENCES`
+   grants are no longer needed for any table.
 2. **A write-path response misreports the nested subtype.** `POST`/`PATCH` echo
    the just-written entity, whose `nodes` are un-narrowed `em.getReference`
    proxies of the base `Node` class, so each element serializes as
