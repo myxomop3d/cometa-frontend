@@ -39,10 +39,21 @@ function MicroserviceAtPage() {
   const { data } = useSuspenseQuery(tableQueryOptions(search));
 
   const rows = React.useMemo(() => data.data.map(toMicroserviceAtRow), [data.data]);
-  const { toggle, pendingIds } = useToggleNeedAT();
+  const { toggle, isPending } = useToggleNeedAT();
+  // `toggle` and `isPending` are both referentially stable (see
+  // use-toggle-need-at.ts), so this memo — and the `columns` array it
+  // produces — stays stable across a toggle's pending-state changes. That
+  // matters because `useDataTable`'s `urlColumnFilters` depends on `columns`
+  // and resets local column filters when it changes; a new array on every
+  // toggle would wipe an in-progress, not-yet-debounced name search. The
+  // checkbox still reflects pending state correctly: toggling updates state
+  // inside `useToggleNeedAT`, which re-renders this component and (since
+  // `DataTable` is a plain, unmemoized component) re-renders the table body,
+  // so each cell's `isPending(id)` call reads the current ref value even
+  // though `columns` itself never changed.
   const columns = React.useMemo(
-    () => getMicroserviceAtColumns({ onToggleNeedAT: toggle, pendingIds }),
-    [toggle, pendingIds],
+    () => getMicroserviceAtColumns({ onToggleNeedAT: toggle, isPending }),
+    [toggle, isPending],
   );
 
   const onNavigate = React.useCallback(

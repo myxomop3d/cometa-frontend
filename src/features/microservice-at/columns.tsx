@@ -13,8 +13,12 @@ import {
 interface GetMicroserviceAtColumnsProps {
   /** Absent → the Need AT checkbox is read-only. */
   onToggleNeedAT?: (id: number, isNeedAT: boolean) => void;
-  /** Rows with a toggle in flight; their checkbox is disabled. */
-  pendingIds: ReadonlySet<number>;
+  /** True while that row's toggle is in flight; its checkbox is then
+   *  disabled. A getter (not a `Set`) so `getMicroserviceAtColumns`'s result
+   *  can stay referentially stable across pending-state changes: the caller
+   *  passes a stable function that reads current state from a ref, instead
+   *  of a new `Set` on every toggle. */
+  isPending: (id: number) => boolean;
 }
 
 // Lowercase and called as a plain function (not used as a JSX tag), so this
@@ -55,7 +59,7 @@ function environmentColumn(env: Environment): ColumnDef<MicroserviceAtRow> {
 
 export function getMicroserviceAtColumns({
   onToggleNeedAT,
-  pendingIds,
+  isPending,
 }: GetMicroserviceAtColumnsProps): ColumnDef<MicroserviceAtRow>[] {
   return [
     {
@@ -86,7 +90,7 @@ export function getMicroserviceAtColumns({
         <Checkbox
           aria-label={`Need AT for ${row.original.name}`}
           checked={row.original.data?.isNeedAT === true}
-          disabled={!onToggleNeedAT || pendingIds.has(row.original.id)}
+          disabled={!onToggleNeedAT || isPending(row.original.id)}
           onCheckedChange={(value) => onToggleNeedAT?.(row.original.id, value === true)}
         />
       ),
