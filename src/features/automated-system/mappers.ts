@@ -1,12 +1,13 @@
 import type { AutomatedSystemDto } from "@/types/api";
 import type {
+  AutomatedSystemFormDefaults,
   AutomatedSystemFormValues,
   AutomatedSystemWritePayload,
 } from "./schema";
 
 export function automatedSystemDtoToForm(
   dto: AutomatedSystemDto,
-): AutomatedSystemFormValues {
+): AutomatedSystemFormDefaults {
   return {
     name: dto.name,
     objectCode: dto.objectCode ?? "",
@@ -14,9 +15,9 @@ export function automatedSystemDtoToForm(
     ci: dto.ci ?? "",
     nameHpsm: dto.nameHpsm ?? "",
     // The leader's id arrives only inside the nested ref, present only on
-    // reads that requested $fields=leader. 0 is never a valid id, so the
-    // required-positive rule in the schema rejects it.
-    leaderId: dto.leader?.id ?? 0,
+    // reads that requested $fields=leader. Absent -> undefined ("nothing
+    // picked"); 0 is a real id (the not-set sentinel, DDL 021).
+    leaderId: dto.leader?.id,
     leaderComment: dto.leaderComment ?? "",
     leaderSapId: dto.leaderSapId ?? "",
     block: dto.block ?? "",

@@ -44,7 +44,7 @@ function comboboxQueryOptions(search: string) {
  * to this local implementation. (b) It is now load-bearing: this is the only
  * `detailQueryOptions` that appends `$fields=leader`. Since `TeamDto.leaderId`
  * was removed, that param is the sole source of the leader's id on this path —
- * without it `teamDtoToForm` yields `leaderId: 0` and the sheet reports
+ * without it `teamDtoToForm` yields `leaderId: undefined` and the sheet reports
  * "Leader is required". Do not delete this as dead duplication; if it is ever
  * merged back into `baseApi`, the `$fields=leader` param must go with it.
  */
@@ -53,7 +53,7 @@ function detailQueryOptions(id: number) {
     queryKey: ["teams", "detail", id] as const,
     // $fields=leader is required: since TeamDto.leaderId was removed, the
     // leader's id arrives only inside the nested ref. Without it,
-    // teamDtoToForm yields leaderId 0 and the sheet reports a missing leader.
+    // teamDtoToForm yields leaderId undefined and the sheet reports a missing leader.
     queryFn: () =>
       apiFetch<ApiResponse<TeamDto>>(`/api/v1/team/${id}?$fields=leader`),
   });

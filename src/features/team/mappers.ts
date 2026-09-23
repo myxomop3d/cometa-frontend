@@ -1,15 +1,15 @@
 import type { TeamDto } from "@/types/api";
-import type { TeamFormValues, TeamWritePayload } from "./schema";
+import type { TeamFormDefaults, TeamFormValues, TeamWritePayload } from "./schema";
 
-export function teamDtoToForm(dto: TeamDto): TeamFormValues {
+export function teamDtoToForm(dto: TeamDto): TeamFormDefaults {
   return {
     name: dto.name ?? "",
     code: dto.code ?? "",
     type: dto.type ?? "",
-    // The leader id now arrives only inside the nested ref, which is present
-    // only on reads that requested $fields=leader. 0 is never a valid id, so
-    // the required-positive rule in teamFormSchema rejects it.
-    leaderId: dto.leader?.id ?? 0,
+    // The leader's id arrives only inside the nested ref, present only on
+    // reads that requested $fields=leader. Absent -> undefined ("nothing
+    // picked"); 0 is a real id (the not-set sentinel, DDL 021).
+    leaderId: dto.leader?.id,
     leaderRole: dto.leaderRole ?? "",
     structure: dto.structure ?? "",
   };

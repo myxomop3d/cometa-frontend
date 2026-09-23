@@ -21,11 +21,13 @@ export const automatedSystemFormSchema = z.object({
   fullName: emptyText(),
   ci: emptyText(),
   nameHpsm: emptyText(),
-  /** 0 is never a valid id, so positive() reports "Leader is required". */
+  /** Required. 0 is a real person — the "not set" sentinel (DDL 021) — so
+   *  nonnegative(), not positive(). "Nothing picked" is `undefined`, which
+   *  z.number rejects with the same message. */
   leaderId: z
     .number({ error: "Leader is required" })
     .int()
-    .positive("Leader is required"),
+    .nonnegative("Leader is required"),
   leaderComment: emptyText(),
   leaderSapId: emptyText(),
   block: emptyText(),
@@ -40,6 +42,11 @@ export const automatedSystemFormSchema = z.object({
 });
 
 export type AutomatedSystemFormValues = z.infer<typeof automatedSystemFormSchema>;
+
+/** What the sheet seeds the form with: the leader may be not yet picked. */
+export type AutomatedSystemFormDefaults = Omit<AutomatedSystemFormValues, "leaderId"> & {
+  leaderId: number | undefined;
+};
 
 export interface AutomatedSystemWritePayload {
   name: string;

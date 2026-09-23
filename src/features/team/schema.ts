@@ -12,15 +12,23 @@ export const teamFormSchema = z.object({
    *  text column, and "" breaks reads. Settable, never clearable — §4.2 of the
    *  spec. */
   type: z.string().min(1, "Type is required"),
+  /** Required. 0 is a real person — the "not set" sentinel (DDL 021) — so
+   *  nonnegative(), not positive(). "Nothing picked" is `undefined`, which
+   *  z.number rejects with the same message. */
   leaderId: z
     .number({ error: "Leader is required" })
     .int()
-    .positive("Leader is required"),
+    .nonnegative("Leader is required"),
   leaderRole: emptyText(),
   structure: emptyText(),
 });
 
 export type TeamFormValues = z.infer<typeof teamFormSchema>;
+
+/** What the sheet seeds the form with: the leader may be not yet picked. */
+export type TeamFormDefaults = Omit<TeamFormValues, "leaderId"> & {
+  leaderId: number | undefined;
+};
 
 export interface TeamWritePayload {
   name: string;

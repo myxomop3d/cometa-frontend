@@ -37,10 +37,16 @@ describe("teamDtoToForm", () => {
     expect(teamDtoToForm(dto)).toEqual(form);
   });
 
-  it("yields leaderId 0 when leader is absent, so the form flags it required", () => {
-    // Happens on any read that omitted $fields=leader.
+  it("yields leaderId undefined when leader is absent, so the form flags it required", () => {
     const bare: TeamDto = { ...dto, leader: null };
-    expect(teamDtoToForm(bare).leaderId).toBe(0);
+    expect(teamDtoToForm(bare).leaderId).toBeUndefined();
+  });
+
+  it("accepts leader 0 (the not-set sentinel) and rejects no leader", () => {
+    expect(teamFormSchema.safeParse({ ...form, leaderId: 0 }).success).toBe(true);
+    const r = teamFormSchema.safeParse({ ...form, leaderId: undefined });
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0]?.message).toBe("Leader is required");
   });
 });
 

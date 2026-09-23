@@ -29,6 +29,7 @@ import type { AutomatedSystemDto, AppMessage } from "@/types/api";
 import { automatedSystemApi } from "../api";
 import {
   automatedSystemFormSchema,
+  type AutomatedSystemFormDefaults,
   type AutomatedSystemFormValues,
 } from "../schema";
 import {
@@ -91,15 +92,15 @@ function isAutomatedSystemField(
   return (AS_FORM_FIELDS as readonly string[]).includes(target);
 }
 
-const EMPTY_FORM: AutomatedSystemFormValues = {
+const EMPTY_FORM: AutomatedSystemFormDefaults = {
   name: "",
   objectCode: "",
   fullName: "",
   ci: "",
   nameHpsm: "",
-  // 0 is never a valid id, so the schema's positive() rule reports
-  // "Leader is required" if the user submits without picking one.
-  leaderId: 0,
+  // Nothing picked yet; the schema reports "Leader is required". Not 0 —
+  // 0 is the not-set sentinel person (DDL 021).
+  leaderId: undefined,
   leaderComment: "",
   leaderSapId: "",
   block: "",
@@ -273,8 +274,8 @@ export function AutomatedSystemSheet({
               name="leaderId"
               render={({ field }) => (
                 <PersonCombobox
-                  value={field.value > 0 ? field.value : null}
-                  onChange={(id) => field.onChange(id ?? 0)}
+                  value={field.value ?? null}
+                  onChange={(id) => field.onChange(id ?? undefined)}
                 />
               )}
             />

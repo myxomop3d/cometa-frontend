@@ -63,10 +63,19 @@ describe("automatedSystemDtoToForm", () => {
     expect(automatedSystemDtoToForm(dto)).toEqual(form);
   });
 
-  it("yields leaderId 0 when leader is absent, so the form flags it required", () => {
-    // Happens on any read that omitted $fields=leader.
+  it("yields leaderId undefined when leader is absent, so the form flags it required", () => {
+    // Happens on any read that omitted $fields=leader. 0 is a real person —
+    // the "not set" sentinel (DDL 021) — so it cannot mean "nothing picked".
     const bare: AutomatedSystemDto = { ...dto, leader: null };
-    expect(automatedSystemDtoToForm(bare).leaderId).toBe(0);
+    expect(automatedSystemDtoToForm(bare).leaderId).toBeUndefined();
+  });
+
+  it("keeps a leader that is the not-set sentinel (id 0)", () => {
+    const notSet: AutomatedSystemDto = {
+      ...dto,
+      leader: { ...dto.leader!, id: 0 },
+    };
+    expect(automatedSystemDtoToForm(notSet).leaderId).toBe(0);
   });
 
   it("still copes with a null from a server that predates the migration", () => {
@@ -79,6 +88,16 @@ describe("automatedSystemFormSchema", () => {
   it("trims a whitespace-only value to '' so it is not a third empty spelling", () => {
     const parsed = automatedSystemFormSchema.parse({ ...form, block: "   " });
     expect(parsed.block).toBe("");
+  });
+
+  it("accepts leader 0, the not-set sentinel", () => {
+    expect(automatedSystemFormSchema.safeParse({ ...form, leaderId: 0 }).success).toBe(true);
+  });
+
+  it("reports 'Leader is required' when no leader is picked", () => {
+    const r = automatedSystemFormSchema.safeParse({ ...form, leaderId: undefined });
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0]?.message).toBe("Leader is required");
   });
 });
 

@@ -70,9 +70,9 @@ export function TeamSheet({
           name: "",
           code: "",
           type: "",
-          // 0 is never a valid id, so the schema's positive() rule reports
-          // "Leader is required" if the user submits without picking one.
-          leaderId: 0,
+          // Nothing picked yet; the schema reports "Leader is required". Not 0 —
+          // 0 is the not-set sentinel person (DDL 021).
+          leaderId: undefined,
           leaderRole: "",
           structure: "",
         },
@@ -224,8 +224,8 @@ export function TeamSheet({
               name="leaderId"
               render={({ field }) => (
                 <PersonCombobox
-                  value={field.value > 0 ? field.value : null}
-                  onChange={(id) => field.onChange(id ?? 0)}
+                  value={field.value ?? null}
+                  onChange={(id) => field.onChange(id ?? undefined)}
                 />
               )}
             />
