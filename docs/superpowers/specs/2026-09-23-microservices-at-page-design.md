@@ -2,7 +2,7 @@
 
 Date: 2026-09-23
 Repos: `cometa-frontend` only (no backend change)
-Status: approved design, not yet implemented
+Status: approved design, not yet implemented — Implemented on feature/gm 2026-09-23
 
 ## Goal
 
@@ -156,8 +156,15 @@ No link or tech-component type exists in `src/` yet (checked), so these are new.
   - `staticParams: { $fields: "nodes,nodes.techComponentLinks,nodes.techComponentLinks.techComponent" }`.
 
   It exports `microserviceAtApi` with `dataTableQueryOptions` and `patch`.
-- **`filter-descriptors.ts`**: `[{ id: "name", variant: "text", filterKey: "name" }]`,
-  plus `deriveColumnFiltersFromSearch`, following the Team pattern.
+- **`search.ts`**: `validateMicroserviceAtSearch` (page/pageSize/sort/name validation —
+  `page` must be a positive integer or falls back to `1`; `pageSize` must be one of
+  `PAGE_SIZE_STEPS` from `@/lib/data-table` or falls back to `undefined`; `sort` is
+  restricted to the allowed `name.asc`/`name.desc`), the `microserviceAtFilterDescriptors`
+  (`[{ id: "name", variant: "text" }]`), and `deriveColumnFilters(search)`, which maps
+  `search.name` to the `name` column filter. This is where `filter-descriptors.ts` and a
+  separate `deriveColumnFiltersFromSearch` would have lived in an earlier sketch of the
+  page; the implementation folded both into `search.ts` alongside search validation,
+  since they're all one small concern (URL search state -> table state).
 - **`mappers.ts`**:
   `toDeployments(row): Record<"IFT" | "UAT" | "PROD", Deployment[]>`, where
   `Deployment = { tc: string; artifact: string; version: string }`.
@@ -177,8 +184,11 @@ No link or tech-component type exists in `src/` yet (checked), so these are new.
   | `at` | AT | `dash()` placeholder | neither |
 
   `toDeployments` runs once per row (memoized by row object), not once per environment
-  cell. The toggle handler reaches the columns through a `getColumns({ onToggleNeedAT,
-  pendingIds })` factory argument.
+  cell. The toggle handler reaches the columns through a `getMicroserviceAtColumns({
+  onToggleNeedAT, isPending })` factory argument, where `isPending: (id: number) =>
+  boolean` is a stable getter (backed by a ref inside `useToggleNeedAT`), not a `Set`.
+  That keeps `getMicroserviceAtColumns`'s result referentially stable across a toggle's
+  pending-state changes — see *Toggle data flow* below for why that matters.
 
 ### `src/routes/microservice-at/index.tsx`
 
@@ -203,14 +213,41 @@ A new entry in `app-sidebar.tsx` after Flows: `{ to: "/microservice-at", label:
 1. The user clicks the checkbox on row `id`.
 2. `useMutation` → `microserviceAtApi.patch(id, { nodeAggrType: "MICROSERVICE_NAME_AGGR",
    data: { isNeedAT: next } })`.
-3. `onMutate`: cancel in-flight `["microservice-at"]` queries, snapshot the current page's
-   cache entry, and write `next` into that row optimistically. `id` goes into
-   `pendingIds`, which disables that checkbox.
-4. `onError`: restore the snapshot and show a `sonner` error toast with `ApiError.message`.
-5. `onSettled`: remove `id` from `pendingIds` and invalidate `["microservice-at"]`.
+3. `onMutate`: add `id` to `pendingIds` (which disables that checkbox), then cancel
+   in-flight queries and write `next` into the row optimistically — both scoped to the
+   `["microservice-at", "table", …]` sub-key (the `dataTableQueryOptions` cache entries),
+   not the root `["microservice-at"]` key. The `cancelQueries` call also carries
+   `predicate: (q) => q.state.data !== undefined`, so a page the route loader is
+   fetching for the first time is never cancelled. Without that scoping and predicate, a
+   toggle fired during a route transition could cancel the loader's first-time
+   `ensureQueryData` fetch; query-core 5.90's cancel-with-revert on a query with no data
+   rethrows `CancelledError` instead of resolving, which fails `ensureQueryData` and trips
+   the route's error boundary. Before writing the optimistic value, `onMutate` records
+   only that row's own previous `isNeedAT` (not a snapshot of the whole cached page) —
+   this is the rollback state used in step 4.
+4. `onError`: roll back just the failed row to the `isNeedAT` value recorded in step 3
+   (same table-subkey scoping), and show a `sonner` error toast with `ApiError.message`.
+   The rollback is row-scoped, not a whole-page snapshot restore: two toggles can be in
+   flight on different rows of the same page at once, and restoring the whole page on one
+   failure would silently revert the other row's still-pending or already-settled
+   optimistic write.
+5. `onSettled`: remove `id` from `pendingIds` and invalidate the root `["microservice-at"]`
+   key (invalidation, unlike cancellation, is safe on a query with no data, so it does not
+   need the sub-key/predicate treatment).
 
 A user without `UPDATE` gets a 403. That takes the `onError` path: rollback plus toast.
 The checkbox is not hidden or disabled up front for such users in v1.
+
+The Need AT checkbox's disabled state reads pending status through a stable `isPending(id)`
+getter, backed by a ref inside `useToggleNeedAT` (not a `Set` passed straight through), so
+that `getMicroserviceAtColumns`'s result — and therefore the route's `columns` array — stays
+referentially stable while a toggle is pending. This matters because `useDataTable`'s
+`urlColumnFilters` depends on `columns` and resets local column filters when it changes; a
+new `columns` array on every toggle would wipe a name search typed shortly before the click.
+The checkbox still re-renders as disabled: toggling updates React state inside
+`useToggleNeedAT`, which re-renders the route component and, since `DataTable` is a plain,
+unmemoized component, re-renders the table body, so each cell's `isPending(id)` call reads
+the current ref value on that render even though `columns` itself never changed.
 
 ## Error handling
 
@@ -233,6 +270,14 @@ The checkbox is not hidden or disabled up front for such users in v1.
   - `base and (built)` when one does;
   - a `multiRelation` lambda still comes last;
   - output unchanged when `baseFilter` is not set.
+- **Vitest, `search.test.ts`**: `validateMicroserviceAtSearch` and `deriveColumnFilters`,
+  including `page`/`pageSize` validation (non-integer or negative `page` -> `1`; a
+  `pageSize` outside `PAGE_SIZE_STEPS` -> `undefined`).
+- **No unit test for `useToggleNeedAT`** (the optimistic-update/rollback hook): the repo
+  has no React testing library or DOM test environment (vitest runs under `node`, not
+  `jsdom`/`happy-dom`), and adding one is out of scope for this page. The hook's
+  behavior is covered indirectly by `mappers.test.ts`'s `setNeedAT` tests (the pure
+  function it delegates the cache write to) and by the live check below.
 - **`npx tsc -b`, `npm run lint`, `npm test`.**
 - **Live check** in the browser against the local backend:
   - the page loads with 660 rows counted;
@@ -254,6 +299,14 @@ The checkbox is not hidden or disabled up front for such users in v1.
   not a frontend workaround.
 - **PROD is empty** until PROD microservice nodes are loaded. This is a data state, not a
   bug.
+- **The PATCH sends the whole `data` object.** `microserviceAtApi.patch(id, {
+  nodeAggrType: "MICROSERVICE_NAME_AGGR", data: { isNeedAT } })` sends `data` as a
+  complete object, not a per-key merge patch. If the backend ever replaces the
+  aggregator's `data` jsonb column wholesale on PATCH rather than merging it, any other
+  key that gets added to `data` in the future would be silently wiped by an `isNeedAT`
+  toggle. This is fine today because `isNeedAT` is the only key `data` carries; revisit
+  the write shape (e.g. a dedicated merge endpoint, or reading-then-merging client-side)
+  if `data` grows a second key.
 
 ## Related
 
