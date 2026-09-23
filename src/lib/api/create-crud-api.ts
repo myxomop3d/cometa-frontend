@@ -72,8 +72,11 @@ export interface CreateCrudApiOptions {
    *  resource to one subtype. Emitted FIRST: odata-mini corrupts the root
    *  alias for every clause after an `any()` lambda, so the lambda must stay
    *  last. Any other filter is parenthesized so an `or` inside it cannot
-   *  escape. Do not also pass `$filter` in `staticParams`: it would be
-   *  combined, not replaced. */
+   *  escape. Do not also pass `$filter` in `staticParams`: `staticParams` is
+   *  applied with `params.set`, so a `$filter` there REPLACES whatever
+   *  `buildFilterParams`/the caller's column filters produced (it is not
+   *  combined with it), and `baseFilter` is then ANDed onto that survivor —
+   *  the caller's actual built filter is silently discarded. */
   baseFilter?: string;
 }
 

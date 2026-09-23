@@ -4,8 +4,8 @@ import { createCrudApi } from "./create-crud-api";
 const BASE = "nodeAggrType eq 'MICROSERVICE_NAME_AGGR'";
 
 function stubFetch() {
-  const fetchMock = vi.fn(
-    async (_input: RequestInfo, _init?: RequestInit) =>
+  const fetchMock = vi.fn<typeof fetch>(
+    async () =>
       new Response(JSON.stringify({ count: 0, data: [], messages: [] }), {
         status: 200,
         headers: { "content-type": "application/json" },
