@@ -70,7 +70,7 @@ spelling on the wire, no special casing in `BaseRefMapper`.
 
 This closes the §11 follow-up "Sentinel 'not set' rows for to-one relations"
 of the no-null standard, and the open question in
-`2026-08-27-nested-relation-write-standard-design.md` §7 on clearing a nullable
+`2026-08-27-nested-relation-write-standard-design.md` §7 ("Known hole: a nullable to-one cannot be cleared") on clearing a nullable
 to-one relation.
 
 ## DDL — `cometa/db-scripts/ddl/021_not_set_sentinels.sql`
@@ -251,6 +251,6 @@ Neither exists yet.
 ## Related
 
 - `2026-09-09-no-null-write-standard-design.md` (§4.2, §11)
-- `2026-08-27-nested-relation-write-standard-design.md` (§7)
+- `2026-08-27-nested-relation-write-standard-design.md` (§7, "Known hole")
 - `2026-09-04-automated-system-leader-relation-design.md`
 - `2026-08-26-odata-relation-filter-sort-design.md`
