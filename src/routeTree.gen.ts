@@ -15,6 +15,7 @@ import { Route as ForbiddenRouteImport } from './routes/forbidden'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeamIndexRouteImport } from './routes/team/index'
 import { Route as PersonIndexRouteImport } from './routes/person/index'
+import { Route as MicroserviceAtIndexRouteImport } from './routes/microservice-at/index'
 import { Route as FlowIndexRouteImport } from './routes/flow/index'
 import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
 import { Route as AutomatedSystemIndexRouteImport } from './routes/automated-system/index'
@@ -50,6 +51,11 @@ const PersonIndexRoute = PersonIndexRouteImport.update({
   path: '/person/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MicroserviceAtIndexRoute = MicroserviceAtIndexRouteImport.update({
+  id: '/microservice-at/',
+  path: '/microservice-at/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FlowIndexRoute = FlowIndexRouteImport.update({
   id: '/flow/',
   path: '/flow/',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
+  '/microservice-at/': typeof MicroserviceAtIndexRoute
   '/person/': typeof PersonIndexRoute
   '/team/': typeof TeamIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/automated-system': typeof AutomatedSystemIndexRoute
   '/flow-graph': typeof FlowGraphIndexRoute
   '/flow': typeof FlowIndexRoute
+  '/microservice-at': typeof MicroserviceAtIndexRoute
   '/person': typeof PersonIndexRoute
   '/team': typeof TeamIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/automated-system/': typeof AutomatedSystemIndexRoute
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
+  '/microservice-at/': typeof MicroserviceAtIndexRoute
   '/person/': typeof PersonIndexRoute
   '/team/': typeof TeamIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/automated-system/'
     | '/flow-graph/'
     | '/flow/'
+    | '/microservice-at/'
     | '/person/'
     | '/team/'
     | '/auth/cert/callback'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/automated-system'
     | '/flow-graph'
     | '/flow'
+    | '/microservice-at'
     | '/person'
     | '/team'
     | '/auth/cert/callback'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/automated-system/'
     | '/flow-graph/'
     | '/flow/'
+    | '/microservice-at/'
     | '/person/'
     | '/team/'
     | '/auth/cert/callback'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   AutomatedSystemIndexRoute: typeof AutomatedSystemIndexRoute
   FlowGraphIndexRoute: typeof FlowGraphIndexRoute
   FlowIndexRoute: typeof FlowIndexRoute
+  MicroserviceAtIndexRoute: typeof MicroserviceAtIndexRoute
   PersonIndexRoute: typeof PersonIndexRoute
   TeamIndexRoute: typeof TeamIndexRoute
   AuthCertCallbackRoute: typeof AuthCertCallbackRoute
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PersonIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/microservice-at/': {
+      id: '/microservice-at/'
+      path: '/microservice-at'
+      fullPath: '/microservice-at/'
+      preLoaderRoute: typeof MicroserviceAtIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/flow/': {
       id: '/flow/'
       path: '/flow'
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   AutomatedSystemIndexRoute: AutomatedSystemIndexRoute,
   FlowGraphIndexRoute: FlowGraphIndexRoute,
   FlowIndexRoute: FlowIndexRoute,
+  MicroserviceAtIndexRoute: MicroserviceAtIndexRoute,
   PersonIndexRoute: PersonIndexRoute,
   TeamIndexRoute: TeamIndexRoute,
   AuthCertCallbackRoute: AuthCertCallbackRoute,

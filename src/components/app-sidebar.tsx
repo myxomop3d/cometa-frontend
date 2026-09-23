@@ -1,6 +1,7 @@
 import { forwardRef, useState } from "react";
 import { createLink, useMatchRoute } from "@tanstack/react-router";
 import {
+  Boxes,
   Cpu,
   LogOut,
   Moon,
@@ -54,6 +55,7 @@ const navItems = [
   { to: "/automated-system", label: "Automated Systems", icon: Cpu },
   { to: "/flow-graph", label: "Flow Graph", icon: Network },
   { to: "/flow", label: "Flows", icon: Workflow },
+  { to: "/microservice-at", label: "Microservices & AT", icon: Boxes },
   { to: "/person", label: "Persons", icon: User },
   { to: "/team", label: "Teams", icon: Users },
 ] as const;
