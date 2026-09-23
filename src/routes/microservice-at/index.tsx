@@ -9,6 +9,7 @@ import { DEFAULT_PAGE_SIZE } from "@/lib/data-table/switchable-page";
 import { microserviceAtApi } from "@/features/microservice-at/api";
 import { getMicroserviceAtColumns } from "@/features/microservice-at/columns";
 import { toMicroserviceAtRow } from "@/features/microservice-at/mappers";
+import { useToggleNeedAT } from "@/features/microservice-at/use-toggle-need-at";
 import {
   deriveColumnFilters,
   validateMicroserviceAtSearch,
@@ -38,9 +39,10 @@ function MicroserviceAtPage() {
   const { data } = useSuspenseQuery(tableQueryOptions(search));
 
   const rows = React.useMemo(() => data.data.map(toMicroserviceAtRow), [data.data]);
+  const { toggle, pendingIds } = useToggleNeedAT();
   const columns = React.useMemo(
-    () => getMicroserviceAtColumns({ pendingIds: new Set<number>() }),
-    [],
+    () => getMicroserviceAtColumns({ onToggleNeedAT: toggle, pendingIds }),
+    [toggle, pendingIds],
   );
 
   const onNavigate = React.useCallback(
