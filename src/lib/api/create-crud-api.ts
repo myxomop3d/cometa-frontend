@@ -67,13 +67,27 @@ export interface CreateCrudApiOptions {
   /** Query params appended to every list request, e.g. `{ "$fields": "leader" }`
    *  to make the backend eager-fetch a relation via its entity graph. */
   staticParams?: Record<string, string>;
+  /** OData boolean expression ANDed into every list request's `$filter`,
+   *  e.g. `nodeAggrType eq 'MICROSERVICE_NAME_AGGR'` to pin a polymorphic
+   *  resource to one subtype. Emitted FIRST: odata-mini corrupts the root
+   *  alias for every clause after an `any()` lambda, so the lambda must stay
+   *  last. Any other filter is parenthesized so an `or` inside it cannot
+   *  escape. Do not also pass `$filter` in `staticParams`: it would be
+   *  combined, not replaced. */
+  baseFilter?: string;
+}
+
+function withBaseFilter(params: URLSearchParams, baseFilter: string | undefined) {
+  if (!baseFilter) return;
+  const built = params.get("$filter");
+  params.set("$filter", built ? `${baseFilter} and (${built})` : baseFilter);
 }
 
 export function createCrudApi<
   TDto extends { id: number },
   TFilters extends object,
   TWritePayload,
->({ basePath, listPath, queryKey, filterDescriptors, staticParams }: CreateCrudApiOptions) {
+>({ basePath, listPath, queryKey, filterDescriptors, staticParams, baseFilter }: CreateCrudApiOptions) {
   const resolvedListPath = listPath ?? basePath;
 
   async function fetchList(
@@ -91,6 +105,7 @@ export function createCrudApi<
     for (const [k, v] of Object.entries(staticParams ?? {})) {
       params.set(k, v);
     }
+    withBaseFilter(params, baseFilter);
     return apiFetch<ApiResponse<TDto[]>>(`${resolvedListPath}?${params}`);
   }
 
@@ -134,6 +149,7 @@ export function createCrudApi<
     for (const [k, v] of Object.entries(staticParams ?? {})) {
       searchParams.set(k, v);
     }
+    withBaseFilter(searchParams, baseFilter);
     return apiFetch<ApiResponse<TDto[]>>(
       `${resolvedListPath}?${searchParams.toString()}`,
     );
@@ -175,6 +191,7 @@ export function createCrudApi<
     create,
     patch,
     remove,
+    fetchDataTable,
     listQueryOptions,
     detailQueryOptions,
     dataTableQueryOptions,
