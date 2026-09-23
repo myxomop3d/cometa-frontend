@@ -1,4 +1,5 @@
 import type { FilterDescriptor } from "@/lib/odata/build-filter-params";
+import { PAGE_SIZE_STEPS } from "@/lib/data-table";
 
 /** A type alias, not an interface: it must stay assignable to
  *  `Record<string, unknown>`, which `useDataTable` requires of its search. */
@@ -19,8 +20,17 @@ export function validateMicroserviceAtSearch(
   search: Record<string, unknown>,
 ): MicroserviceAtSearch {
   return {
-    page: typeof search.page === "number" && search.page >= 1 ? search.page : 1,
-    pageSize: typeof search.pageSize === "number" ? search.pageSize : undefined,
+    page:
+      typeof search.page === "number" &&
+      Number.isInteger(search.page) &&
+      search.page >= 1
+        ? search.page
+        : 1,
+    pageSize:
+      typeof search.pageSize === "number" &&
+      (PAGE_SIZE_STEPS as readonly number[]).includes(search.pageSize)
+        ? search.pageSize
+        : undefined,
     sort:
       typeof search.sort === "string" && ALLOWED_SORTS.has(search.sort)
         ? search.sort

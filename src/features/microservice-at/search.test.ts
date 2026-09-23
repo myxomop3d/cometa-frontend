@@ -28,6 +28,26 @@ describe("validateMicroserviceAtSearch", () => {
     expect(s.page).toBe(1);
     expect(s.name).toBeUndefined();
   });
+
+  it("rejects a non-integer page", () => {
+    expect(validateMicroserviceAtSearch({ page: 1.5 }).page).toBe(1);
+  });
+
+  it("rejects a negative page", () => {
+    expect(validateMicroserviceAtSearch({ page: -2 }).page).toBe(1);
+  });
+
+  it("rejects a pageSize below the smallest step", () => {
+    expect(validateMicroserviceAtSearch({ pageSize: 0 }).pageSize).toBeUndefined();
+  });
+
+  it("rejects a pageSize that is not a step", () => {
+    expect(validateMicroserviceAtSearch({ pageSize: 7 }).pageSize).toBeUndefined();
+  });
+
+  it("keeps a valid pageSize step", () => {
+    expect(validateMicroserviceAtSearch({ pageSize: 25 }).pageSize).toBe(25);
+  });
 });
 
 describe("deriveColumnFilters", () => {
