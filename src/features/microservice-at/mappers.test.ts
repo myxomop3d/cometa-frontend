@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import type { AggrNodeDto, ApiResponse, MicroserviceNameAggrDto } from "@/types/api";
 import { setNeedAT, toDeployments, toMicroserviceAtRow } from "./mappers";
 
+let nextNodeId = 1;
+
 function node(
   environment: string,
   links: { tc?: string; tcEnv?: string; artifactId?: string; version?: string }[],
 ): AggrNodeDto {
   return {
-    id: Math.floor(Math.random() * 1e6),
+    id: nextNodeId++,
     name: "svc",
     environment,
     techComponentLinks: links.map((l, i) => ({
