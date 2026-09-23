@@ -19,9 +19,12 @@ right rather than a note on this change:**
   fails test compilation.
 - `issue/putReplacesInsteadOfUpdating.md` — `PUT /{id}` may insert rather than
   update, across all eight CRUD resources.
-- `issue/automatedSystemNotNullInsertHazard.md` — `POST /automated-system`
-  writes SQL NULL into 15 NOT NULL columns; the same defect just fixed on
-  `TechComponent`, with a worked fix to copy.
+- `issue/automatedSystemNotNullInsertHazard.md` — **RESOLVED 2026-09-23.**
+  `POST /automated-system` wrote SQL NULL into 15 NOT NULL columns. Reproduced
+  live, then fixed for `AutomatedSystem`, `Flow` and `Team` at once via
+  `nullValueCheckStrategy = ALWAYS` in `CometaCommonMapperConfig`; the three
+  `@Mapping(defaultValue = "")` on `TechComponentMapper` were removed as
+  redundant, so the project has one mechanism rather than two.
 
 ## Deferred items
 
