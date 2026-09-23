@@ -75,6 +75,38 @@ export interface AutomatedSystemFilters extends Partial<PaginationParams> {
   leaderId?: number;
 }
 
+// TechComponent
+export type TechComponentEnvironment = "PROD" | "UAT" | "IFT" | "DEV";
+
+/** Flat = every scalar of the entity, none of its relations. */
+export interface TechComponentFlatDto {
+  id: number;
+  insertedAt: string | null;
+  updatedAt: string | null;
+  groupName: string;
+  name: string;
+  technology: string;
+  environment: TechComponentEnvironment;
+  consoleUrl: string;
+  infoUrl: string;
+}
+
+export interface TechComponentDto extends TechComponentFlatDto {
+  /** Read: populated only with ?$fields=automatedSystem. Write: only `id`.
+   *  NOT NULL (DDL 021) — id 0 is the "Not set" sentinel row — yet null on
+   *  any read that omits $fields. */
+  automatedSystem: AutomatedSystemFlatDto | null;
+}
+
+export interface TechComponentFilters extends Partial<PaginationParams> {
+  name?: string;
+  groupName?: string;
+  technology?: string;
+  environment?: string;
+  /** URL search-param name, not a DTO field. */
+  automatedSystemId?: number;
+}
+
 // Node
 export type EnvironmentCode = "DEV" | "IFT" | "UAT" | "PROD";
 export type NodeType = "NODE" | "MICROSERVICE" | "TOPIC" | "EGRESS" | "INGRESS";
