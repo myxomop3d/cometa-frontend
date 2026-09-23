@@ -244,3 +244,43 @@ export interface PersonByEmailResponse {
   person: PersonDto | null;
   hasAccount: boolean;
 }
+
+// ── Node aggregator (MICROSERVICE_NAME_AGGR) ─────────────────────────────
+// Read shape of GET /api/v1/node-aggregator/graph with
+// $fields=nodes,nodes.techComponentLinks,nodes.techComponentLinks.techComponent.
+// Trimmed to the fields the Microservices & AT page reads; the backend sends
+// more (each node's full config `data`, timestamps, …).
+
+export interface MicroserviceNameAggrData {
+  isNeedAT: boolean;
+}
+
+export interface NodeTechComponentLinkDto {
+  id: number;
+  techComponent?: { id: number; name: string; environment: string } | null;
+  /** Deployment parameters (jsonb). Only the two keys the page reads. */
+  data: { artifactId?: string; version?: string } | null;
+}
+
+export interface AggrNodeDto {
+  id: number;
+  name: string;
+  /** "IFT" | "UAT" | "PROD" | "DEV"; the source of truth for grouping. */
+  environment: string;
+  techComponentLinks?: NodeTechComponentLinkDto[] | null;
+}
+
+export interface MicroserviceNameAggrDto {
+  id: number;
+  name: string;
+  nodeAggrType: "MICROSERVICE_NAME_AGGR";
+  data: MicroserviceNameAggrData | null;
+  nodes?: AggrNodeDto[] | null;
+}
+
+/** PATCH body. `nodeAggrType` is required (the DTO is polymorphic); `nodes`
+ *  is deliberately absent so membership stays unchanged. */
+export interface MicroserviceNameAggrPatch {
+  nodeAggrType: "MICROSERVICE_NAME_AGGR";
+  data: MicroserviceNameAggrData;
+}
