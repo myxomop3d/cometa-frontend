@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** A Tech Components table page with create/edit/delete, backed by a
+**Goal:** A Tech Components table page with create/edit (no delete — out of scope), backed by a
 migration that formalises id-0 "not set" sentinel rows for `person` and
 `automated_system` and makes `tech_component.automated_system_id` `NOT NULL`.
 
@@ -55,7 +55,7 @@ Frontend (`F:/programming/react/cometa-frontend/src`):
 - Modify `features/automated-system/{schema,mappers,mappers.test}.ts`, `components/AutomatedSystemSheet.tsx` — leader empty = `undefined`.
 - Modify `features/team/{schema,mappers,mappers.test,api}.ts`, `components/TeamSheet.tsx` — same.
 - Modify `types/api.ts` — TechComponent types.
-- Create `features/tech-component/`: `api.ts`, `advanced-api.ts`, `filter-descriptors.ts` (+test), `schema.ts`, `mappers.ts` (+test), `row-action.ts`, `columns.tsx`, `switchable-config.ts`, `components/TechComponentSheet.tsx`, `components/TechComponentDeleteDialog.tsx`.
+- Create `features/tech-component/`: `api.ts`, `advanced-api.ts`, `filter-descriptors.ts` (+test), `schema.ts`, `mappers.ts` (+test), `row-action.ts`, `columns.tsx`, `switchable-config.ts`, `components/TechComponentSheet.tsx`.
 - Modify `features/automated-system/api.ts` — `fetchAutomatedSystemsFiltered`, `automatedSystemsFilteredQueryOptions`, `comboboxQueryOptions`.
 - Create `features/automated-system/components/AutomatedSystemCombobox.tsx`.
 - Create `routes/tech-component/index.tsx`, `routes/tech-component/-simple-search.ts` (+test).
@@ -1465,7 +1465,7 @@ Claude-Session: https://claude.ai/code/session_0125UDcCBxZjUT2eZwv4yjih"
 
 **Interfaces:**
 - Consumes: `techComponentApi` (Task 4), `deriveColumnFiltersFromSearch` (Task 4), `automatedSystemsFilteredQueryOptions` (Task 6), `TECH_COMPONENT_ENVIRONMENTS` (Task 5).
-- Produces: `TechComponentRowAction` (`create` | `update` | `delete`), `getTechComponentColumns`, `techComponentSwitchableConfig`, `techComponentSimpleFilterKeys`, `validateTechComponentSimpleFields`.
+- Produces: `TechComponentRowAction` (`create` | `update`), `getTechComponentColumns`, `techComponentSwitchableConfig`, `techComponentSimpleFilterKeys`, `validateTechComponentSimpleFields`.
 
 - [ ] **Step 1: Write the failing test** `src/routes/tech-component/-simple-search.test.ts`:
 
@@ -1564,8 +1564,7 @@ import type { TechComponentDto } from "@/types/api";
 
 export type TechComponentRowAction =
   | { variant: "create" }
-  | { variant: "update"; row: TechComponentDto }
-  | { variant: "delete"; row: TechComponentDto };
+  | { variant: "update"; row: TechComponentDto };
 ```
 
 - [ ] **Step 6: Create** `src/features/tech-component/columns.tsx`:
@@ -1582,7 +1581,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { dash } from "@/lib/format";
@@ -1762,13 +1760,6 @@ export function getTechComponentColumns({
               >
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => setRowAction({ variant: "delete", row: row.original })}
-              >
-                Delete
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -1829,16 +1820,16 @@ Claude-Session: https://claude.ai/code/session_0125UDcCBxZjUT2eZwv4yjih"
 
 ---
 
-### Task 8: Tech Component sheet and delete dialog
+### Task 8: Tech Component sheet
 
 **Files:**
-- Create: `src/features/tech-component/components/TechComponentSheet.tsx`, `TechComponentDeleteDialog.tsx`
+- Create: `src/features/tech-component/components/TechComponentSheet.tsx`
 
 **Interfaces:**
 - Consumes: `techComponentApi` (Task 4); schema/mappers (Task 5); `AutomatedSystemCombobox` (Task 6).
-- Produces: `<TechComponentSheet techComponent variant onSuccess {...SheetProps} />`, `<TechComponentDeleteDialog techComponent open onOpenChange onSuccess />`.
+- Produces: `<TechComponentSheet techComponent variant onSuccess {...SheetProps} />`.
 
-This is the first delete in the app (no other page has one). It is a row action with a confirm dialog.
+Create and edit only. Deleting a Tech Component is out of scope: no delete action, no delete dialog (consistent with every other page, none of which delete).
 
 - [ ] **Step 1: Create** `src/features/tech-component/components/TechComponentSheet.tsx`:
 
@@ -2112,95 +2103,13 @@ export function TechComponentSheet({
 
 (The Select mirrors `AutomatedSystemSheet`'s `status` select, which also passes `""` for an empty value.)
 
-- [ ] **Step 2: Create** `src/features/tech-component/components/TechComponentDeleteDialog.tsx`:
-
-```tsx
-import { Loader } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ApiError } from "@/lib/api/create-crud-api";
-import type { TechComponentDto } from "@/types/api";
-
-import { techComponentApi } from "../api";
-
-interface TechComponentDeleteDialogProps {
-  techComponent: TechComponentDto;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-}
-
-export function TechComponentDeleteDialog({
-  techComponent,
-  open,
-  onOpenChange,
-  onSuccess,
-}: TechComponentDeleteDialogProps) {
-  const mutation = useMutation({
-    mutationFn: () => techComponentApi.remove(techComponent.id),
-    onSuccess: () => {
-      toast.success("Tech component deleted");
-      onSuccess();
-      onOpenChange(false);
-    },
-    onError: (err) => {
-      toast.error(
-        err instanceof ApiError && err.message
-          ? err.message
-          : "Failed to delete tech component",
-      );
-    },
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete tech component?</DialogTitle>
-          <DialogDescription>
-            {`"${techComponent.name}" (${techComponent.environment}) will be deleted, along with its links to nodes. This cannot be undone.`}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            {mutation.isPending && (
-              <Loader className="mr-2 size-4 animate-spin" aria-hidden="true" />
-            )}
-            Delete
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-```
-
-The wording is accurate: `node_tech_component_link_tech_component_fk` is `ON DELETE CASCADE` (verified 2026-09-24).
-
-- [ ] **Step 3: Type-check, lint, commit**
+- [ ] **Step 2: Type-check, lint, commit**
 
 ```bash
 npx tsc -b
 npm run lint
 git add src/features/tech-component/components
-git commit -m "feat(tech-component): create/edit sheet and delete dialog
+git commit -m "feat(tech-component): create/edit sheet
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_0125UDcCBxZjUT2eZwv4yjih"
@@ -2215,7 +2124,7 @@ Expected: clean.
 **Files:**
 - Create: `src/routes/tech-component/index.tsx`
 - Modify: `src/components/app-sidebar.tsx` (lucide import block, nav list lines 55–60)
-- Modify: `docs/superpowers/specs/2026-09-24-tech-component-page-design.md` (status + delete note)
+- Modify: `docs/superpowers/specs/2026-09-24-tech-component-page-design.md` (status)
 
 **Interfaces:**
 - Consumes: everything above.
@@ -2239,7 +2148,6 @@ import { makeSwitchableLoader } from "@/lib/data-table/switchable-page";
 import { useSwitchableTablePage } from "@/hooks/use-switchable-table-page";
 import { techComponentSwitchableConfig } from "@/features/tech-component/switchable-config";
 import { TechComponentSheet } from "@/features/tech-component/components/TechComponentSheet";
-import { TechComponentDeleteDialog } from "@/features/tech-component/components/TechComponentDeleteDialog";
 import { validateTechComponentSimpleFields } from "./-simple-search";
 
 export const Route = createFileRoute("/tech-component/")({
@@ -2279,7 +2187,7 @@ function TechComponentPage() {
     setRowAction(null);
   };
 
-  const sheetOpen = rowAction?.variant === "create" || rowAction?.variant === "update";
+  const sheetOpen = rowAction !== null;
   const sheetKey =
     rowAction?.variant === "update" ? `update-${rowAction.row.id}` : "create";
   const sheetComponent = rowAction?.variant === "update" ? rowAction.row : null;
@@ -2332,18 +2240,6 @@ function TechComponentPage() {
           onSuccess={handleSuccess}
         />
       )}
-
-      {rowAction?.variant === "delete" && (
-        <TechComponentDeleteDialog
-          key={`delete-${rowAction.row.id}`}
-          techComponent={rowAction.row}
-          open
-          onOpenChange={(open) => {
-            if (!open) setRowAction(null);
-          }}
-          onSuccess={handleSuccess}
-        />
-      )}
     </div>
   );
 }
@@ -2371,7 +2267,7 @@ Expected: `vite build` regenerates `src/routeTree.gen.ts` (do not hand-edit it) 
   3. Sort by Automated System asc/desc — no error.
   4. Advanced mode: an Automated System + Environment filter combination.
   5. Show the hidden Console URL column; a URL opens in a new tab.
-  6. Create a component (`Not set` AS, environment `DEV`), edit it (change AS to a real one, clear Technology → saved as `""`), delete it via the row menu + confirm.
+  6. Create a component (`Not set` AS, environment `DEV`), edit it (change AS to a real one, clear Technology → saved as `""`). The row menu offers Edit only — no Delete.
   7. Create a duplicate `(name, environment)` → error toast, sheet stays open.
   8. **Regression (Task 3):** open an Automated System whose leader is `Doe John` and save a text change — succeeds; open **Add Automated System**, submit without a leader → "Leader is required". Same two checks on **Teams**.
 
@@ -2379,7 +2275,6 @@ Report any failure with the step number rather than working around it.
 
 - [ ] **Step 5: Update the spec.** In `docs/superpowers/specs/2026-09-24-tech-component-page-design.md`:
   - change `Status: approved design, not yet implemented` to `Status: implemented on feature/gm 2026-09-24`;
-  - in the `components/TechComponentSheet.tsx` bullet, replace `create / update / delete (confirm)` with `create / update; delete is a row action with a confirm dialog (TechComponentDeleteDialog) — the first delete in the app`.
 
 - [ ] **Step 6: Commit**
 

@@ -8,8 +8,8 @@ Status: approved design, not yet implemented
 
 A table page, **Tech Components**, over `gmsb.tech_component`, with the same
 feature set as Automated Systems: switchable simple/advanced filtering, sorting,
-pagination, and a Sheet for create / edit / delete, including choosing the
-component's Automated System.
+pagination, and a Sheet for create / edit, including choosing the
+component's Automated System. Deleting a Tech Component is out of scope.
 
 The sheet is the first form to write `tech_component.automated_system_id`, one
 of the four nullable FKs the no-null standard left for later
@@ -197,7 +197,7 @@ The trimmed `techComponent` shape inside `NodeTechComponentLinkDto` is untouched
 - `row-action.ts`, `switchable-config.ts` (`queryKey: ["tech-components"]`,
   simple keys `name, groupName, technology, environment, automatedSystemId`).
 - `components/TechComponentSheet.tsx` — modeled on `AutomatedSystemSheet`:
-  create / update / delete (confirm), server errors via the existing toast and
+  create / update (no delete — out of scope), server errors via the existing toast and
   field-mapping path. The unique `(name, environment)` violation is not
   pre-checked on the client.
 
@@ -222,8 +222,8 @@ Neither exists yet.
 
 ## Error handling
 
-- Sentinel delete → trigger error → surfaced by the existing error toast. The
-  row has an ordinary delete action; the guard is the database's.
+- Sentinel delete → trigger error. No page offers delete today; the guard is
+  the database's, for API or SQL callers.
 - Duplicate `(name, environment)` → DB unique violation → error toast.
 - POST without `automatedSystem` cannot come from the sheet (field required).
 
@@ -239,7 +239,7 @@ Neither exists yet.
   no row references the old id, 121 leaders point at 0, `tech_component` has no
   `NULL` FK, and `DELETE ... WHERE id = 0` fails on both tables.
 - Manual (`npm run dev -- --host`, test account): filter by each column, sort
-  by Automated System, create / edit / delete, pick `Not set`; save an AS and a
+  by Automated System, create / edit, pick `Not set`; save an AS and a
   Team whose leader is `Doe John`.
 - `tsc -b`, `npm run lint`, `npm run build`.
 
