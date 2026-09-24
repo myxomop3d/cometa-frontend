@@ -1,0 +1,30 @@
+function asStr(v: unknown): string | undefined {
+  return typeof v === "string" ? v : undefined;
+}
+function asNum(v: unknown): number | undefined {
+  if (typeof v === "number") return v;
+  if (typeof v === "string" && v.length > 0) {
+    const n = Number(v);
+    return Number.isNaN(n) ? undefined : n;
+  }
+  return undefined;
+}
+function asStrArray(v: unknown): string[] | undefined {
+  if (Array.isArray(v)) return v as string[];
+  if (typeof v === "string" && v.length > 0) return v.split(",");
+  return undefined;
+}
+
+/** Simple-mode URL params. No unsortable-column guard: no Tech Component
+ *  column collides with odata-mini's $orderby grammar (cf. AS `guid`). */
+export function validateTechComponentSimpleFields(
+  search: Record<string, unknown>,
+) {
+  return {
+    name: asStr(search.name),
+    groupName: asStr(search.groupName),
+    technology: asStr(search.technology),
+    environment: asStrArray(search.environment),
+    automatedSystemId: asNum(search.automatedSystemId),
+  };
+}
