@@ -30,6 +30,20 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { cn } from "@/lib/utils";
 import type { RelationQueryOptionsFn } from "@/types/data-table";
 
+/**
+ * Pure helper: derives the list of currently-selected ids from a
+ * RelationPicker `value`. Only `undefined`/`null` mean "no value" — `0` is
+ * a legitimate id (e.g. the "Not set" sentinel row) and must be treated as
+ * selected, not falsy.
+ */
+export function toSelectedIds(
+  value: number | number[] | undefined | null,
+  multi: boolean,
+): number[] {
+  if (value === undefined || value === null) return [];
+  return multi ? (value as number[]) : [value as number];
+}
+
 export interface RelationPickerProps<TRelated> {
   multi: boolean;
   value: number | number[] | undefined;
@@ -68,10 +82,10 @@ export function RelationPicker<TRelated>({
   );
 
   // Hydrate labels for selected IDs by fetching only those items via id filter
-  const selectedIds = React.useMemo(() => {
-    if (!value) return [];
-    return multi ? (value as number[]) : [value as number];
-  }, [value, multi]);
+  const selectedIds = React.useMemo(
+    () => toSelectedIds(value, multi),
+    [value, multi],
+  );
 
   const { data: labelData } = useQuery({
     ...queryOptionsFn({ ids: selectedIds }),
