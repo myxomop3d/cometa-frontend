@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForbiddenRouteImport } from './routes/forbidden'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TechComponentIndexRouteImport } from './routes/tech-component/index'
 import { Route as TeamIndexRouteImport } from './routes/team/index'
 import { Route as PersonIndexRouteImport } from './routes/person/index'
 import { Route as MicroserviceAtIndexRouteImport } from './routes/microservice-at/index'
@@ -39,6 +40,11 @@ const ForbiddenRoute = ForbiddenRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TechComponentIndexRoute = TechComponentIndexRouteImport.update({
+  id: '/tech-component/',
+  path: '/tech-component/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeamIndexRoute = TeamIndexRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/microservice-at/': typeof MicroserviceAtIndexRoute
   '/person/': typeof PersonIndexRoute
   '/team/': typeof TeamIndexRoute
+  '/tech-component/': typeof TechComponentIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/microservice-at': typeof MicroserviceAtIndexRoute
   '/person': typeof PersonIndexRoute
   '/team': typeof TeamIndexRoute
+  '/tech-component': typeof TechComponentIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/microservice-at/': typeof MicroserviceAtIndexRoute
   '/person/': typeof PersonIndexRoute
   '/team/': typeof TeamIndexRoute
+  '/tech-component/': typeof TechComponentIndexRoute
   '/auth/cert/callback': typeof AuthCertCallbackRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/microservice-at/'
     | '/person/'
     | '/team/'
+    | '/tech-component/'
     | '/auth/cert/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/microservice-at'
     | '/person'
     | '/team'
+    | '/tech-component'
     | '/auth/cert/callback'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/microservice-at/'
     | '/person/'
     | '/team/'
+    | '/tech-component/'
     | '/auth/cert/callback'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   MicroserviceAtIndexRoute: typeof MicroserviceAtIndexRoute
   PersonIndexRoute: typeof PersonIndexRoute
   TeamIndexRoute: typeof TeamIndexRoute
+  TechComponentIndexRoute: typeof TechComponentIndexRoute
   AuthCertCallbackRoute: typeof AuthCertCallbackRoute
 }
 
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tech-component/': {
+      id: '/tech-component/'
+      path: '/tech-component'
+      fullPath: '/tech-component/'
+      preLoaderRoute: typeof TechComponentIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/team/': {
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   MicroserviceAtIndexRoute: MicroserviceAtIndexRoute,
   PersonIndexRoute: PersonIndexRoute,
   TeamIndexRoute: TeamIndexRoute,
+  TechComponentIndexRoute: TechComponentIndexRoute,
   AuthCertCallbackRoute: AuthCertCallbackRoute,
 }
 export const routeTree = rootRouteImport

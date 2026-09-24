@@ -2,7 +2,7 @@
 
 Date: 2026-09-24
 Repos: `cometa` (DDL 021, `TechComponent` mapping, mapper tests) and `cometa-frontend`
-Status: approved design, not yet implemented
+Status: implemented on feature/gm 2026-09-24
 
 ## Goal
 

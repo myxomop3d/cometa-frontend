@@ -8,6 +8,7 @@ import {
   Network,
   PanelLeftClose,
   PanelLeftOpen,
+  Server,
   Sun,
   User,
   Users,
@@ -58,6 +59,7 @@ const navItems = [
   { to: "/microservice-at", label: "Microservices & AT", icon: Boxes },
   { to: "/person", label: "Persons", icon: User },
   { to: "/team", label: "Teams", icon: Users },
+  { to: "/tech-component", label: "Tech Components", icon: Server },
 ] as const;
 
 /**
