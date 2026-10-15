@@ -2,6 +2,7 @@ import { forwardRef, useState } from "react";
 import { createLink, useMatchRoute } from "@tanstack/react-router";
 import {
   Boxes,
+  CircleUser,
   Cpu,
   LogOut,
   Moon,
@@ -150,15 +151,20 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
-        {user && (
-          <div
-            className="truncate px-3 py-1.5 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"
-            title={user.sigmaLogin}
-          >
-            {user.sigmaLogin}
-          </div>
-        )}
         <SidebarMenu>
+          {user && (
+            // Informational row: kept as a menu item so the footer height is
+            // the same collapsed and expanded (icon + tooltip when collapsed).
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip={user.sigmaLogin}
+                className="cursor-default text-muted-foreground hover:bg-transparent hover:text-muted-foreground active:bg-transparent active:text-muted-foreground"
+              >
+                <CircleUser className="size-4" />
+                <span>{user.sigmaLogin}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={toggleTheme}
