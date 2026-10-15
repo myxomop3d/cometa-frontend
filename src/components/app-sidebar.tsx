@@ -20,6 +20,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -52,15 +53,41 @@ const SidebarMenuButtonLink = createLink(
   ))
 );
 
-const navItems = [
-  { to: "/automated-system", label: "Automated Systems", icon: Cpu },
-  { to: "/flow-graph", label: "Flow Graph", icon: Network },
-  { to: "/flow", label: "Flows", icon: Workflow },
+const mainNavItems = [
+  { to: "/flow-graph", label: "Схемы потоков", icon: Network },
+  { to: "/flow", label: "Список потоков", icon: Workflow },
   { to: "/microservice-at", label: "Microservices & AT", icon: Boxes },
+] as const;
+
+const dictionaryNavItems = [
+  { to: "/automated-system", label: "Automated Systems", icon: Cpu },
   { to: "/person", label: "Persons", icon: User },
   { to: "/team", label: "Teams", icon: Users },
   { to: "/tech-component", label: "Tech Components", icon: Server },
 ] as const;
+
+type NavItem = (typeof mainNavItems | typeof dictionaryNavItems)[number];
+
+function NavMenu({ items }: { items: readonly NavItem[] }) {
+  const matchRoute = useMatchRoute();
+
+  return (
+    <SidebarMenu>
+      {items.map((item) => (
+        <SidebarMenuItem key={item.to}>
+          <SidebarMenuButtonLink
+            to={item.to}
+            isActive={!!matchRoute({ to: item.to, fuzzy: true })}
+            tooltip={item.label}
+          >
+            <item.icon />
+            <span>{item.label}</span>
+          </SidebarMenuButtonLink>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
+}
 
 /**
  * Pin/unpin the sidebar. Unlike the stock SidebarTrigger the icon reflects
@@ -84,8 +111,6 @@ function SidebarToggle() {
 }
 
 export function AppSidebar() {
-  const matchRoute = useMatchRoute();
-
   const [isDark, setIsDark] = useState(() => {
     const stored = localStorage.getItem("theme");
     const dark = stored === "dark";
@@ -113,20 +138,14 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButtonLink
-                    to={item.to}
-                    isActive={!!matchRoute({ to: item.to, fuzzy: true })}
-                    tooltip={item.label}
-                  >
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </SidebarMenuButtonLink>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <NavMenu items={mainNavItems} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        {/* mt-auto pushes the dictionaries down against the footer */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupLabel>Справочники</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <NavMenu items={dictionaryNavItems} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
