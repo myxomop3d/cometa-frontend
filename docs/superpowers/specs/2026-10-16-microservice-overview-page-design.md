@@ -20,7 +20,7 @@ Target shape:
 
 | Microservice | Env | Deployments | Topics | Flows |
 |---|---|---|---|---|
-| calypso-payments-zeus-out | IFT | `ift-k8s-bk2:` `kafka-payload-kafka - 6.0.2_m121j25r` | ⇥ CALYPSO.PAYMENTS (enter, green)<br>⇤ CALYPSO.PAYMENTS.ZEUS (exit, red) | Поток PAYMENTS из АС в Alpha (link) |
+| calypso-payments-zeus-out | IFT | `ift-k8s-bk2:` `kafka-payload-kafka - 6.0.2_m121j25r` | ⇤ CALYPSO.PAYMENTS (exit, green)<br>⇥ CALYPSO.PAYMENTS.ZEUS (enter, red) | Поток PAYMENTS из АС в Alpha (link) |
 
 ## Scope
 
@@ -67,7 +67,7 @@ Against the development database (`gmsb`).
 | Text filters are case-insensitive substrings | User decision. `CALYPSO.PAYMENTS` matches `CALYPSO.PAYMENTS.ZEUS` too |
 | Tech component is display only | User decision |
 | Direction is translated on the server to `CONSUME` / `PRODUCE` | The frontend does not need to know the link-direction vocabulary |
-| Topic shown with a coloured arrow before its name | User decision: green `SquareArrowRightEnter` = `COUNTERDIRECTIONAL` (consumes), red `SquareArrowRightExit` = `CODIRECTIONAL` (produces), lucide icons |
+| Topic shown with a coloured arrow before its name | User decision: green `SquareArrowRightExit` = `COUNTERDIRECTIONAL` (consumes: the message exits the topic), red `SquareArrowRightEnter` = `CODIRECTIONAL` (produces: the message enters the topic). Icons are drawn from the topic's point of view |
 | Keep `$top` / `$skip` / `$orderby` names for paging and sort | The frontend's existing paging and sort serialization work unchanged. Filters are plain params because they are not OData |
 | Not `createCrudApi` on the frontend | It builds OData `$filter`; this endpoint takes plain params |
 | No DDL, no index | ~1.8k nodes and ~3.4k links. Revisit with a trigram index only if measured slow |
@@ -220,7 +220,7 @@ and the URL search as the single source of truth.
   | `name` | Microservice | name; pinned left | sortable; text filter → `name` |
   | `environment` | Env | `Badge` | sortable; multiSelect IFT/UAT/PROD/DEV → `env` |
   | `deployments` | Deployments | per deployment: `tc:` muted, then `artifactId - version` in mono, one line each | text filter labelled "artifactId" → `artifactId` |
-  | `topics` | Topics | one line per topic: `SquareArrowRightEnter` green-600 for `CONSUME`, `SquareArrowRightExit` red-600 for `PRODUCE`, each with `aria-label` and `title` ("consumes" / "produces"); then the name in mono | text filter labelled "topic" → `topic` |
+  | `topics` | Topics | one line per topic: `SquareArrowRightExit` green-600 for `CONSUME`, `SquareArrowRightEnter` red-600 for `PRODUCE` (topic's point of view), each with `aria-label` and `title` ("consumes" / "produces"); then the name in mono | text filter labelled "topic" → `topic` |
   | `flows` | Flows | one `<Link to="/flow-graph" search={{ flowId, env: row.environment }}>` per flow, showing its caption | neither |
 
   An empty list renders `dash()` from `@/lib/format`.
