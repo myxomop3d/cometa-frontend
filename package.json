@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start:both": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-both.ps1",
+    "stop:both": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-both.ps1",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

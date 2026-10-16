@@ -6,6 +6,7 @@
 - `npm run lint` — ESLint
 - `npm run preview` — preview production build
 - `npx tsc --noEmit` — type-check only
+- `npm run start:both` / `npm run stop:both` — start/stop the local backend jar (:8080, `local` profile) and the Vite dev server (:5173) detached, logs in `logs/`. `scripts/start-both.ps1 -Build` rebuilds the backend and verifies the MapStruct mappers first
 
 ## Tech Stack
 - **React 19 + TypeScript 5.9 + Vite 8**
