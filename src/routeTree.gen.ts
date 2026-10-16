@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TechComponentIndexRouteImport } from './routes/tech-component/index'
 import { Route as TeamIndexRouteImport } from './routes/team/index'
 import { Route as PersonIndexRouteImport } from './routes/person/index'
+import { Route as MicroserviceIndexRouteImport } from './routes/microservice/index'
 import { Route as MicroserviceAtIndexRouteImport } from './routes/microservice-at/index'
 import { Route as FlowIndexRouteImport } from './routes/flow/index'
 import { Route as FlowGraphIndexRouteImport } from './routes/flow-graph/index'
@@ -57,6 +58,11 @@ const PersonIndexRoute = PersonIndexRouteImport.update({
   path: '/person/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MicroserviceIndexRoute = MicroserviceIndexRouteImport.update({
+  id: '/microservice/',
+  path: '/microservice/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MicroserviceAtIndexRoute = MicroserviceAtIndexRouteImport.update({
   id: '/microservice-at/',
   path: '/microservice-at/',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
   '/microservice-at/': typeof MicroserviceAtIndexRoute
+  '/microservice/': typeof MicroserviceIndexRoute
   '/person/': typeof PersonIndexRoute
   '/team/': typeof TeamIndexRoute
   '/tech-component/': typeof TechComponentIndexRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/flow-graph': typeof FlowGraphIndexRoute
   '/flow': typeof FlowIndexRoute
   '/microservice-at': typeof MicroserviceAtIndexRoute
+  '/microservice': typeof MicroserviceIndexRoute
   '/person': typeof PersonIndexRoute
   '/team': typeof TeamIndexRoute
   '/tech-component': typeof TechComponentIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/flow-graph/': typeof FlowGraphIndexRoute
   '/flow/': typeof FlowIndexRoute
   '/microservice-at/': typeof MicroserviceAtIndexRoute
+  '/microservice/': typeof MicroserviceIndexRoute
   '/person/': typeof PersonIndexRoute
   '/team/': typeof TeamIndexRoute
   '/tech-component/': typeof TechComponentIndexRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/flow-graph/'
     | '/flow/'
     | '/microservice-at/'
+    | '/microservice/'
     | '/person/'
     | '/team/'
     | '/tech-component/'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/flow-graph'
     | '/flow'
     | '/microservice-at'
+    | '/microservice'
     | '/person'
     | '/team'
     | '/tech-component'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/flow-graph/'
     | '/flow/'
     | '/microservice-at/'
+    | '/microservice/'
     | '/person/'
     | '/team/'
     | '/tech-component/'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   FlowGraphIndexRoute: typeof FlowGraphIndexRoute
   FlowIndexRoute: typeof FlowIndexRoute
   MicroserviceAtIndexRoute: typeof MicroserviceAtIndexRoute
+  MicroserviceIndexRoute: typeof MicroserviceIndexRoute
   PersonIndexRoute: typeof PersonIndexRoute
   TeamIndexRoute: typeof TeamIndexRoute
   TechComponentIndexRoute: typeof TechComponentIndexRoute
@@ -237,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PersonIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/microservice/': {
+      id: '/microservice/'
+      path: '/microservice'
+      fullPath: '/microservice/'
+      preLoaderRoute: typeof MicroserviceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/microservice-at/': {
       id: '/microservice-at/'
       path: '/microservice-at'
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   FlowGraphIndexRoute: FlowGraphIndexRoute,
   FlowIndexRoute: FlowIndexRoute,
   MicroserviceAtIndexRoute: MicroserviceAtIndexRoute,
+  MicroserviceIndexRoute: MicroserviceIndexRoute,
   PersonIndexRoute: PersonIndexRoute,
   TeamIndexRoute: TeamIndexRoute,
   TechComponentIndexRoute: TechComponentIndexRoute,

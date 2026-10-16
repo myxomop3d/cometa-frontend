@@ -13,6 +13,7 @@ import {
   Sun,
   User,
   Users,
+  Waypoints,
   Workflow,
 } from "lucide-react";
 import {
@@ -58,6 +59,7 @@ const mainNavItems = [
   { to: "/flow-graph", label: "Схемы потоков", icon: Network },
   { to: "/flow", label: "Список потоков", icon: Workflow },
   { to: "/microservice-at", label: "Microservices & AT", icon: Boxes },
+  { to: "/microservice", label: "Микросервисы", icon: Waypoints },
 ] as const;
 
 const dictionaryNavItems = [
