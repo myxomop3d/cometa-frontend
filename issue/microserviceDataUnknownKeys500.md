@@ -24,8 +24,11 @@ Measured on the dev database: **14 of 1209 microservice nodes** carry
 and `GET /api/v1/node/graph/{id}` return 500. The failure is in the read path,
 so it is reachable by anything that reads one of those nodes.
 
-`TopicData` and `NodeTechComponentLinkData` both tolerate unknown keys and are
-unaffected — this is exactly the failure mode that tolerance avoids.
+`NodeTechComponentLinkData` tolerates unknown keys and is unaffected — this is
+exactly the failure mode that tolerance avoids. `TopicData` was previously
+listed here as tolerant too; that is false: its `Configuration.Regular` has no
+`@JsonAnySetter` and fails on the `max` key, see
+[flowGraphTopicRegularUnknownKeys500.md](flowGraphTopicRegularUnknownKeys500.md).
 
 ## Where to look
 
