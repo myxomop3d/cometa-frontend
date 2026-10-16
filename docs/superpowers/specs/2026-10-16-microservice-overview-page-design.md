@@ -1,12 +1,12 @@
-# Microservice overview page — design
+# Microservices page (Микросервисы) — design
 
 Date: 2026-10-16
 Repos: `cometa` (backend: new read endpoint) and `cometa-frontend` (new page)
-Status: approved design, not yet implemented
+Status: approved design, not yet implemented. Renamed 2026-10-16: page **Микросервисы** at `/microservice`; the backend endpoint keeps `microservice-overview`
 
 ## Goal
 
-A table page, **Microservice overview**, with one row per `MICROSERVICE` node, that
+A table page, **Микросервисы** (`/microservice`), with one row per `MICROSERVICE` node, that
 lets a user:
 
 1. find microservices by the `artifactId` of their deployments
@@ -20,7 +20,7 @@ Target shape:
 
 | Microservice | Env | Deployments | Topics | Flows |
 |---|---|---|---|---|
-| calypso-payments-zeus-out | IFT | `ift-k8s-bk2:` `kafka-payload-kafka - 6.0.2_m121j25r` | ← CALYPSO.PAYMENTS<br>→ CALYPSO.PAYMENTS.ZEUS | Поток PAYMENTS из АС в Alpha (link) |
+| calypso-payments-zeus-out | IFT | `ift-k8s-bk2:` `kafka-payload-kafka - 6.0.2_m121j25r` | ⇥ CALYPSO.PAYMENTS (enter, green)<br>⇤ CALYPSO.PAYMENTS.ZEUS (exit, red) | Поток PAYMENTS из АС в Alpha (link) |
 
 ## Scope
 
@@ -67,7 +67,7 @@ Against the development database (`gmsb`).
 | Text filters are case-insensitive substrings | User decision. `CALYPSO.PAYMENTS` matches `CALYPSO.PAYMENTS.ZEUS` too |
 | Tech component is display only | User decision |
 | Direction is translated on the server to `CONSUME` / `PRODUCE` | The frontend does not need to know the link-direction vocabulary |
-| Topic shown with a coloured arrow before its name | User decision: green `←` = `COUNTERDIRECTIONAL` (consumes), red `→` = `CODIRECTIONAL` (produces) |
+| Topic shown with a coloured arrow before its name | User decision: green `SquareArrowRightEnter` = `COUNTERDIRECTIONAL` (consumes), red `SquareArrowRightExit` = `CODIRECTIONAL` (produces), lucide icons |
 | Keep `$top` / `$skip` / `$orderby` names for paging and sort | The frontend's existing paging and sort serialization work unchanged. Filters are plain params because they are not OData |
 | Not `createCrudApi` on the frontend | It builds OData `$filter`; this endpoint takes plain params |
 | No DDL, no index | ~1.8k nodes and ~3.4k links. Revisit with a trigram index only if measured slow |
@@ -190,7 +190,7 @@ Same skeleton as the **Microservices & AT** page: plain `useDataTable` with the 
 toolbar, a route loader with `ensureQueryData`, `useSuspenseQuery` in the component,
 and the URL search as the single source of truth.
 
-### `src/features/microservice-overview/`
+### `src/features/microservice/`
 
 - **`types.ts`**: TypeScript mirrors of the DTO;
   `TopicDirection = "CONSUME" | "PRODUCE"`.
@@ -211,7 +211,7 @@ and the URL search as the single source of truth.
     emits repeated `env`, `$top`/`$skip` from page/pageSize, `$orderby` from the sort,
     and nothing for absent filters;
   - `microserviceOverviewQueryOptions(search)`, keyed
-    `["microservice-overview", "table", search]`, calling the shared `apiFetch` and
+    `["microservice", "table", search]`, calling the shared `apiFetch` and
     returning `ApiResponse<MicroserviceOverviewDto[]>`.
 - **`columns.tsx`**:
 
@@ -220,19 +220,19 @@ and the URL search as the single source of truth.
   | `name` | Microservice | name; pinned left | sortable; text filter → `name` |
   | `environment` | Env | `Badge` | sortable; multiSelect IFT/UAT/PROD/DEV → `env` |
   | `deployments` | Deployments | per deployment: `tc:` muted, then `artifactId - version` in mono, one line each | text filter labelled "artifactId" → `artifactId` |
-  | `topics` | Topics | one line per topic: `ArrowLeft` green-600 for `CONSUME`, `ArrowRight` red-600 for `PRODUCE`, each with `aria-label` and `title` ("consumes" / "produces"); then the name in mono | text filter labelled "topic" → `topic` |
+  | `topics` | Topics | one line per topic: `SquareArrowRightEnter` green-600 for `CONSUME`, `SquareArrowRightExit` red-600 for `PRODUCE`, each with `aria-label` and `title` ("consumes" / "produces"); then the name in mono | text filter labelled "topic" → `topic` |
   | `flows` | Flows | one `<Link to="/flow-graph" search={{ flowId, env: row.environment }}>` per flow, showing its caption | neither |
 
   An empty list renders `dash()` from `@/lib/format`.
 
 ### Route and sidebar
 
-- **`src/routes/microservice-overview/index.tsx`**: `validateSearch`, `loaderDeps:
+- **`src/routes/microservice/index.tsx`**: `validateSearch`, `loaderDeps:
   search`, the loader, `useDataTable` with `initialColumnPinning: { left: ["name"] }`,
-  `DataTable` + `DataTableToolbar`. The header is **Microservice overview** with the
-  subtitle `{count} microservices`.
+  `DataTable` + `DataTableToolbar`. The header is **Микросервисы** with the
+  subtitle `Всего: {count}` (avoids Russian plural forms).
 - **Sidebar**: an entry after "Microservices & AT":
-  `{ to: "/microservice-overview", label: "Microservice overview", icon: Waypoints }`.
+  `{ to: "/microservice", label: "Микросервисы", icon: Waypoints }`.
 
 The flow-graph route accepts `env` in DEV/IFT/UAT/PROD, a superset of the node
 environments, so passing the row's env is safe.
