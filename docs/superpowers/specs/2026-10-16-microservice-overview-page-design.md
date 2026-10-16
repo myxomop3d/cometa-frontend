@@ -2,7 +2,7 @@
 
 Date: 2026-10-16
 Repos: `cometa` (backend: new read endpoint) and `cometa-frontend` (new page)
-Status: approved design, not yet implemented. Renamed 2026-10-16: page **Микросервисы** at `/microservice`; the backend endpoint keeps `microservice-overview`
+Status: implemented on feature/gm 2026-10-17; live-verified. Renamed 2026-10-16: page **Микросервисы** at `/microservice`; the backend endpoint keeps `microservice-overview`
 
 ## Goal
 
@@ -315,3 +315,18 @@ environments, so passing the row's env is safe.
 - `cometa/docs/superpowers/specs/2026-09-22-node-tech-component-link-design.md`: the
   `node_tech_component_link` table and its jsonb `data`.
 - `issue/wrongLinksInDb.md`: the excluded link shapes.
+
+## Implementation notes (2026-10-17)
+
+- `MicroserviceOverviewFilter` lives in the persistence module, not the service module:
+  `MicroserviceOverviewQuery` (persistence) consumes it, and persistence cannot depend on
+  service.
+- No `ESCAPE '\'` clause: PostgreSQL's default LIKE escape character is already
+  backslash, so the escaped parameter behaves identically.
+- No `deriveColumnFilters` on the frontend: `useDataTable` derives column filters from
+  the search through `meta.filterKey`, and the fetcher reads the search directly.
+- `$top` is limited to 1..1000; `$top=0` is a 400, not "all rows".
+- Live pass, check 7: the flow caption links to the correct `/flow-graph?flowId=<id>&env=<row env>`,
+  but the flow-graph page itself shows "Request failed: 500" for every flow tried. Its endpoint
+  `GET /api/v1/flow-graph/{id}` fails on a topic's jsonb `data` (Jackson: unrecognized field
+  `max` in `TopicData.Configuration.Regular`). This is outside the microservice page.
