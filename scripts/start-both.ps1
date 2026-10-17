@@ -14,7 +14,7 @@
 #>
 param(
   [string]$BackendDir = $(if ($env:COMETA_BACKEND_DIR) { $env:COMETA_BACKEND_DIR } else { "F:\programming\cometa" }),
-  [string]$JavaHome = "C:\Program Files\Microsoft\jdk-17.0.19.10-hotspot",
+  [string]$JavaHome = "C:\Program Files\Microsoft\jdk-25.0.4.101-hotspot",
   [switch]$Build,
   [int]$TimeoutSec = 120
 )
@@ -22,7 +22,7 @@ param(
 $ErrorActionPreference = "Stop"
 $FrontendDir = Split-Path -Parent $PSScriptRoot
 $LogDir = Join-Path $FrontendDir "logs"
-$Jar = Join-Path $BackendDir "cometa-web-module\target\cometa-web-module-0.0.1-SNAPSHOT.jar"
+$JarDir = Join-Path $BackendDir "cometa-web-module\target"
 $EnvFile = Join-Path $BackendDir ".vscode\backend.env"
 
 function Test-Listening([int]$Port) {
@@ -78,7 +78,10 @@ if (Test-Listening 8080) {
       }
     if ($broken) { throw "corrupt mappers (no interface): $($broken.BaseName -join ', ') - rebuild" }
   }
-  if (-not (Test-Path $Jar)) { throw "backend jar not found: $Jar (run with -Build)" }
+  # Resolved after the build so a project version bump doesn't break the script.
+  $Jar = Get-ChildItem (Join-Path $JarDir "cometa-web-module-*.jar") -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName
+  if (-not $Jar) { throw "backend jar not found in $JarDir (run with -Build)" }
 
   $line = Get-Content $EnvFile | Where-Object { $_ -match '^DB_PASSWORD=' } | Select-Object -First 1
   if (-not $line) { throw "DB_PASSWORD not found in $EnvFile" }
